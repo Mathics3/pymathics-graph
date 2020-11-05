@@ -1,0 +1,4 @@
+*~
+/.python-version
+/pymathics_graph.egg-info
+__pycache__
