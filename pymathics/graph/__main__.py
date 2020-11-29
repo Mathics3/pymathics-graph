@@ -152,6 +152,7 @@ class _NetworkXBuiltin(Builtin):
         "EdgeStyle": "{}",
         "EdgeWeight": "{}",
         "PlotTheme": "{}",
+        "VertexLabeling": "False",
     }
 
     messages = {
@@ -743,6 +744,7 @@ class GraphAtom(AtomBuiltin):
     options = {
         "VertexSize": "{}",
         "VertexStyle": "{}",
+        "VertexLabeling": "False",
         "EdgeStyle": "{}",
         "DirectedEdges": "True",
         "PlotTheme": "Null",

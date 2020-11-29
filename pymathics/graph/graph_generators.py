@@ -43,6 +43,7 @@ class BalancedTree(_NetworkXBuiltin):
 
 
         options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("tree")
+        options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.r = r
         g.h = h
@@ -83,6 +84,7 @@ class BarbellGraph(_NetworkXBuiltin):
         G = nx.barbell_graph(py_m1, py_m2)
 
         options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("spring")
+        options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.m1 = m1
         g.m2 = m2
@@ -124,6 +126,7 @@ class BinomialTree(_NetworkXBuiltin):
         G = nx.binomial_tree(py_n)
 
         options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("tree")
+        options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.n = n
         G.root = g.root = 0
@@ -160,6 +163,7 @@ class CompleteGraph(_NetworkXBuiltin):
         G = nx.complete_graph(py_n)
 
         options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("circular")
+        options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.n  = n
         return g
@@ -208,6 +212,7 @@ class FullRAryTree(_NetworkXBuiltin):
         G = nx.full_rary_tree(py_r, py_n)
 
         options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("tree")
+        options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.r = r
         g.n = n
@@ -271,6 +276,7 @@ class RandomTree(_NetworkXBuiltin):
         G = nx.random_tree(py_n)
 
         options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("tree")
+        options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.n = n
         G.root = g.root = 0
@@ -303,6 +309,7 @@ class StarGraph(_NetworkXBuiltin):
         G = nx.star_graph(py_n)
 
         options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("spring")
+        options["VertexLabeling"] = options["System`VertexLabeling"]
 
         g = Graph(G, options=options)
         g.n = n
