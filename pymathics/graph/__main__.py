@@ -26,6 +26,19 @@ from itertools import permutations
 from collections import defaultdict
 from math import sqrt, ceil
 
+DEFAULT_GRAPH_OPTIONS = {
+    "VertexSize": "{}",
+    "VertexStyle": "{}",
+    "EdgeStyle": "{}",
+    "EdgeWeight": "{}",
+    "GraphLayout": "{}",
+    "VertexLabeling": "False",
+    "PlotLabel": "Null",
+}
+
+DEFAULT_TREE_OPTIONS = {**DEFAULT_GRAPH_OPTIONS, **{"Directed" : "False"}}
+
+
 try:
     import networkx as nx
 except ImportError:
@@ -146,14 +159,7 @@ def _parse_property(expr, attr_dict=None):
 class _NetworkXBuiltin(Builtin):
     requires = ("networkx",)
 
-    options = {
-        "VertexSize": "{}",
-        "VertexStyle": "{}",
-        "EdgeStyle": "{}",
-        "EdgeWeight": "{}",
-        "PlotTheme": "{}",
-        "VertexLabeling": "False",
-    }
+    options = DEFAULT_GRAPH_OPTIONS
 
     messages = {
         "graph": "Expected a graph at position 1 in ``.",
@@ -181,7 +187,6 @@ class _NetworkXBuiltin(Builtin):
             return compute(graph)
         elif head == "System`List":
             return compute(_graph_from_list(graph.leaves, options))
-
 
     def __str__(self):
         return "-Graph-"
@@ -336,6 +341,8 @@ def _normalize_edges(edges):
 
 class Graph(Atom):
 
+    options = DEFAULT_GRAPH_OPTIONS
+
     def __init__(self, G, **kwargs):
         super(Graph, self).__init__()
         self.options = kwargs.get("options", None)
@@ -452,7 +459,6 @@ class Graph(Atom):
         return weights
 
 
-
 def _is_connected(G):
     if len(G) == 0:  # empty graph?
         return True
@@ -518,7 +524,6 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
 
     if "System`VertexStyle" in options:
         vertex_options = options["System`VertexStyle"].to_python()
-
 
     known_vertices = set(vertices)
     known_edges = set(edges)
@@ -741,14 +746,7 @@ class GraphAtom(AtomBuiltin):
 
     requires = ("networkx",)
 
-    options = {
-        "VertexSize": "{}",
-        "VertexStyle": "{}",
-        "VertexLabeling": "False",
-        "EdgeStyle": "{}",
-        "DirectedEdges": "True",
-        "PlotTheme": "Null",
-    }
+    options = DEFAULT_GRAPH_OPTIONS
 
     def apply(self, graph, evaluation, options):
         "Graph[graph_List, OptionsPattern[%(name)s]]"

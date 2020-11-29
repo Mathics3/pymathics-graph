@@ -1,5 +1,13 @@
-from pymathics.graph.__main__ import _NetworkXBuiltin, nx, Graph
+from pymathics.graph.__main__ import (
+    DEFAULT_TREE_OPTIONS,
+    Graph,
+    _NetworkXBuiltin,
+    nx,
+)
 from mathics.core.expression import String
+
+# TODO: this code can be DRY'd a bit.
+
 
 class BalancedTree(_NetworkXBuiltin):
     """
@@ -22,6 +30,8 @@ class BalancedTree(_NetworkXBuiltin):
         "mem": "Out of memory",
     }
 
+    options = DEFAULT_TREE_OPTIONS
+
     def apply(self, r, h, expression, evaluation, options):
         "%(name)s[r_Integer, h_Integer, OptionsPattern[%(name)s]]"
         py_r = r.get_int_value()
@@ -35,19 +45,25 @@ class BalancedTree(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp2", expression)
             return
 
+        graph_create = nx.DiGraph if options["System`Directed"].to_python() else nx.Graph
+
         try:
-            G = nx.balanced_tree(py_r, py_h)
+            G = nx.balanced_tree(py_r, py_h, create_using=graph_create)
         except MemoryError:
             evaluation.message(self.get_name(), "mem", expression)
             return
 
-
-        options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("tree")
+        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
+            "tree"
+        )
         options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
+
         g.r = r
         g.h = h
         G.root = g.root = 0
+        G.title = g.title = options["System`PlotLabel"]
+
         return g
 
 
@@ -83,11 +99,14 @@ class BarbellGraph(_NetworkXBuiltin):
 
         G = nx.barbell_graph(py_m1, py_m2)
 
-        options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("spring")
+        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
+            "spring"
+        )
         options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.m1 = m1
         g.m2 = m2
+        G.title = g.title = options["System`PlotLabel"]
         return g
 
 
@@ -113,6 +132,7 @@ class BinomialTree(_NetworkXBuiltin):
 
     messages = {
         "ilsmp": "Expected a non-negative integer at position 1 in ``.",
+        "mem": "Out of memory",
     }
 
     def apply(self, n, expression, evaluation, options):
@@ -123,13 +143,20 @@ class BinomialTree(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        G = nx.binomial_tree(py_n)
+        try:
+            G = nx.binomial_tree(py_n)
+        except MemoryError:
+            evaluation.message(self.get_name(), "mem", expression)
+            return
 
-        options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("tree")
+        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
+            "tree"
+        )
         options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.n = n
         G.root = g.root = 0
+        G.title = g.title = options["System`PlotLabel"]
         return g
 
 
@@ -162,10 +189,13 @@ class CompleteGraph(_NetworkXBuiltin):
 
         G = nx.complete_graph(py_n)
 
-        options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("circular")
+        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
+            "circular"
+        )
         options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
-        g.n  = n
+        g.n = n
+        G.title = g.title = options["System`PlotLabel"]
         return g
 
     def apply_multipartite(self, n, evaluation, options):
@@ -194,7 +224,10 @@ class FullRAryTree(_NetworkXBuiltin):
     messages = {
         "ilsmp": "Expected a non-negative integer at position 1 in ``.",
         "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
+        "mem": "Out of memory",
     }
+
+    options = DEFAULT_TREE_OPTIONS
 
     def apply(self, r, n, expression, evaluation, options):
         "%(name)s[r_Integer, n_Integer, OptionsPattern[%(name)s]]"
@@ -209,14 +242,23 @@ class FullRAryTree(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        G = nx.full_rary_tree(py_r, py_n)
+        graph_create = nx.DiGraph if options["System`Directed"].to_python() else nx.Graph
 
-        options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("tree")
+        try:
+            G = nx.full_rary_tree(py_r, py_n, create_using=graph_create)
+        except MemoryError:
+            evaluation.message(self.get_name(), "mem", expression)
+            return
+
+        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
+            "tree"
+        )
         options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.r = r
         g.n = n
         G.root = g.root = 0
+        G.title = g.title = options["System`PlotLabel"]
         return g
 
 
@@ -247,7 +289,109 @@ class GraphAtlas(_NetworkXBuiltin):
         G = nx.graph_atlas(py_n)
         g = Graph(G)
         g.n = n
+        G.title = g.title = options["System`PlotLabel"]
         return g
+
+
+class HknHararyGraph(_NetworkXBuiltin):
+    """<dl>
+      <dt>'HmnHararyGraph[$k$, $n$]'
+      <dd>Returns the Harary graph with given node connectivity and node number.
+
+      This second generator gives the Harary graph that minimizes the
+      number of edges in the graph with given node connectivity and
+      number of nodes.
+
+      Harary, F.  The Maximum Connectivity of a Graph.  Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
+    </dl>
+
+    >> HknHararyGraph[3, 10]
+     = -Graph-
+
+    """
+
+    messages = {
+        "ilsmp": "Expected a non-negative integer at position 1 in ``.",
+        "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
+    }
+
+    def apply(self, k, n, expression, evaluation, options):
+        "%(name)s[k_Integer, n_Integer, OptionsPattern[%(name)s]]"
+        py_k = k.get_int_value()
+
+        if py_k < 0:
+            evaluation.message(self.get_name(), "ilsmp", expression)
+            return
+
+        py_n = n.get_int_value()
+        if py_n < 0:
+            evaluation.message(self.get_name(), "ilsmp2", expression)
+            return
+
+        from pymathics.graph.harary import hkn_harary_graph
+
+        G = hkn_harary_graph(py_k, py_n)
+
+        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
+            "spring"
+        )
+        options["VertexLabeling"] = options["System`VertexLabeling"]
+        g = Graph(G, options=options)
+        g.n = n
+        G.root = g.root = 0
+        G.title = g.title = options["System`PlotLabel"]
+        return g
+
+
+class HmnHararyGraph(_NetworkXBuiltin):
+    """<dl>
+      <dt>'HmnHararyGraph[$m$, $n$]'
+      <dd>Returns the Harary graph with given numbers of nodes and edges.
+
+      This generator gives the Harary graph that maximizes the node
+      connectivity with given number of nodes and given number of
+      edges.
+
+      Harary, F.  The Maximum Connectivity of a Graph.  Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
+    </dl>
+
+    >> HmnHararyGraph[5, 10]
+     = -Graph-
+    """
+
+    messages = {
+        "ilsmp": "Expected a non-negative integer at position 1 in ``.",
+        "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
+    }
+
+    def apply(self, n, m, expression, evaluation, options):
+        "%(name)s[n_Integer, m_Integer, OptionsPattern[%(name)s]]"
+        py_n = n.get_int_value()
+
+        if py_n < 0:
+            evaluation.message(self.get_name(), "ilsmp", expression)
+            return
+
+        py_m = m.get_int_value()
+
+        if py_m < 0:
+            evaluation.message(self.get_name(), "ilsmp2", expression)
+            return
+
+        from pymathics.graph.harary import hnm_harary_graph
+
+        G = hnm_harary_graph(py_n, py_m)
+
+        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
+            "circular"
+        )
+        options["VertexLabeling"] = options["System`VertexLabeling"]
+        g = Graph(G, options=options)
+        g.n = n
+        G.root = g.root = 0
+        G.title = g.title = options["System`PlotLabel"]
+        return g
+
 
 class RandomTree(_NetworkXBuiltin):
     """
@@ -275,7 +419,9 @@ class RandomTree(_NetworkXBuiltin):
 
         G = nx.random_tree(py_n)
 
-        options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("tree")
+        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
+            "circular"
+        )
         options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.n = n
@@ -306,11 +452,18 @@ class StarGraph(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        G = nx.star_graph(py_n)
+        try:
+            G = nx.star_graph(py_n)
+        except MemoryError:
+            evaluation.message(self.get_name(), "mem", expression)
+            return
 
-        options["PlotTheme"] = options["System`PlotTheme"].get_string_value() or String("spring")
+        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
+            "spring"
+        )
         options["VertexLabeling"] = options["System`VertexLabeling"]
 
         g = Graph(G, options=options)
         g.n = n
+        G.title = g.title = options["System`PlotLabel"]
         return g
