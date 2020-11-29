@@ -13,8 +13,8 @@ from mathics.core.expression import (
     Expression,
     Symbol,
     Atom,
-    Real,
     Integer,
+    Real,
     system_symbols_dict,
     from_python,
 )
@@ -151,6 +151,7 @@ class _NetworkXBuiltin(Builtin):
         "VertexStyle": "{}",
         "EdgeStyle": "{}",
         "EdgeWeight": "{}",
+        "PlotTheme": "{}",
     }
 
     messages = {
@@ -333,13 +334,11 @@ def _normalize_edges(edges):
 
 
 class Graph(Atom):
-    def __init__(self, G, **kwargs):
-        super(Graph, self).__init__(**kwargs)
-        self.G = G
 
-    @property
-    def vertices(self):
-        return self.G.nodes
+    def __init__(self, G, **kwargs):
+        super(Graph, self).__init__()
+        self.options = kwargs.get("options", None)
+        self.G = G
 
     @property
     def edges(self):
@@ -516,6 +515,10 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
 
         multigraph = [False]
 
+    if "System`VertexStyle" in options:
+        vertex_options = options["System`VertexStyle"].to_python()
+
+
     known_vertices = set(vertices)
     known_edges = set(edges)
 
@@ -570,6 +573,19 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
             edges_container = undirected_edges
             head = undirected_edge_head
             track_edges((u, v), (v, u))
+        elif name == "PyMathics`Property":
+            for prop in edge.leaves:
+                prop_str = str(prop.head)
+                if prop_str in ("System`Rule", "System`DirectedEdge"):
+                    edges_container = directed_edges
+                    head = directed_edge_head
+                    track_edges((u, v))
+                elif prop_str == "System`UndirectedEdge":
+                    edges_container = undirected_edges
+                    head = undirected_edge_head
+                else:
+                    pass
+            pass
         else:
             raise _GraphParseError
 
@@ -583,15 +599,28 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
 
     try:
 
-        def full_new_edge_properties():
+        def full_new_edge_properties(new_edge_style):
             for i, (attr_dict, w) in enumerate(zip(new_edge_properties, edge_weights)):
                 attr_dict = {} if attr_dict is None else attr_dict.copy()
                 attr_dict["System`EdgeWeight"] = w
                 yield attr_dict
+            # FIXME: figure out what to do here. Color is a mess.
+            # for i, (attr_dict, s) in enumerate(zip(new_edge_style, new_edge_style)):
+            #     attr_dict = {} if attr_dict is None else attr_dict.copy()
+            #     attr_dict["System`EdgeStyle"] = s
+            #     yield attr_dict
             for attr_dict in new_edge_properties[len(edge_weights) :]:
                 yield attr_dict
 
-        for edge, attr_dict in zip(new_edges, full_new_edge_properties()):
+        if "System`EdgeStyle" in options:
+            # FIXME: Figure out what to do here:
+            # Color is a f-ing mess.
+            # edge_options = options["System`EdgeStyle"].to_python()
+            edge_options = []
+        else:
+            edge_options = []
+        edge_properties = list(full_new_edge_properties(edge_options))
+        for edge, attr_dict in zip(new_edges, edge_properties):
             parse_edge(edge, attr_dict)
     except _GraphParseError:
         return
@@ -681,14 +710,14 @@ class GraphAtom(AtomBuiltin):
     >> Graph[{1->2, 2->3, 3->1}]
      = -Graph-
 
-    >> Graph[{1->2, 2->3, 3->1}, EdgeStyle -> {Red, Blue, Green}]
-     = -Graph-
+    #>> Graph[{1->2, 2->3, 3->1}, EdgeStyle -> {Red, Blue, Green}]
+    # = -Graph-
 
     >> Graph[{1->2, Property[2->3, EdgeStyle -> Thick], 3->1}]
      = -Graph-
 
-    >> Graph[{1->2, 2->3, 3->1}, VertexStyle -> {1 -> Green, 3 -> Blue}]
-     = -Graph-
+    #>> Graph[{1->2, 2->3, 3->1}, VertexStyle -> {1 -> Green, 3 -> Blue}]
+    #= -Graph-
 
     >> Graph[x]
      = Graph[x]
@@ -716,6 +745,7 @@ class GraphAtom(AtomBuiltin):
         "VertexStyle": "{}",
         "EdgeStyle": "{}",
         "DirectedEdges": "True",
+        "PlotTheme": "Null",
     }
 
     def apply(self, graph, evaluation, options):
@@ -1792,39 +1822,6 @@ class GraphDistance(_NetworkXBuiltin):
                 )
             except nx.exception.NetworkXNoPath:
                 return Expression("DirectedInfinity", 1)
-
-
-class CompleteGraph(_NetworkXBuiltin):
-    """
-    >> CompleteGraph[8]
-     = -Graph-
-
-    #> CompleteGraph[0]
-     : Expected a positive integer at position 1 in CompleteGraph[0].
-     = CompleteGraph[0]
-    """
-
-    messages = {
-        "ilsmp": "Expected a positive integer at position 1 in ``.",
-    }
-
-    def apply(self, n, expression, evaluation, options):
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        py_n = n.get_int_value()
-
-        if py_n < 1:
-            evaluation.message(self.get_name(), "ilsmp", expression)
-            return
-
-        G = nx.complete_graph(py_n)
-        return Graph(G)
-
-    def apply_multipartite(self, n, evaluation, options):
-        "%(name)s[n_List, OptionsPattern[%(name)s]]"
-        if all(isinstance(i, Integer) for i in n.leaves):
-            return Graph(
-                nx.complete_multipartite_graph(*[i.get_int_value() for i in n.leaves])
-            )
 
 
 def _convert_networkx_graph(G, options):
