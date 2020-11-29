@@ -15,16 +15,11 @@ from mathics.core.expression import (
     Atom,
     Integer,
     Real,
-    system_symbols_dict,
     from_python,
 )
-from mathics.core.util import robust_min
 from mathics.builtin.patterns import Matcher
 
 from inspect import isgenerator
-from itertools import permutations
-from collections import defaultdict
-from math import sqrt, ceil
 
 DEFAULT_GRAPH_OPTIONS = {
     "VertexSize": "{}",
@@ -58,15 +53,7 @@ def _shell_layout(G):
 
 
 def _generic_layout(G, warn):
-    try:
-        import pydot
-    except ImportError:
-        pass
-    else:
-        return nx.nx_pydot.graphviz_layout(G, prog="dot")
-
-    warn("Could not find pydot; graph layout quality might be low.")
-    return nx.drawing.fruchterman_reingold_layout(G, pos=None, k=1.0)
+    return nx.nx_pydot.graphviz_layout(G, prog="dot")
 
 
 def _path_layout(G, root):
@@ -345,7 +332,6 @@ class Graph(Atom):
 
     def __init__(self, G, **kwargs):
         super(Graph, self).__init__()
-        self.options = kwargs.get("options", None)
         self.G = G
 
     @property

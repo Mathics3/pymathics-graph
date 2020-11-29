@@ -4,9 +4,41 @@ from pymathics.graph.__main__ import (
     _NetworkXBuiltin,
     nx,
 )
-from mathics.core.expression import String
+from mathics.core.expression import Integer, String
+from typing import Callable, Optional
 
-# TODO: this code can be DRY'd a bit.
+# TODO: Can this code can be DRY'd more?
+
+
+def graph_helper(
+    graph_generator_func: Callable,
+    options: dict,
+    can_digraph: bool,
+    graph_layout: str,
+    root: Optional[int] = None,
+    *args,
+    **kwargs
+) -> Optional[Callable]:
+    should_digraph = can_digraph and options["System`Directed"].to_python()
+    try:
+        G = (
+            graph_generator_func(*args, create_using=nx.DiGraph, **kwargs)
+            if should_digraph
+            else graph_generator_func(*args, **kwargs)
+        )
+    except MemoryError:
+        evaluation.message(self.get_name(), "mem", expression)
+        return None
+    G.graph_layout = options["System`GraphLayout"].get_string_value() or String(
+        graph_layout
+    )
+    G.vertex_labeling = options["System`VertexLabeling"]
+    g = Graph(G)
+
+    if root is not None:
+        G.root = g.root = root
+    G.title = g.title = options["System`PlotLabel"]
+    return g
 
 
 class BalancedTree(_NetworkXBuiltin):
@@ -38,32 +70,19 @@ class BalancedTree(_NetworkXBuiltin):
 
         if py_r < 0:
             evaluation.message(self.get_name(), "ilsmp", expression)
-            return
+            return None
 
         py_h = h.get_int_value()
         if py_h < 0:
             evaluation.message(self.get_name(), "ilsmp2", expression)
-            return
+            return None
 
-        graph_create = nx.DiGraph if options["System`Directed"].to_python() else nx.Graph
-
-        try:
-            G = nx.balanced_tree(py_r, py_h, create_using=graph_create)
-        except MemoryError:
-            evaluation.message(self.get_name(), "mem", expression)
-            return
-
-        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
-            "tree"
-        )
-        options["VertexLabeling"] = options["System`VertexLabeling"]
-        g = Graph(G, options=options)
-
-        g.r = r
-        g.h = h
-        G.root = g.root = 0
-        G.title = g.title = options["System`PlotLabel"]
-
+        args = (py_r, py_h)
+        g = graph_helper(nx.balanced_tree, options, True, "tree", 0, *args)
+        if not g:
+            return None
+        g.G.r = r
+        g.G.h = h
         return g
 
 
@@ -74,7 +93,7 @@ class BarbellGraph(_NetworkXBuiltin):
       <dd>Barbell Graph: two complete graphs connected by a path.
     </dl>
 
-    >> BarBellGraph[2, 3]
+    >> BarBellGraph[4, 1]
      = -Graph-
 
     """
@@ -97,16 +116,13 @@ class BarbellGraph(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        G = nx.barbell_graph(py_m1, py_m2)
+        args = (py_m1, py_m2)
+        g = graph_helper(nx.barbell_graph, options, False, "spring", None, *args)
+        if not g:
+            return None
 
-        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
-            "spring"
-        )
-        options["VertexLabeling"] = options["System`VertexLabeling"]
-        g = Graph(G, options=options)
-        g.m1 = m1
-        g.m2 = m2
-        G.title = g.title = options["System`PlotLabel"]
+        g.G.m1 = m1
+        g.G.m2 = m2
         return g
 
 
@@ -143,20 +159,11 @@ class BinomialTree(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        try:
-            G = nx.binomial_tree(py_n)
-        except MemoryError:
-            evaluation.message(self.get_name(), "mem", expression)
-            return
-
-        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
-            "tree"
-        )
-        options["VertexLabeling"] = options["System`VertexLabeling"]
-        g = Graph(G, options=options)
-        g.n = n
-        G.root = g.root = 0
-        G.title = g.title = options["System`PlotLabel"]
+        args = (py_n,)
+        g = graph_helper(nx.binomial_tree, options, False, "tree", 0, *args)
+        if not g:
+            return None
+        g.G.n = n
         return g
 
 
@@ -189,9 +196,9 @@ class CompleteGraph(_NetworkXBuiltin):
 
         G = nx.complete_graph(py_n)
 
-        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
-            "circular"
-        )
+        options["GraphLayout"] = options[
+            "System`GraphLayout"
+        ].get_string_value() or String("circular")
         options["VertexLabeling"] = options["System`VertexLabeling"]
         g = Graph(G, options=options)
         g.n = n
@@ -242,36 +249,26 @@ class FullRAryTree(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        graph_create = nx.DiGraph if options["System`Directed"].to_python() else nx.Graph
+        args = (py_r, py_n)
+        g = graph_helper(nx.full_rary_tree, options, True, "tree", 0, *args)
+        if not g:
+            return None
 
-        try:
-            G = nx.full_rary_tree(py_r, py_n, create_using=graph_create)
-        except MemoryError:
-            evaluation.message(self.get_name(), "mem", expression)
-            return
-
-        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
-            "tree"
-        )
-        options["VertexLabeling"] = options["System`VertexLabeling"]
-        g = Graph(G, options=options)
-        g.r = r
-        g.n = n
-        G.root = g.root = 0
-        G.title = g.title = options["System`PlotLabel"]
+        g.G.r = r
+        g.G.n = n
         return g
 
 
 class GraphAtlas(_NetworkXBuiltin):
-    """
-    <dl>
+    """<dl>
       <dt>'GraphAtlas[$n$]'
-      <dd>gives graph number $i$ from the Networkx's Graph Atlas. There are about 1200 of them.
+      <dd>gives graph number $i$ from the Networkx's Graph
+      Atlas. There are about 1200 of them and get large as $i$
+      increases.
     </dl>
 
     >> GraphAtlas[1000]
      = -Graph-
-
     """
 
     messages = {
@@ -286,10 +283,11 @@ class GraphAtlas(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        G = nx.graph_atlas(py_n)
-        g = Graph(G)
+        args = (py_n,)
+        g = graph_helper(nx.graph_atlas, options, False, "spring", None, *args)
+        if not g:
+            return None
         g.n = n
-        G.title = g.title = options["System`PlotLabel"]
         return g
 
 
@@ -330,16 +328,12 @@ class HknHararyGraph(_NetworkXBuiltin):
 
         from pymathics.graph.harary import hkn_harary_graph
 
-        G = hkn_harary_graph(py_k, py_n)
-
-        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
-            "spring"
-        )
-        options["VertexLabeling"] = options["System`VertexLabeling"]
-        g = Graph(G, options=options)
-        g.n = n
-        G.root = g.root = 0
-        G.title = g.title = options["System`PlotLabel"]
+        args = (py_k, py_n)
+        g = graph_helper(hkn_harary_graph, options, False, "circular", None, *args)
+        if not g:
+            return None
+        g.k = py_k
+        g.n = py_n
         return g
 
 
@@ -380,16 +374,12 @@ class HmnHararyGraph(_NetworkXBuiltin):
 
         from pymathics.graph.harary import hnm_harary_graph
 
-        G = hnm_harary_graph(py_n, py_m)
-
-        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
-            "circular"
-        )
-        options["VertexLabeling"] = options["System`VertexLabeling"]
-        g = Graph(G, options=options)
-        g.n = n
-        G.root = g.root = 0
-        G.title = g.title = options["System`PlotLabel"]
+        args = (py_n, py_m)
+        g = graph_helper(hmn_harary_graph, options, False, "circular", None, *args)
+        if not g:
+            return None
+        g.n = py_n
+        g.m = py_m
         return g
 
 
@@ -417,15 +407,11 @@ class RandomTree(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        G = nx.random_tree(py_n)
-
-        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
-            "circular"
-        )
-        options["VertexLabeling"] = options["System`VertexLabeling"]
-        g = Graph(G, options=options)
-        g.n = n
-        G.root = g.root = 0
+        args = (py_n,)
+        g = graph_helper(nx.random_tree, options, False, "tree", 0, *args)
+        if not g:
+            return None
+        g.G.n = n
         return g
 
 
@@ -452,18 +438,9 @@ class StarGraph(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        try:
-            G = nx.star_graph(py_n)
-        except MemoryError:
-            evaluation.message(self.get_name(), "mem", expression)
-            return
-
-        options["GraphLayout"] = options["System`GraphLayout"].get_string_value() or String(
-            "spring"
-        )
-        options["VertexLabeling"] = options["System`VertexLabeling"]
-
-        g = Graph(G, options=options)
-        g.n = n
-        G.title = g.title = options["System`PlotLabel"]
+        args = (py_n,)
+        g = graph_helper(nx.star_graph, options, False, "spring", 0, *args)
+        if not g:
+            return None
+        g.G.n = n
         return g
