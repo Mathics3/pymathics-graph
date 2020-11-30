@@ -10,11 +10,12 @@ from mathics.builtin.base import Builtin, AtomBuiltin
 from mathics.builtin.graphics import GraphicsBox
 from mathics.builtin.randomnumbers import RandomEnv
 from mathics.core.expression import (
-    Expression,
-    Symbol,
     Atom,
+    Expression,
     Integer,
     Real,
+    String,
+    Symbol,
     from_python,
 )
 from mathics.builtin.patterns import Matcher
@@ -31,8 +32,9 @@ DEFAULT_GRAPH_OPTIONS = {
     "PlotLabel": "Null",
 }
 
-DEFAULT_TREE_OPTIONS = {**DEFAULT_GRAPH_OPTIONS, **{"Directed" : "False"}}
-
+DEFAULT_TREE_OPTIONS = {**DEFAULT_GRAPH_OPTIONS,
+                        **{"Directed" : "False",
+                           "GraphLayout": '"tree"'}}
 
 try:
     import networkx as nx
@@ -445,6 +447,12 @@ class Graph(Atom):
         return weights
 
 
+class TreeGraph(Graph):
+    def __init__(self, G, **kwargs):
+        super(Graph, self).__init__()
+        self.G = G
+
+
 def _is_connected(G):
     if len(G) == 0:  # empty graph?
         return True
@@ -507,9 +515,6 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
         edge_properties = []
 
         multigraph = [False]
-
-    if "System`VertexStyle" in options:
-        vertex_options = options["System`VertexStyle"].to_python()
 
     known_vertices = set(vertices)
     known_edges = set(edges)
@@ -640,7 +645,10 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
         n_undirected=len(undirected_edges),
     )
 
-    return Graph(G)
+    G.vertex_labeling = options["System`VertexLabeling"]
+    g = Graph(G)
+    G.title = g.title = options["System`PlotLabel"]
+    return g
 
 
 class Property(Builtin):
@@ -738,6 +746,22 @@ class GraphAtom(AtomBuiltin):
         "Graph[graph_List, OptionsPattern[%(name)s]]"
         return _graph_from_list(graph.leaves, options)
 
+
+class TreeGraphAtom(AtomBuiltin):
+    """
+    >> TreeGraph[{1->2, 2->3, 3->1}]
+     = -Graph-
+
+    """
+
+    options = DEFAULT_TREE_OPTIONS
+
+    def apply(self, graph, evaluation, options):
+        "TreeGraph[graph_List, OptionsPattern[%(name)s]]"
+        g = _graph_from_list(graph.leaves, options)
+        g.G.graph_layout = String("tree")
+        # Compute/check/set for root?
+        return g
 
 class PathGraph(_NetworkXBuiltin):
     """
