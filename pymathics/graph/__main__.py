@@ -194,10 +194,12 @@ class GraphBox(GraphicsBox):
         return "-Graph-"
 
     def boxes_to_xml(self, leaves, **options):
-        return self._graphics_box(leaves, options).boxes_to_xml(**options)
+        # Figure out what to do here.
+        return "-Graph-XML-"
 
     def boxes_to_tex(self, leaves, **options):
-        return self._graphics_box(leaves, options).boxes_to_tex(**options)
+        # Figure out what to do here.
+        return "-Graph-TeX-"
 
 
 class _Collection(object):
@@ -388,6 +390,10 @@ class Graph(Atom):
 
     def atom_to_boxes(self, form, evaluation):
         return Expression("GraphBox", self, form)
+
+    def boxes_to_xml(self, **options):
+        # Figure out what to do here.
+        return "-Graph-XML-"
 
     def get_property(self, item, name):
         if item.get_head_name() in ("System`DirectedEdge", "System`UndirectedEdge"):
