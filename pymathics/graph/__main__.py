@@ -32,15 +32,7 @@ DEFAULT_GRAPH_OPTIONS = {
     "PlotLabel": "Null",
 }
 
-DEFAULT_TREE_OPTIONS = {**DEFAULT_GRAPH_OPTIONS,
-                        **{"Directed" : "False",
-                           "GraphLayout": '"tree"'}}
-
-try:
-    import networkx as nx
-except ImportError:
-    nx = {}
-
+import networkx as nx
 
 def _circular_layout(G):
     return nx.drawing.circular_layout(G, scale=1.5)
@@ -453,12 +445,6 @@ class Graph(Atom):
         return weights
 
 
-class TreeGraph(Graph):
-    def __init__(self, G, **kwargs):
-        super(Graph, self).__init__()
-        self.G = G
-
-
 def _is_connected(G):
     if len(G) == 0:  # empty graph?
         return True
@@ -774,44 +760,6 @@ class GraphAtom(AtomBuiltin):
     def apply_1(self, vertices, edges, evaluation, options):
         "Graph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
         return _graph_from_list(edges.leaves, options=options, new_vertices=vertices.leaves)
-
-
-class TreeGraphAtom(AtomBuiltin):
-    """
-    >> TreeGraph[{1->2, 2->3, 3->1}]
-     = -Graph-
-
-    """
-
-    options = DEFAULT_TREE_OPTIONS
-
-    messages = {
-        "v": "Expected first parameter vertices to be a list of vertices",
-        "notree": "Graph is not a tree.",
-    }
-
-    def apply(self, rules, evaluation, options):
-        "TreeGraph[rules_List, OptionsPattern[%(name)s]]"
-        g = _graph_from_list(rules.leaves, options)
-        if not nx.is_tree(g.G):
-            evaluation.message(self.get_name(), "notree")
-
-        g.G.graph_layout = String("tree")
-        # Compute/check/set for root?
-        return g
-
-    def apply_1(self, vertices, edges, evaluation, options):
-        "TreeGraph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
-        if not all(isinstance(v, Atom) for v in vertices.leaves):
-            evaluation.message(self.get_name(), "v")
-
-        g = _graph_from_list(edges.leaves, options=options, new_vertices=vertices.leaves)
-        if not nx.is_tree(g.G):
-            evaluation.message(self.get_name(), "notree")
-
-        g.G.graph_layout = String("tree")
-        # Compute/check/set for root?
-        return g
 
 
 class PathGraph(_NetworkXBuiltin):

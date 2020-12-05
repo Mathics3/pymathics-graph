@@ -1,9 +1,11 @@
 from pymathics.graph.__main__ import (
-    DEFAULT_TREE_OPTIONS,
     Graph,
     _NetworkXBuiltin,
     nx,
 )
+
+from pymathics.graph.tree import DEFAULT_TREE_OPTIONS
+
 from mathics.core.expression import Integer, String
 from typing import Callable, Optional
 
