@@ -490,40 +490,21 @@ def _parse_item(x, attr_dict=None):
         return x, attr_dict
 
 
-def _graph_from_list(rules, options):
+def _graph_from_list(rules, options, new_vertices=None):
     if not rules:
         return Graph(nx.Graph())
     else:
         new_edges, new_edge_properties = zip(*[_parse_item(x) for x in rules])
-        return _create_graph(new_edges, new_edge_properties, options)
+        return _create_graph(new_edges, new_edge_properties,
+                             options=options,
+                             new_vertices=new_vertices)
 
 
-def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
-    directed_edges = []
-    undirected_edges = []
+def _create_graph(new_edges, new_edge_properties, options, from_graph=None, new_vertices=None):
 
-    if from_graph is not None:
-        vertices, vertex_properties = from_graph.vertices.data()
-        edges, edge_properties = from_graph.edges.data()
-
-        for edge, attr_dict in zip(edges, edge_properties):
-            u, v = edge.leaves
-            if edge.get_head_name() == "System`DirectedEdge":
-                directed_edges.append((u, v, attr_dict))
-            else:
-                undirected_edges.append((u, v, attr_dict))
-
-        multigraph = [from_graph.is_multigraph()]
-    else:
-        vertices = []
-        vertex_properties = []
-        edges = []
-        edge_properties = []
-
-        multigraph = [False]
-
-    known_vertices = set(vertices)
-    known_edges = set(edges)
+    known_vertices = set()
+    vertices = []
+    vertex_properties = []
 
     def add_vertex(x, attr_dict=None):
         if x.has_form("Property", 2):
@@ -535,6 +516,36 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
             vertices.append(x)
             vertex_properties.append(attr_dict)
         return x
+
+    directed_edges = []
+    undirected_edges = []
+
+    if new_vertices is not None:
+        vertices = [add_vertex(v) for v in new_vertices]
+
+    if from_graph is not None:
+        old_vertices, vertex_properties = from_graph.vertices.data()
+        vertices += old_vertices
+        edges, edge_properties = from_graph.edges.data()
+
+        for edge, attr_dict in zip(edges, edge_properties):
+            u, v = edge.leaves
+            if edge.get_head_name() == "System`DirectedEdge":
+                directed_edges.append((u, v, attr_dict))
+            else:
+                undirected_edges.append((u, v, attr_dict))
+
+        multigraph = [from_graph.is_multigraph()]
+    else:
+        edges = []
+        edge_properties = []
+
+        multigraph = [False]
+
+    known_edges = set(edges)
+    # It is simpler to just recompute this than change the above to work
+    # incrementally
+    known_vertices = set(vertices)
 
     def track_edges(*edges):
         if multigraph[0]:
@@ -631,9 +642,17 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
     empty_dict = {}
     if directed_edges:
         G = nx.MultiDiGraph() if multigraph[0] else nx.DiGraph()
+        nodes_seen = set()
         for u, v, attr_dict in directed_edges:
             attr_dict = attr_dict or empty_dict
             G.add_edge(u, v, **attr_dict)
+            nodes_seen.add(u)
+            nodes_seen.add(v)
+
+        unseen_vertices = set(vertices) - nodes_seen
+        for v in unseen_vertices:
+            G.add_node(v)
+
         for u, v, attr_dict in undirected_edges:
             attr_dict = attr_dict or empty_dict
             G.add_edge(u, v, **attr_dict)
@@ -752,6 +771,10 @@ class GraphAtom(AtomBuiltin):
         "Graph[graph_List, OptionsPattern[%(name)s]]"
         return _graph_from_list(graph.leaves, options)
 
+    def apply_1(self, vertices, edges, evaluation, options):
+        "Graph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
+        return _graph_from_list(edges.leaves, options=options, new_vertices=vertices.leaves)
+
 
 class TreeGraphAtom(AtomBuiltin):
     """
@@ -762,12 +785,34 @@ class TreeGraphAtom(AtomBuiltin):
 
     options = DEFAULT_TREE_OPTIONS
 
-    def apply(self, graph, evaluation, options):
-        "TreeGraph[graph_List, OptionsPattern[%(name)s]]"
-        g = _graph_from_list(graph.leaves, options)
+    messages = {
+        "v": "Expected first parameter vertices to be a list of vertices",
+        "notree": "Graph is not a tree.",
+    }
+
+    def apply(self, rules, evaluation, options):
+        "TreeGraph[rules_List, OptionsPattern[%(name)s]]"
+        g = _graph_from_list(rules.leaves, options)
+        if not nx.is_tree(g.G):
+            evaluation.message(self.get_name(), "notree")
+
         g.G.graph_layout = String("tree")
         # Compute/check/set for root?
         return g
+
+    def apply_1(self, vertices, edges, evaluation, options):
+        "TreeGraph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
+        if not all(isinstance(v, Atom) for v in vertices.leaves):
+            evaluation.message(self.get_name(), "v")
+
+        g = _graph_from_list(edges.leaves, options=options, new_vertices=vertices.leaves)
+        if not nx.is_tree(g.G):
+            evaluation.message(self.get_name(), "notree")
+
+        g.G.graph_layout = String("tree")
+        # Compute/check/set for root?
+        return g
+
 
 class PathGraph(_NetworkXBuiltin):
     """
