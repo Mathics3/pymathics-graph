@@ -1,6 +1,6 @@
 import networkx as nx
-from pymathics.graph.__main__ import Graph, _graph_from_list, DEFAULT_GRAPH_OPTIONS
-from mathics.core.expression import String
+from pymathics.graph.__main__ import Graph, _graph_from_list, DEFAULT_GRAPH_OPTIONS, _NetworkXBuiltin
+from mathics.core.expression import String, Symbol
 
 DEFAULT_TREE_OPTIONS = {
     **DEFAULT_GRAPH_OPTIONS,
@@ -54,3 +54,25 @@ class TreeGraph(Graph):
     def __init__(self, G, **kwargs):
         super(Graph, self).__init__()
         self.G = G
+
+
+class TreeGraphQ(_NetworkXBuiltin):
+    """
+    <dl>
+      <dt>'TreeGraphQ[$g$]'
+      <dd>returns $True$ if the graph $g$ is a tree and $False$ otherwise.
+    </dl>
+
+    >> TreeGraphQ[StarGraph[3]]
+     = True
+    >> TreeGraphQ[CompleteGraph[2]]
+     = True
+    >> TreeGraphQ[CompleteGraph[3]]
+     = False
+    """
+
+    def apply(self, g, expression, evaluation, options):
+        "TreeGraphQ[g_, OptionsPattern[%(name)s]]"
+        if not isinstance(g, Graph):
+            return Symbol("False")
+        return Symbol("True" if nx.is_tree(g.G) else "False")
