@@ -21,7 +21,7 @@ def graph_helper(
     *args,
     **kwargs
 ) -> Optional[Callable]:
-    should_digraph = can_digraph and options["System`Directed"].to_python()
+    should_digraph = can_digraph and options["System`DirectedEdges"].to_python()
     try:
         G = (
             graph_generator_func(*args, create_using=nx.DiGraph, **kwargs)
@@ -214,6 +214,44 @@ class CompleteGraph(_NetworkXBuiltin):
                 nx.complete_multipartite_graph(*[i.get_int_value() for i in n.leaves])
             )
 
+class CompleteKaryTree(_NetworkXBuiltin):
+    """<dl>
+      <dt>'CompleteKaryTree[$n$, $k$]'
+      <dd>Creates a complete $k$-ary tree of $n$ levels.
+    </dl>
+
+    In the returned tree, with $n$ nodes, the from root $R$ to any
+    leaf be $k.
+
+    >> CompleteKaryTree[2, 3]
+     = -Graph-
+
+    >> CompleteKaryTree[3]
+     = -Graph-
+
+    """
+
+    options = DEFAULT_TREE_OPTIONS
+
+    def apply(self, k, n, expression, evaluation, options):
+        "%(name)s[n_Integer, k_Integer, OptionsPattern[%(name)s]]"
+
+        n_int = n.get_int_value()
+        k_int = k.get_int_value()
+
+        new_n_int = int(((k_int ** n_int) - 1) / (k_int - 1))
+        return f_r_t_apply(self, k, Integer(new_n_int), expression, evaluation, options)
+
+
+    # FIXME: can be done with rules?
+    def apply_2(self, n, expression, evaluation, options):
+        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
+
+        n_int = n.get_int_value()
+
+        new_n_int = int(2 ** n_int) - 1
+        return f_r_t_apply(self, Integer(2), Integer(new_n_int), expression, evaluation, options)
+
 
 class CycleGraph(_NetworkXBuiltin):
     """<dl>
@@ -229,6 +267,27 @@ class CycleGraph(_NetworkXBuiltin):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
         return hkn_harary_apply(self, Integer(2), n, expression, evaluation, options)
 
+
+def f_r_t_apply(self, r, n, expression, evaluation, options):
+    py_r = r.get_int_value()
+
+    if py_r < 0:
+        evaluation.message(self.get_name(), "ilsmp", expression)
+        return
+
+    py_n = n.get_int_value()
+    if py_n < 0:
+        evaluation.message(self.get_name(), "ilsmp", expression)
+        return
+
+    args = (py_r, py_n)
+    g = graph_helper(nx.full_rary_tree, options, True, "tree", 0, *args)
+    if not g:
+        return None
+
+    g.G.r = r
+    g.G.n = n
+    return g
 
 class FullRAryTree(_NetworkXBuiltin):
     """<dl>
@@ -252,28 +311,9 @@ class FullRAryTree(_NetworkXBuiltin):
     }
 
     options = DEFAULT_TREE_OPTIONS
-
     def apply(self, r, n, expression, evaluation, options):
         "%(name)s[r_Integer, n_Integer, OptionsPattern[%(name)s]]"
-        py_r = r.get_int_value()
-
-        if py_r < 0:
-            evaluation.message(self.get_name(), "ilsmp", expression)
-            return
-
-        py_n = n.get_int_value()
-        if py_n < 0:
-            evaluation.message(self.get_name(), "ilsmp", expression)
-            return
-
-        args = (py_r, py_n)
-        g = graph_helper(nx.full_rary_tree, options, True, "tree", 0, *args)
-        if not g:
-            return None
-
-        g.G.r = r
-        g.G.n = n
-        return g
+        return f_r_t_apply(self, r, n, expression, evaluation, options)
 
 
 class GraphAtlas(_NetworkXBuiltin):

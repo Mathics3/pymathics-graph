@@ -4,7 +4,7 @@ from mathics.core.expression import String, Symbol
 
 DEFAULT_TREE_OPTIONS = {
     **DEFAULT_GRAPH_OPTIONS,
-    **{"Directed": "False", "GraphLayout": '"tree"'},
+    **{"DirectedEdges": "False", "GraphLayout": '"tree"'},
 }
 
 from mathics.builtin.base import Builtin, AtomBuiltin
