@@ -4,33 +4,35 @@
 Graphs
 """
 
-# uses GraphViz, if it's installed in your PATH (see pydot.graphviz.find_graphviz and http://www.graphviz.org).
+# uses networkx
 
 from mathics.builtin.base import Builtin, AtomBuiltin
 from mathics.builtin.graphics import GraphicsBox
 from mathics.builtin.randomnumbers import RandomEnv
 from mathics.core.expression import (
-    Expression,
-    Symbol,
     Atom,
-    Real,
+    Expression,
     Integer,
-    system_symbols_dict,
+    Real,
+    String,
+    Symbol,
     from_python,
 )
-from mathics.core.util import robust_min
 from mathics.builtin.patterns import Matcher
 
 from inspect import isgenerator
-from itertools import permutations
-from collections import defaultdict
-from math import sqrt, ceil
 
-try:
-    import networkx as nx
-except ImportError:
-    nx = {}
+DEFAULT_GRAPH_OPTIONS = {
+    "VertexSize": "{}",
+    "VertexStyle": "{}",
+    "EdgeStyle": "{}",
+    "EdgeWeight": "{}",
+    "GraphLayout": "{}",
+    "VertexLabeling": "False",
+    "PlotLabel": "Null",
+}
 
+import networkx as nx
 
 def _circular_layout(G):
     return nx.drawing.circular_layout(G, scale=1.5)
@@ -45,15 +47,7 @@ def _shell_layout(G):
 
 
 def _generic_layout(G, warn):
-    try:
-        import pydot
-    except ImportError:
-        pass
-    else:
-        return nx.nx_pydot.graphviz_layout(G, prog="dot")
-
-    warn("Could not find pydot; graph layout quality might be low.")
-    return nx.drawing.fruchterman_reingold_layout(G, pos=None, k=1.0)
+    return nx.nx_pydot.graphviz_layout(G, prog="dot")
 
 
 def _path_layout(G, root):
@@ -122,84 +116,6 @@ def _components(G):
 _default_minimum_distance = 0.3
 
 
-def _min_distance(edges, pos):
-    def distances():
-        for e in edges:
-            e1, e2 = e.leaves
-            if e1 != e2:
-                x1, y1 = pos[e1]
-                x2, y2 = pos[e2]
-                dx = x2 - x1
-                dy = y2 - y1
-                yield dx * dx + dy * dy
-
-    d = robust_min(distances())
-    if d is None:
-        return _default_minimum_distance
-    else:
-        return sqrt(d)
-
-
-def _pos_into_box(vertices, pos, min_box, max_box):
-    new_pos = {}
-
-    cx = (min_box[0] + max_box[0]) / 2
-    cy = (min_box[1] + max_box[1]) / 2
-    dx = max_box[0] - min_box[0]
-    dy = max_box[1] - min_box[1]
-
-    if len(vertices) == 1:
-        for v in vertices:
-            new_pos[v] = (cx, cy)
-    else:
-        points = pos.values()
-        for p0 in points:
-            x0, y0 = p0
-            x1 = x0
-            y1 = y0
-            for p in points:
-                x, y = p
-                x0 = min(x0, x)
-                y0 = min(y0, y)
-                x1 = max(x1, x)
-                y1 = max(y1, y)
-            break
-
-        zx = (x0 + x1) / 2
-        zy = (y0 + y1) / 2
-        s = 1.0 / max(max(x1 - x0, 1) / dx, (max(y1 - y0, 1)) / dy)
-        for k, p in pos.items():
-            x, y = p
-            new_pos[k] = (cx + (x - zx) * s, cy + (y - zy) * s)
-
-    return new_pos
-
-
-def _move_pos(pos, dx, dy):
-    new_pos = {}
-    for k, p in pos.items():
-        x, y = p
-        new_pos[k] = (x + dx, y + dy)
-    return new_pos
-
-
-_vertex_size_names = system_symbols_dict(
-    {
-        "Large": 0.8,
-        "Medium": 0.3,
-        "Small": 0.2,
-        "Tiny": 0.05,
-    }
-)
-
-
-def _vertex_size(expr):
-    if isinstance(expr, Symbol):
-        return _vertex_size_names.get(expr.get_name())
-    else:
-        return expr.round_to_float()
-
-
 def _vertex_style(expr):
     return expr
 
@@ -224,12 +140,7 @@ def _parse_property(expr, attr_dict=None):
 class _NetworkXBuiltin(Builtin):
     requires = ("networkx",)
 
-    options = {
-        "VertexSize": "{}",
-        "VertexStyle": "{}",
-        "EdgeStyle": "{}",
-        "EdgeWeight": "{}",
-    }
+    options = DEFAULT_GRAPH_OPTIONS
 
     messages = {
         "graph": "Expected a graph at position 1 in ``.",
@@ -258,6 +169,9 @@ class _NetworkXBuiltin(Builtin):
         elif head == "System`List":
             return compute(_graph_from_list(graph.leaves, options))
 
+    def __str__(self):
+        return "-Graph-"
+
 
 class GraphBox(GraphicsBox):
     def _graphics_box(self, leaves, options):
@@ -272,10 +186,12 @@ class GraphBox(GraphicsBox):
         return "-Graph-"
 
     def boxes_to_xml(self, leaves, **options):
-        return self._graphics_box(leaves, options).boxes_to_xml(**options)
+        # Figure out what to do here.
+        return "-Graph-XML-"
 
     def boxes_to_tex(self, leaves, **options):
-        return self._graphics_box(leaves, options).boxes_to_tex(**options)
+        # Figure out what to do here.
+        return "-Graph-TeX-"
 
 
 class _Collection(object):
@@ -407,20 +323,28 @@ def _normalize_edges(edges):
 
 
 class Graph(Atom):
-    def __init__(self, vertices, edges, G, layout, options, highlights=None, **kwargs):
-        super(Graph, self).__init__(**kwargs)
-        self.vertices = vertices
-        self.edges = edges
+
+    options = DEFAULT_GRAPH_OPTIONS
+
+    def __init__(self, G, **kwargs):
+        super(Graph, self).__init__()
         self.G = G
-        self.layout = layout
-        self.options = options
-        self.highlights = highlights
+
+    @property
+    def edges(self):
+        return self.G.edges
+
+    @property
+    def vertices(self):
+        return self.G.nodes
 
     def empty(self):
         return len(self.G) == 0
 
+    # networkx graphs can't be for mixed
     def is_mixed_graph(self):
-        return self.edges.is_mixed()
+        return False
+        # return self.edges. ... is_mixed()
 
     def is_multigraph(self):
         return isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph))
@@ -428,88 +352,56 @@ class Graph(Atom):
     def is_loop_free(self):
         return not any(True for _ in nx.nodes_with_selfloops(self.G))
 
-    def add_vertices(self, new_vertices, new_vertex_properties):
-        vertices = self.vertices.clone()
-        vertices.extend(new_vertices, new_vertex_properties)
-        G = self.G.copy()
-        G.add_nodes_from(zip(new_vertices, new_vertex_properties))
-        return Graph(
-            vertices, self.edges, G, self.layout, self.options, self.highlights
-        )
+    def __str__(self):
+        return "-Graph-"
 
-    def delete_vertices(self, vertices_to_delete):
-        vertices_to_delete = set(vertices_to_delete)
+    def do_copy(self):
+        return Graph(self.G)
 
-        G = self.G.copy()
-        G.remove_nodes_from(vertices_to_delete)
+    def get_sort_key(self, pattern_sort=False):
+        if pattern_sort:
+            return super(Graph, self).get_sort_key(True)
+        else:
+            return hash(self)
 
-        vertices = self.vertices.clone()
-        vertices.delete(vertices_to_delete)
+    def default_format(self, evaluation, form):
+        return "-Graph-"
 
-        def edges_to_delete():
-            for edge in self.edges.expressions:
-                u, v = edge.leaves
-                if u in vertices_to_delete or v in vertices_to_delete:
-                    yield edge
+    def same(self, other):
+        return isinstance(other, Graph) and self.G == other.G
+        # FIXME
+        # self.properties == other.properties
+        # self.options == other.options
+        # self.highlights == other.highlights
 
-        edges = self.edges.clone()
-        edges.delete(edges_to_delete())
+    def to_python(self, *args, **kwargs):
+        return self.G
 
-        return Graph(vertices, edges, G, self.layout, self.options, self.highlights)
+    def __hash__(self):
+        return hash(("Graph", self.G))  # FIXME self.properties, ...
 
-    def add_edges(self, new_edges, new_edge_properties):
-        G = self.G.copy()
+    def atom_to_boxes(self, form, evaluation):
+        return Expression("GraphBox", self, form)
 
-        vertices = self.vertices.clone()
-        vertex_index = self.vertices.get_index()
+    def boxes_to_xml(self, **options):
+        # Figure out what to do here.
+        return "-Graph-XML-"
 
-        multigraph = self.is_multigraph()
-        directed = G.is_directed()
-
-        edges = self.edges.clone()
-        new_edges = list(_normalize_edges(new_edges))
-        edges.extend(new_edges, new_edge_properties)
-
-        def add_edge(u, v):
-            vertex_u, attr_dict_u = _parse_item(u)
-            vertex_v, attr_dict_v = _parse_item(v)
-
-            if not multigraph and G.has_edge(vertex_u, vertex_v):
-                raise _FullGraphRewrite
-
-            G.add_edge(vertex_u, vertex_v)
-
-            if vertex_u not in vertex_index:
-                vertices.extend([vertex_u], [attr_dict_u])
-            if vertex_v not in vertex_index:
-                vertices.extend([vertex_v], [attr_dict_v])
-
-        try:
-            for edge in new_edges:
-                if edge.has_form("DirectedEdge", 2):
-                    u, v = edge.leaves
-                    if directed:
-                        add_edge(u, v)
-                    else:
-                        raise _FullGraphRewrite
-                elif edge.has_form("UndirectedEdge", 2):
-                    u, v = edge.leaves
-                    if directed:
-                        add_edge(u, v)
-                        add_edge(v, u)
-                    else:
-                        add_edge(u, v)
-
-            return Graph(vertices, edges, G, self.layout, self.options, self.highlights)
-        except _FullGraphRewrite:
-            return _create_graph(new_edges, new_edge_properties, from_graph=G)
+    def get_property(self, item, name):
+        if item.get_head_name() in ("System`DirectedEdge", "System`UndirectedEdge"):
+            x = self.edges.get_property(item, name)
+        if x is None:
+            x = self.vertices.get_property(item, name)
+        return x
 
     def delete_edges(self, edges_to_delete):
         G = self.G.copy()
         directed = G.is_directed()
 
         edges_to_delete = list(_normalize_edges(edges_to_delete))
-        edges_to_delete = self.edges.filter(edges_to_delete)
+        # FIXME: edges_to_delete is needs to be a tuple. tuples
+        # are edges in networkx
+        edges_to_delete = [edge for edge in self.edges if edge in edges_to_delete]
 
         for edge in edges_to_delete:
             if edge.has_form("DirectedEdge", 2):
@@ -527,343 +419,7 @@ class Graph(Atom):
         edges = self.edges.clone()
         edges.delete(edges_to_delete)
 
-        return Graph(
-            self.vertices, edges, G, self.layout, self.options, self.highlights
-        )
-
-    def __str__(self):
-        return "-Graph-"
-
-    def with_highlight(self, highlights):
-        return Graph(
-            self.vertices, self.edges, self.G, self.layout, self.options, highlights
-        )
-
-    def do_copy(self):
-        return Graph(
-            self.vertices,
-            self.edges,
-            self.G,
-            self.layout,
-            self.options,
-            self.highlights,
-        )
-
-    def default_format(self, evaluation, form):
-        return "-Graph-"
-
-    def get_sort_key(self, pattern_sort=False):
-        if pattern_sort:
-            return super(Graph, self).get_sort_key(True)
-        else:
-            return hash(self)
-
-    def same(self, other):
-        return isinstance(other, Graph) and self.G == other.G
-        # FIXME
-        # self.properties == other.properties
-        # self.options == other.options
-        # self.highlights == other.highlights
-
-    def to_python(self, *args, **kwargs):
-        return self.G
-
-    def __hash__(self):
-        return hash(("Graph", self.G))  # FIXME self.properties, ...
-
-    def _styling(self, name, elements, parse, default_value):
-        expr = self.options.get(name)
-        if expr is None:
-            return lambda x: default_value
-
-        values = {}
-        if expr.has_form("List", None):
-            if all(leaf.has_form("Rule", 2) for leaf in expr.leaves):
-                for rule in expr.leaves:
-                    v, r = rule.leaves
-                    values[v] = parse(r) or default_value
-            else:
-                for v, r in zip(elements, expr.leaves):
-                    values[v] = parse(r) or default_value
-        else:
-            default_value = parse(expr) or default_value
-
-        return lambda x: values.get(x, default_value)
-
-    def _primitives(self, pos, vertices, edges, minimum_distance, evaluation):
-        highlights = self.highlights
-        default_radius = 0.1
-
-        vertex_size = self._styling(
-            "System`VertexSize", vertices, _vertex_size, default_radius
-        )
-
-        vertex_style = self._styling(
-            "System`VertexStyle", vertices, _vertex_style, None
-        )
-
-        edge_style = self._styling("System`EdgeStyle", edges, _edge_style, None)
-
-        if highlights:
-
-            def highlighted(exprs):
-                items = Expression("List", *exprs)
-                listspec = Expression("List", Integer(1))
-
-                matches = Expression("Replace", items, highlights, listspec).evaluate(
-                    evaluation
-                )
-                if matches.get_head_name() != "System`List":
-                    return
-                if len(matches.leaves) != len(exprs):
-                    return
-
-                for expr, m in zip(exprs, matches.leaves):
-                    if m.get_head_name() == "System`Missing":
-                        yield expr, None
-                    else:
-                        yield expr, m
-
-        else:
-
-            def highlighted(exprs):
-                for expr in exprs:
-                    yield expr, None
-
-        def edge_primitives():
-            yield Expression("AbsoluteThickness", 0.25)
-
-            def edge_ids():
-                vertex_index = self.vertices.get_index()
-                for edge in edges:
-                    v1, v2 = edge.leaves
-                    i1 = vertex_index[v1]
-                    i2 = vertex_index[v2]
-                    flipped = i2 < i1
-                    yield ((i2, i1) if flipped else (i1, i2)), flipped
-
-            def bends():
-                ids = list(edge_ids())
-                multiplicites = defaultdict(int)
-                for edge_id, _ in ids:
-                    multiplicites[edge_id] += 1
-                edge_numbers = {}
-                for edge_id, flipped in ids:
-                    m = multiplicites[edge_id]
-                    if m == 1:
-                        yield None
-                    else:
-                        i = edge_numbers.get(edge_id, 1)
-                        z = -1 + 2 * ((i - 1) / (m - 1))
-                        if flipped:
-                            z = -z
-                        yield z
-                        edge_numbers[edge_id] = i + 1
-
-            G = self.G
-
-            for (edge, style), properties, bend in zip(
-                highlighted(edges), self.edges.get_properties(), bends()
-            ):
-                if edge.get_head_name() == "System`DirectedEdge":
-                    yield Expression("Arrowheads", 0.03)
-                else:
-                    yield Expression("Arrowheads", 0)
-
-                v1, v2 = edge.leaves
-
-                if v1.same(v2):  # self-loop?
-                    x, y = pos[v1]
-                    r = vertex_size(v1) * minimum_distance
-
-                    # determine on which side to draw the loop. choose that side where we expect the least
-                    # number of intersections with other edges connected to this vertex.
-                    n_left_edges = 0
-                    n_right_edges = 0
-                    for v2 in G.neighbors(v1):
-                        nx, ny = pos[v2]
-                        if nx - x > 0:
-                            n_right_edges += 1
-                        else:
-                            n_left_edges += 1
-
-                    ly = 4.0 * r
-                    lx = -ly if n_left_edges <= n_right_edges else ly
-                    points = [
-                        Expression("List", x, y),
-                        Expression("List", x + lx, y - ly),
-                        Expression("List", x + lx, y + ly),
-                        Expression("List", x, y),
-                    ]
-
-                    arrow = Expression(
-                        "Arrow",
-                        Expression("BezierCurve", Expression("List", *points)),
-                        r,
-                    )
-                else:
-                    r1 = vertex_size(v1) * minimum_distance
-                    r2 = vertex_size(v2) * minimum_distance
-
-                    if bend is None:
-                        p1 = pos[v1]
-                        p2 = pos[v2]
-                        q1 = Expression("List", *p1)
-                        q2 = Expression("List", *p2)
-                        arrow = Expression(
-                            "Arrow",
-                            Expression("List", q1, q2),
-                            Expression("List", r1, r2),
-                        )
-                    else:
-                        x1, y1 = pos[v1]
-                        x2, y2 = pos[v2]
-
-                        dx = x2 - x1
-                        dy = y2 - y1
-                        d = sqrt(dx * dx + dy * dy)
-                        nx = -dy / d
-                        ny = dx / d
-
-                        z = 0.5 * minimum_distance * bend
-                        points = [
-                            Expression("List", x1, y1),
-                            Expression(
-                                "List",
-                                0.5 * (x1 + x2) + nx * z,
-                                0.5 * (y1 + y2) + ny * z,
-                            ),
-                            Expression("List", x2, y2),
-                        ]
-
-                        curve = Expression("BezierCurve", Expression("List", *points))
-                        arrow = Expression("Arrow", curve, Expression("List", r1, r2))
-
-                if style is None and properties is not None:
-                    style = properties.get("System`EdgeStyle")
-
-                if style is None:
-                    style = edge_style(edge)
-
-                if style is not None:
-                    arrow = Expression("Style", arrow, style)
-
-                yield arrow
-
-        def vertex_primitives():
-            for (v, style), properties in zip(
-                highlighted(vertices), self.vertices.get_properties()
-            ):
-                xy = pos.get(v)
-
-                x, y = xy
-                r = vertex_size(v) * minimum_distance
-
-                disk = Expression(
-                    "Disk", Expression("List", x, y), Expression("List", r, r)
-                )
-
-                if style is None and properties is not None:
-                    style = properties.get("System`VertexStyle")
-
-                if style is None:
-                    style = vertex_style(v)
-
-                if style is not None:
-                    yield Expression("Style", disk, style)
-                else:
-                    yield disk
-
-                # yield Expression('FontSize', Expression('Scaled', r))
-                # yield Expression('Text', v, Expression('List', x, y))
-
-        vertex_face = Expression("FaceForm", Expression("RGBColor", 0.8, 0.8, 0.9))
-        vertex_edge = Expression("EdgeForm", Expression("RGBColor", 0, 0, 0))
-
-        edge_expression = Expression(
-            "Style", Expression("List", *list(edge_primitives())), Expression("List")
-        )
-        vertex_expression = Expression(
-            "Style",
-            Expression("List", *list(vertex_primitives())),
-            Expression("List", vertex_face, vertex_edge),
-        )
-
-        return Expression("List", edge_expression, vertex_expression)
-
-    def _layout(self, evaluation):
-        G = self.G
-
-        components = list(nx.connected_components(G.to_undirected()))
-        if not components:  # empty graph?
-            return []
-        n_components = len(components)
-
-        if n_components == 1:
-            component_edges = [self.edges.expressions]
-        else:
-            vertex_component = {}
-            for i, component in enumerate(components):
-                for vertex in component:
-                    vertex_component[vertex] = i
-
-            component_edges = [[] for _ in range(n_components)]
-            for edge in self.edges.expressions:
-                component_edges[vertex_component[edge.leaves[0]]].append(edge)
-
-        warnings = set()
-
-        def warn(message):
-            if message not in warnings:
-                warnings.add(message)
-                evaluation.print_out(message)
-
-        def boxes(box):
-            minimum_distance = _default_minimum_distance
-            stored_pos = []
-
-            for i, (vertices, edges) in enumerate(zip(components, component_edges)):
-                if len(vertices) > 1:
-                    base_pos = _auto_layout(G.subgraph(vertices), warn)
-                else:
-                    base_pos = None
-
-                pos = _pos_into_box(vertices, base_pos, (0, 0), (1, 1))
-                stored_pos.append(pos)
-
-                minimum_distance = min(minimum_distance, _min_distance(edges, pos))
-
-            for i, (vertices, edges, pos) in enumerate(
-                zip(components, component_edges, stored_pos)
-            ):
-                pos = _move_pos(pos, *box(i, minimum_distance))
-
-                yield self._primitives(
-                    pos, vertices, edges, minimum_distance, evaluation
-                )
-
-        if n_components <= 3:
-            n = n_components
-        else:
-            n = int(ceil(sqrt(n_components)))
-
-        def grid(i, d):
-            x = i % n
-            y = (n - 1) - i // n
-            s = 1 + 1.1 * d
-            return x * s, y * s
-
-        return Expression("List", *list(boxes(grid)))
-
-    def atom_to_boxes(self, form, evaluation):
-        return Expression("GraphBox", self, form)
-
-    def get_property(self, item, name):
-        if item.get_head_name() in ("System`DirectedEdge", "System`UndirectedEdge"):
-            x = self.edges.get_property(item, name)
-        if x is None:
-            x = self.vertices.get_property(item, name)
-        return x
+        return Graph(G)
 
     def update_weights(self, evaluation):
         weights = None
@@ -887,34 +443,6 @@ class Graph(Atom):
                     weights = "WEIGHT"
 
         return weights
-
-    def coalesced_graph(self, evaluation):
-        if not isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph)):
-            return self.G, "WEIGHT"
-
-        new_edges = defaultdict(lambda: 0)
-        for u, v, w in self.G.edges.data("System`EdgeWeight", default=None):
-            if w is not None:
-                w = w.evaluate(evaluation).to_mpmath()
-            else:
-                w = 1
-            new_edges[(u, v)] += w
-
-        if self.G.is_directed():
-            new_graph = nx.DiGraph()
-        else:
-            new_graph = nx.Graph()
-
-        new_graph.add_edges_from(
-            ((u, v, {"WEIGHT": w}) for (u, v), w in new_edges.items())
-        )
-
-        return new_graph, "WEIGHT"
-
-    def sort_vertices(self, vertices):
-        # sort the given vertices in the graph's natural order
-        index = self.vertices.get_index()
-        return [y for _, y in sorted([(index[x], x) for x in vertices])]
 
 
 def _is_connected(G):
@@ -948,40 +476,21 @@ def _parse_item(x, attr_dict=None):
         return x, attr_dict
 
 
-def _graph_from_list(rules, options):
+def _graph_from_list(rules, options, new_vertices=None):
     if not rules:
-        return Graph(_Collection([]), _EdgeCollection([]), nx.Graph(), None, options)
+        return Graph(nx.Graph())
     else:
         new_edges, new_edge_properties = zip(*[_parse_item(x) for x in rules])
-        return _create_graph(new_edges, new_edge_properties, options)
+        return _create_graph(new_edges, new_edge_properties,
+                             options=options,
+                             new_vertices=new_vertices)
 
 
-def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
-    directed_edges = []
-    undirected_edges = []
+def _create_graph(new_edges, new_edge_properties, options, from_graph=None, new_vertices=None):
 
-    if from_graph is not None:
-        vertices, vertex_properties = from_graph.vertices.data()
-        edges, edge_properties = from_graph.edges.data()
-
-        for edge, attr_dict in zip(edges, edge_properties):
-            u, v = edge.leaves
-            if edge.get_head_name() == "System`DirectedEdge":
-                directed_edges.append((u, v, attr_dict))
-            else:
-                undirected_edges.append((u, v, attr_dict))
-
-        multigraph = [from_graph.is_multigraph()]
-    else:
-        vertices = []
-        vertex_properties = []
-        edges = []
-        edge_properties = []
-
-        multigraph = [False]
-
-    known_vertices = set(vertices)
-    known_edges = set(edges)
+    known_vertices = set()
+    vertices = []
+    vertex_properties = []
 
     def add_vertex(x, attr_dict=None):
         if x.has_form("Property", 2):
@@ -993,6 +502,36 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
             vertices.append(x)
             vertex_properties.append(attr_dict)
         return x
+
+    directed_edges = []
+    undirected_edges = []
+
+    if new_vertices is not None:
+        vertices = [add_vertex(v) for v in new_vertices]
+
+    if from_graph is not None:
+        old_vertices, vertex_properties = from_graph.vertices.data()
+        vertices += old_vertices
+        edges, edge_properties = from_graph.edges.data()
+
+        for edge, attr_dict in zip(edges, edge_properties):
+            u, v = edge.leaves
+            if edge.get_head_name() == "System`DirectedEdge":
+                directed_edges.append((u, v, attr_dict))
+            else:
+                undirected_edges.append((u, v, attr_dict))
+
+        multigraph = [from_graph.is_multigraph()]
+    else:
+        edges = []
+        edge_properties = []
+
+        multigraph = [False]
+
+    known_edges = set(edges)
+    # It is simpler to just recompute this than change the above to work
+    # incrementally
+    known_vertices = set(vertices)
 
     def track_edges(*edges):
         if multigraph[0]:
@@ -1034,6 +573,19 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
             edges_container = undirected_edges
             head = undirected_edge_head
             track_edges((u, v), (v, u))
+        elif name == "PyMathics`Property":
+            for prop in edge.leaves:
+                prop_str = str(prop.head)
+                if prop_str in ("System`Rule", "System`DirectedEdge"):
+                    edges_container = directed_edges
+                    head = directed_edge_head
+                    track_edges((u, v))
+                elif prop_str == "System`UndirectedEdge":
+                    edges_container = undirected_edges
+                    head = undirected_edge_head
+                else:
+                    pass
+            pass
         else:
             raise _GraphParseError
 
@@ -1047,15 +599,28 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
 
     try:
 
-        def full_new_edge_properties():
+        def full_new_edge_properties(new_edge_style):
             for i, (attr_dict, w) in enumerate(zip(new_edge_properties, edge_weights)):
                 attr_dict = {} if attr_dict is None else attr_dict.copy()
                 attr_dict["System`EdgeWeight"] = w
                 yield attr_dict
+            # FIXME: figure out what to do here. Color is a mess.
+            # for i, (attr_dict, s) in enumerate(zip(new_edge_style, new_edge_style)):
+            #     attr_dict = {} if attr_dict is None else attr_dict.copy()
+            #     attr_dict["System`EdgeStyle"] = s
+            #     yield attr_dict
             for attr_dict in new_edge_properties[len(edge_weights) :]:
                 yield attr_dict
 
-        for edge, attr_dict in zip(new_edges, full_new_edge_properties()):
+        if "System`EdgeStyle" in options:
+            # FIXME: Figure out what to do here:
+            # Color is a f-ing mess.
+            # edge_options = options["System`EdgeStyle"].to_python()
+            edge_options = []
+        else:
+            edge_options = []
+        edge_properties = list(full_new_edge_properties(edge_options))
+        for edge, attr_dict in zip(new_edges, edge_properties):
             parse_edge(edge, attr_dict)
     except _GraphParseError:
         return
@@ -1063,9 +628,17 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
     empty_dict = {}
     if directed_edges:
         G = nx.MultiDiGraph() if multigraph[0] else nx.DiGraph()
+        nodes_seen = set()
         for u, v, attr_dict in directed_edges:
             attr_dict = attr_dict or empty_dict
             G.add_edge(u, v, **attr_dict)
+            nodes_seen.add(u)
+            nodes_seen.add(v)
+
+        unseen_vertices = set(vertices) - nodes_seen
+        for v in unseen_vertices:
+            G.add_node(v)
+
         for u, v, attr_dict in undirected_edges:
             attr_dict = attr_dict or empty_dict
             G.add_edge(u, v, **attr_dict)
@@ -1083,9 +656,10 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None):
         n_undirected=len(undirected_edges),
     )
 
-    return Graph(
-        _Collection(vertices, vertex_properties), edge_collection, G, None, options
-    )
+    G.vertex_labeling = options["System`VertexLabeling"]
+    g = Graph(G)
+    G.title = g.title = options["System`PlotLabel"]
+    return g
 
 
 class Property(Builtin):
@@ -1147,14 +721,14 @@ class GraphAtom(AtomBuiltin):
     >> Graph[{1->2, 2->3, 3->1}]
      = -Graph-
 
-    >> Graph[{1->2, 2->3, 3->1}, EdgeStyle -> {Red, Blue, Green}]
-     = -Graph-
+    #>> Graph[{1->2, 2->3, 3->1}, EdgeStyle -> {Red, Blue, Green}]
+    # = -Graph-
 
     >> Graph[{1->2, Property[2->3, EdgeStyle -> Thick], 3->1}]
      = -Graph-
 
-    >> Graph[{1->2, 2->3, 3->1}, VertexStyle -> {1 -> Green, 3 -> Blue}]
-     = -Graph-
+    #>> Graph[{1->2, 2->3, 3->1}, VertexStyle -> {1 -> Green, 3 -> Blue}]
+    #= -Graph-
 
     >> Graph[x]
      = Graph[x]
@@ -1177,16 +751,15 @@ class GraphAtom(AtomBuiltin):
 
     requires = ("networkx",)
 
-    options = {
-        "VertexSize": "{}",
-        "VertexStyle": "{}",
-        "EdgeStyle": "{}",
-        "DirectedEdges": "True",
-    }
+    options = DEFAULT_GRAPH_OPTIONS
 
     def apply(self, graph, evaluation, options):
         "Graph[graph_List, OptionsPattern[%(name)s]]"
         return _graph_from_list(graph.leaves, options)
+
+    def apply_1(self, vertices, edges, evaluation, options):
+        "Graph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
+        return _graph_from_list(edges.leaves, options=options, new_vertices=vertices.leaves)
 
 
 class PathGraph(_NetworkXBuiltin):
@@ -1255,7 +828,7 @@ class PathGraphQ(_NetworkXBuiltin):
                 connected = nx.is_connected(G)
 
             if connected:
-                is_path = all(d <= 2 for _, d in G.degree(graph.vertices.expressions))
+                is_path = all(d <= 2 for _, d in G.degree(graph.vertices))
             else:
                 is_path = False
 
@@ -1707,7 +1280,7 @@ class EdgeCount(_PatternCount):
     """
 
     def _items(self, graph):
-        return graph.edges.expressions
+        return graph.G.edges
 
 
 class EdgeList(_PatternList):
@@ -2260,61 +1833,11 @@ class GraphDistance(_NetworkXBuiltin):
                 return Expression("DirectedInfinity", 1)
 
 
-class CompleteGraph(_NetworkXBuiltin):
-    """
-    >> CompleteGraph[8]
-     = -Graph-
-
-    #> CompleteGraph[0]
-     : Expected a positive integer at position 1 in CompleteGraph[0].
-     = CompleteGraph[0]
-    """
-
-    messages = {
-        "ilsmp": "Expected a positive integer at position 1 in ``.",
-    }
-
-    def apply(self, n, expression, evaluation, options):
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        py_n = n.get_int_value()
-
-        if py_n < 1:
-            evaluation.message(self.get_name(), "ilsmp", expression)
-            return
-
-        vertices = [Integer(i) for i in range(py_n)]
-        edges = [
-            Expression("UndirectedEdge", Integer(e1), Integer(e2))
-            for e1, e2, in permutations(range(py_n), 2)
-        ]
-
-        G = nx.Graph()
-        G.add_nodes_from(vertices)
-        G.add_edges_from(e.leaves for e in edges)
-
-        return Graph(
-            _Collection(vertices),
-            _EdgeCollection(edges, n_undirected=len(edges)),
-            G,
-            _circular_layout,
-            options,
-        )
-
-    def apply_multipartite(self, n, evaluation, options):
-        "%(name)s[n_List, OptionsPattern[%(name)s]]"
-        if all(isinstance(i, Integer) for i in n.leaves):
-            return Graph(
-                nx.complete_multipartite_graph(*[i.get_int_value() for i in n.leaves])
-            )
-
-
 def _convert_networkx_graph(G, options):
     mapping = dict((v, Integer(i)) for i, v in enumerate(G.nodes))
     G = nx.relabel_nodes(G, mapping)
     edges = [Expression("System`UndirectedEdge", u, v) for u, v in G.edges]
     return Graph(
-        _Collection(G.nodes()),
-        _EdgeCollection(edges, n_undirected=len(edges)),
         G,
         None,
         options,

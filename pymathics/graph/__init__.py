@@ -6,6 +6,8 @@ graphs.
 
 
 from pymathics.graph.__main__ import *
+from pymathics.graph.tree import *
+from pymathics.graph.graph_generators import *
 from pymathics.graph.version import __version__
 
 pymathics_version_data = {

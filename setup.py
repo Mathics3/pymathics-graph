@@ -20,10 +20,11 @@ setup(
     name="pymathics-graph",
     version=__version__,
     packages=find_namespace_packages(include=["pymathics.*"]),
-    install_requires=["mathics>=1.0", "networkx", "pydot"],
+    install_requires=["Mathics3>=1.1.0", "networkx", "pydot", "matplotlib"],
     # don't pack Mathics in egg because of media files, etc.
     zip_safe=False,
     maintainer="Mathics Group",
+    long_description_content_type="text/x-rst",
     # metadata for upload to PyPI
     classifiers=[
         "Intended Audience :: Developers",
