@@ -6,7 +6,7 @@ from pymathics.graph.__main__ import (
 
 from pymathics.graph.tree import DEFAULT_TREE_OPTIONS
 
-from mathics.core.expression import Integer, String
+from mathics.core.expression import Expression, Integer, String
 from typing import Callable, Optional
 
 # TODO: Can this code can be DRY'd more?
@@ -215,6 +215,21 @@ class CompleteGraph(_NetworkXBuiltin):
             )
 
 
+class CycleGraph(_NetworkXBuiltin):
+    """<dl>
+        <dt>'CycleGraph[$n$]'
+        <dd>Returns the cycle graph with $n$ vertices $C_n$.
+      </dl>
+
+    >> CycleGraph[3, PlotLabel -> "C_i"]
+     = -Graph-
+    """
+
+    def apply(self, n, expression, evaluation, options):
+        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
+        return hkn_harary_apply(self, Integer(2), n, expression, evaluation, options)
+
+
 class FullRAryTree(_NetworkXBuiltin):
     """<dl>
       <dt>'FullRAryTree[$r$, $n$]'
@@ -292,11 +307,33 @@ class GraphAtlas(_NetworkXBuiltin):
         g.n = n
         return g
 
+def hkn_harary_apply(self, k, n, expression, evaluation, options):
+    py_k = k.get_int_value()
+
+    if py_k < 0:
+        evaluation.message(self.get_name(), "ilsmp", expression)
+        return
+
+    py_n = n.get_int_value()
+    if py_n < 0:
+        evaluation.message(self.get_name(), "ilsmp2", expression)
+        return
+
+    from pymathics.graph.harary import hkn_harary_graph
+
+    args = (py_k, py_n)
+    g = graph_helper(hkn_harary_graph, options, False, "circular", None, *args)
+    if not g:
+        return None
+    g.k = py_k
+    g.n = py_n
+    return g
+
 
 class HknHararyGraph(_NetworkXBuiltin):
     """<dl>
-      <dt>'HmnHararyGraph[$k$, $n$]'
-      <dd>Returns the Harary graph with given node connectivity and node number.
+        <dt>'HmnHararyGraph[$k$, $n$]'
+        <dd>Returns the Harary graph with given node connectivity and node number.
 
       This second generator gives the Harary graph that minimizes the
       number of edges in the graph with given node connectivity and
@@ -317,26 +354,7 @@ class HknHararyGraph(_NetworkXBuiltin):
 
     def apply(self, k, n, expression, evaluation, options):
         "%(name)s[k_Integer, n_Integer, OptionsPattern[%(name)s]]"
-        py_k = k.get_int_value()
-
-        if py_k < 0:
-            evaluation.message(self.get_name(), "ilsmp", expression)
-            return
-
-        py_n = n.get_int_value()
-        if py_n < 0:
-            evaluation.message(self.get_name(), "ilsmp2", expression)
-            return
-
-        from pymathics.graph.harary import hkn_harary_graph
-
-        args = (py_k, py_n)
-        g = graph_helper(hkn_harary_graph, options, False, "circular", None, *args)
-        if not g:
-            return None
-        g.k = py_k
-        g.n = py_n
-        return g
+        return hkn_harary_apply(self, k, n, expression, evaluation, options)
 
 
 class HmnHararyGraph(_NetworkXBuiltin):
