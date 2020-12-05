@@ -1721,10 +1721,10 @@ class VertexDegree(_Centrality):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
 
         def degrees(graph):
-            degrees = dict(list(graph.G.degree(graph.vertices.expressions)))
+            degrees = dict(list(graph.G.degree(graph.vertices)))
             return Expression(
                 "List",
-                *[Integer(degrees.get(v, 0)) for v in graph.vertices.expressions]
+                *[Integer(degrees.get(v, 0)) for v in graph.vertices]
             )
 
         return self._evaluate_atom(graph, options, degrees)
