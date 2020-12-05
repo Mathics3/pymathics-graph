@@ -31,9 +31,7 @@ def graph_helper(
     except MemoryError:
         evaluation.message(self.get_name(), "mem", expression)
         return None
-    G.graph_layout = options["System`GraphLayout"].get_string_value() or String(
-        graph_layout
-    )
+    G.graph_layout = options["System`GraphLayout"].get_string_value() or graph_layout
     g = Graph(G)
     G.vertex_labels = g.vertex_labels = options["System`VertexLabels"]
 
@@ -169,6 +167,21 @@ class BinomialTree(_NetworkXBuiltin):
         return g
 
 
+def complete_graph_apply(self, n, expression, evaluation, options):
+        py_n = n.get_int_value()
+
+        if py_n < 1:
+            evaluation.message(self.get_name(), "ilsmp", expression)
+            return
+
+        args = (py_n,)
+        g = graph_helper(nx.complete_graph, options, False, "circular", None, *args)
+        if not g:
+            return None
+
+        g.G.n = n
+        return g
+
 class CompleteGraph(_NetworkXBuiltin):
     """
     <dl>
@@ -190,19 +203,7 @@ class CompleteGraph(_NetworkXBuiltin):
 
     def apply(self, n, expression, evaluation, options):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        py_n = n.get_int_value()
-
-        if py_n < 1:
-            evaluation.message(self.get_name(), "ilsmp", expression)
-            return
-
-        args = (py_n,)
-        g = graph_helper(nx.complete_graph, options, False, "circular", None, *args)
-        if not g:
-            return None
-
-        g.G.n = n
-        return g
+        return complete_graph_apply(self, n, expression, evaluation, options)
 
     def apply_multipartite(self, n, evaluation, options):
         "%(name)s[n_List, OptionsPattern[%(name)s]]"
@@ -262,8 +263,11 @@ class CycleGraph(_NetworkXBuiltin):
 
     def apply(self, n, expression, evaluation, options):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        return hkn_harary_apply(self, Integer(2), n, expression, evaluation, options)
-
+        n_int = n.get_int_value()
+        if n_int < 3:
+            return complete_graph_apply(self, n, expression, evaluation, options)
+        else:
+            return hkn_harary_apply(self, Integer(2), n, expression, evaluation, options)
 
 def f_r_t_apply(self, r, n, expression, evaluation, options):
     py_r = r.get_int_value()

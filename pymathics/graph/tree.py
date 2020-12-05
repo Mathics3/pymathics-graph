@@ -30,7 +30,7 @@ class TreeGraphAtom(AtomBuiltin):
         if not nx.is_tree(g.G):
             evaluation.message(self.get_name(), "notree")
 
-        g.G.graph_layout = String("tree")
+        g.G.graph_layout = "tree"
         # Compute/check/set for root?
         return g
 
@@ -45,7 +45,7 @@ class TreeGraphAtom(AtomBuiltin):
         if not nx.is_tree(g.G):
             evaluation.message(self.get_name(), "notree")
 
-        g.G.graph_layout = String("tree")
+        g.G.graph_layout = "tree"
         # Compute/check/set for root?
         return g
 
