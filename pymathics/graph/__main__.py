@@ -23,13 +23,14 @@ from mathics.builtin.patterns import Matcher
 from inspect import isgenerator
 
 DEFAULT_GRAPH_OPTIONS = {
-    "VertexSize": "{}",
-    "VertexStyle": "{}",
+    "DirectedEdges": "False",
     "EdgeStyle": "{}",
     "EdgeWeight": "{}",
     "GraphLayout": "{}",
-    "VertexLabels": "False",
     "PlotLabel": "Null",
+    "VertexLabels": "False",
+    "VertexSize": "{}",
+    "VertexStyle": "{}",
 }
 
 import networkx as nx
@@ -656,8 +657,8 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None, new_
         n_undirected=len(undirected_edges),
     )
 
-    G.vertex_labels = options["System`VertexLabels"]
     g = Graph(G)
+    g.vertex_labels = G.vertex_labels = options["System`VertexLabels"]
     G.title = g.title = options["System`PlotLabel"]
     return g
 

@@ -34,8 +34,8 @@ def graph_helper(
     G.graph_layout = options["System`GraphLayout"].get_string_value() or String(
         graph_layout
     )
-    G.vertex_labels = options["System`VertexLabels"]
     g = Graph(G)
+    G.vertex_labels = g.vertex_labels = options["System`VertexLabels"]
 
     if root is not None:
         G.root = g.root = root
