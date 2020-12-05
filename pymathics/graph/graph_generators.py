@@ -34,7 +34,7 @@ def graph_helper(
     G.graph_layout = options["System`GraphLayout"].get_string_value() or String(
         graph_layout
     )
-    G.vertex_labeling = options["System`VertexLabeling"]
+    G.vertex_labels = options["System`VertexLabels"]
     g = Graph(G)
 
     if root is not None:
@@ -196,15 +196,12 @@ class CompleteGraph(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        G = nx.complete_graph(py_n)
+        args = (py_n,)
+        g = graph_helper(nx.complete_graph, options, False, "circular", None, *args)
+        if not g:
+            return None
 
-        options["GraphLayout"] = options[
-            "System`GraphLayout"
-        ].get_string_value() or String("circular")
-        options["VertexLabeling"] = options["System`VertexLabeling"]
-        g = Graph(G, options=options)
-        g.n = n
-        G.title = g.title = options["System`PlotLabel"]
+        g.G.n = n
         return g
 
     def apply_multipartite(self, n, evaluation, options):

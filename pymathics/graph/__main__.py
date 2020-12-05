@@ -28,7 +28,7 @@ DEFAULT_GRAPH_OPTIONS = {
     "EdgeStyle": "{}",
     "EdgeWeight": "{}",
     "GraphLayout": "{}",
-    "VertexLabeling": "False",
+    "VertexLabels": "False",
     "PlotLabel": "Null",
 }
 
@@ -656,7 +656,7 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None, new_
         n_undirected=len(undirected_edges),
     )
 
-    G.vertex_labeling = options["System`VertexLabeling"]
+    G.vertex_labels = options["System`VertexLabels"]
     g = Graph(G)
     G.title = g.title = options["System`PlotLabel"]
     return g
