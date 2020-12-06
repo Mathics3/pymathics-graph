@@ -5,10 +5,12 @@ Algorithms on Graphs.
 networkx does all the heavy lifting.
 """
 
-from mathics.core.expression import Expression
+from mathics.core.expression import Expression, Symbol
 
 from pymathics.graph.__main__ import (
+    DEFAULT_GRAPH_OPTIONS,
     _NetworkXBuiltin,
+    _create_graph,
     nx,
 )
 
@@ -87,3 +89,25 @@ class GraphDistance(_NetworkXBuiltin):
                 )
             except nx.exception.NetworkXNoPath:
                 return Expression("DirectedInfinity", 1)
+
+class FindSpanningTree(_NetworkXBuiltin):
+    """
+    <dl>
+      <dt>'FindSpanningTree[$g$]'
+      <dd>finds a spanning tree of the graph $g$.
+    </dl>
+
+    >> FindSpanningTree[CycleGraph[4]]
+    """
+
+    options = DEFAULT_GRAPH_OPTIONS
+    def apply(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            weight = graph.update_weights(evaluation)
+            edge_type = "DirectedEdge" if graph.G.is_directed() else "UndirectedEdge"
+            # FIXME: put in edge to Graph conversion function?
+            edges = [Expression("UndirectedEdge", u, v) for u, v in nx.minimum_spanning_edges(graph.G, data=False)]
+            g = _create_graph(edges, [None] * len(edges), options)
+            return g
