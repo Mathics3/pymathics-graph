@@ -5,10 +5,11 @@ graphs.
 """
 
 
+from pymathics.graph.version import __version__
 from pymathics.graph.__main__ import *
 from pymathics.graph.tree import *
-from pymathics.graph.graph_generators import *
-from pymathics.graph.version import __version__
+from pymathics.graph.generators import *
+from pymathics.graph.algorithms import *
 
 pymathics_version_data = {
     "author": "The Mathics Team",

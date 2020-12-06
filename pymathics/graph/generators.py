@@ -1,7 +1,19 @@
+# -*- coding: utf-8 -*-
+"""
+Routines for generating classes of Graphs.
+
+networkx does all the heavy lifting.
+"""
+
+from mathics.builtin.randomnumbers import RandomEnv
+
 from pymathics.graph.__main__ import (
     Graph,
     WL_MARKER_TO_MATPLOTLIB,
     _NetworkXBuiltin,
+    _convert_networkx_graph,
+    has_directed_option,
+    _process_graph_options,
     nx,
 )
 
@@ -22,7 +34,7 @@ def graph_helper(
     *args,
     **kwargs
 ) -> Optional[Callable]:
-    should_digraph = can_digraph and options["System`DirectedEdges"].to_python()
+    should_digraph = can_digraph and has_directed_option(options)
     try:
         G = (
             graph_generator_func(*args, create_using=nx.DiGraph, **kwargs)
@@ -34,13 +46,10 @@ def graph_helper(
         return None
     G.graph_layout = options["System`GraphLayout"].get_string_value() or graph_layout
     g = Graph(G)
-    G.vertex_labels = g.vertex_labels = options["System`VertexLabels"].get_string_value()
-    shape = options["System`VertexShape"].get_string_value()
-    G.node_shape = g.node_shape = WL_MARKER_TO_MATPLOTLIB.get(shape, shape)
+    _process_graph_options(g, options)
 
     if root is not None:
         G.root = g.root = root
-    G.title = g.title = options["System`PlotLabel"]
     return g
 
 
@@ -479,6 +488,39 @@ class KaryTree(_NetworkXBuiltin):
     def apply_2(self, n, k, expression, evaluation, options):
         "%(name)s[n_Integer, k_Integer, OptionsPattern[%(name)s]]"
         return f_r_t_apply(self, k, n, expression, evaluation, options)
+
+
+class RandomGraph(_NetworkXBuiltin):
+    """
+    <dl>
+      <dt>'RandomGraph[{$n$, $m$}]'
+      <dd>Returns a pseudorandom graph with $n$ vertices and $m$ edges.
+
+      <dt>'RandomGraph[$n$, $m$, $k$]'
+      <dd>Returns list of $k$ RandomGraph[{$n$, $m$}].
+    </dl>
+    """
+    def _generate(self, n, m, k, evaluation, options):
+        py_n = n.get_int_value()
+        py_m = m.get_int_value()
+        py_k = k.get_int_value()
+        is_directed = has_directed_option(options)
+
+        with RandomEnv(evaluation) as rand:
+            for _ in range(py_k):
+                # seed = rand.randint(0, 2 ** 63 - 1) # 2**63 is too large
+                G = nx.gnm_random_graph(py_n, py_m, directed=is_directed)
+                yield _convert_networkx_graph(G, options)
+
+    def apply_nm(self, n, m, expression, evaluation, options):
+        "%(name)s[{n_Integer, m_Integer}, OptionsPattern[%(name)s]]"
+        g = list(self._generate(n, m, Integer(1), evaluation, options))[0]
+        _process_graph_options(g, options)
+        return g
+
+    def apply_nmk(self, n, m, k, expression, evaluation, options):
+        "%(name)s[{n_Integer, m_Integer}, k_Integer, OptionsPattern[%(name)s]]"
+        return Expression("List", *self._generate(n, m, k, evaluation, options))
 
 
 class RandomTree(_NetworkXBuiltin):

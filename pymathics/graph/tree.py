@@ -51,8 +51,16 @@ class TreeGraphAtom(AtomBuiltin):
 
 
 class TreeGraph(Graph):
+    options = DEFAULT_TREE_OPTIONS
+
+    messages = {
+        "notree": "Graph is not a tree.",
+    }
+
     def __init__(self, G, **kwargs):
         super(Graph, self).__init__()
+        if not nx.is_tree(G):
+            evaluation.message(self.get_name(), "notree")
         self.G = G
 
 

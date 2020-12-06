@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """
-Graphs
+Core routines for working with Graphs.
+A Graph is a tuple of a set of Nodes and Edges.
+
+networkx does all the heavy lifting.
 """
 
 # uses networkx
 
 from mathics.builtin.base import Builtin, AtomBuiltin
 from mathics.builtin.graphics import GraphicsBox
-from mathics.builtin.randomnumbers import RandomEnv
 from mathics.core.expression import (
     Atom,
     Expression,
@@ -16,7 +18,6 @@ from mathics.core.expression import (
     Real,
     String,
     Symbol,
-    from_python,
 )
 from mathics.builtin.patterns import Matcher
 
@@ -24,8 +25,8 @@ from inspect import isgenerator
 
 WL_MARKER_TO_MATPLOTLIB = {
     "Circle": "o",
-    "Diamond" :"D",
-    "Square" :"s",
+    "Diamond": "D",
+    "Square": "s",
     "Star": "*",
     "Pentagon": "p",
     "Octagon": "8",
@@ -42,11 +43,41 @@ DEFAULT_GRAPH_OPTIONS = {
     "PlotLabel": "Null",
     "VertexLabels": "False",
     "VertexSize": "{}",
-    "VertexShape": "o",
+    "VertexShape": '"Circle"',
     "VertexStyle": "{}",
 }
 
 import networkx as nx
+
+
+def has_directed_option(options: dict) -> bool:
+    return options.get("System`DirectedEdges", False).to_python()
+
+def _process_graph_options(g, options: dict) -> None:
+    """
+    Handle common graph-related options like VertexLabels, PlotLabel, VertexShape, etc.
+    """
+    # FIXME: for now we are adding both to both g and g.G.
+    # g is where it is used in format. However we should wrap this as our object.
+    # Access in G which might be better, currently isn't used.
+    g.G.vertex_labels = g.vertex_labels = (
+        options["System`VertexLabels"].to_python()
+        if "System`VertexLabels" in options
+        else False
+    )
+    shape = (
+        options["System`VertexShape"].get_string_value()
+        if "System`VertexShape" in options
+        else "Circle"
+    )
+
+    g.G.node_shape = g.node_shape = WL_MARKER_TO_MATPLOTLIB.get(shape, shape)
+    g.G.title = g.title = (
+        options["System`PlotLabel"].get_string_value()
+        if "System`PlotLabel" in options
+        else None
+    )
+
 
 def _circular_layout(G):
     return nx.drawing.circular_layout(G, scale=1.5)
@@ -495,12 +526,14 @@ def _graph_from_list(rules, options, new_vertices=None):
         return Graph(nx.Graph())
     else:
         new_edges, new_edge_properties = zip(*[_parse_item(x) for x in rules])
-        return _create_graph(new_edges, new_edge_properties,
-                             options=options,
-                             new_vertices=new_vertices)
+        return _create_graph(
+            new_edges, new_edge_properties, options=options, new_vertices=new_vertices
+        )
 
 
-def _create_graph(new_edges, new_edge_properties, options, from_graph=None, new_vertices=None):
+def _create_graph(
+    new_edges, new_edge_properties, options, from_graph=None, new_vertices=None
+):
 
     known_vertices = set()
     vertices = []
@@ -671,10 +704,7 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None, new_
     )
 
     g = Graph(G)
-    g.vertex_labels = G.vertex_labels = options["System`VertexLabels"]
-    G.title = g.title = options["System`PlotLabel"]
-    shape = options["System`VertexShape"].get_string_value()
-    G.node_shape = g.vertex_shape = WL_MARKER_TO_MATPLOTLIB.get(shape, shape)
+    _process_graph_options(g, options)
     return g
 
 
@@ -775,7 +805,9 @@ class GraphAtom(AtomBuiltin):
 
     def apply_1(self, vertices, edges, evaluation, options):
         "Graph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
-        return _graph_from_list(edges.leaves, options=options, new_vertices=vertices.leaves)
+        return _graph_from_list(
+            edges.leaves, options=options, new_vertices=vertices.leaves
+        )
 
 
 class PathGraph(_NetworkXBuiltin):
@@ -1739,8 +1771,7 @@ class VertexDegree(_Centrality):
         def degrees(graph):
             degrees = dict(list(graph.G.degree(graph.vertices)))
             return Expression(
-                "List",
-                *[Integer(degrees.get(v, 0)) for v in graph.vertices]
+                "List", *[Integer(degrees.get(v, 0)) for v in graph.vertices]
             )
 
         return self._evaluate_atom(graph, options, degrees)
@@ -1793,92 +1824,14 @@ class FindShortestPath(_NetworkXBuiltin):
                 return Expression("List")
 
 
-class GraphDistance(_NetworkXBuiltin):
-    """
-    >> GraphDistance[{1 <-> 2, 2 <-> 3, 3 <-> 4, 2 <-> 4, 4 -> 5}, 1, 5]
-     = 3
-
-    >> GraphDistance[{1 <-> 2, 2 <-> 3, 3 <-> 4, 4 -> 2, 4 -> 5}, 1, 5]
-     = 4
-
-    >> GraphDistance[{1 <-> 2, 2 <-> 3, 4 -> 3, 4 -> 2, 4 -> 5}, 1, 5]
-     = Infinity
-
-    >> GraphDistance[{1 <-> 2, 2 <-> 3, 3 <-> 4, 2 <-> 4, 4 -> 5}, 3]
-     = {2, 1, 0, 1, 2}
-
-    >> GraphDistance[{1 <-> 2, 3 <-> 4}, 3]
-     = {Infinity, Infinity, 0, 1}
-
-    #> GraphDistance[{}, 1, 1]
-     : The vertex at position 2 in GraphDistance[{}, 1, 1] does not belong to the graph at position 1.
-     = GraphDistance[{}, 1, 1]
-    #> GraphDistance[{1 -> 2}, 3, 4]
-     : The vertex at position 2 in GraphDistance[{1 -> 2}, 3, 4] does not belong to the graph at position 1.
-     = GraphDistance[{1 -> 2}, 3, 4]
-    """
-
-    def apply_s(self, graph, s, expression, evaluation, options):
-        "%(name)s[graph_, s_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            weight = graph.update_weights(evaluation)
-            d = nx.shortest_path_length(graph.G, source=s, weight=weight)
-            inf = Expression("DirectedInfinity", 1)
-            return Expression(
-                "List", *[d.get(v, inf) for v in graph.vertices.expressions]
-            )
-
-    def apply_s_t(self, graph, s, t, expression, evaluation, options):
-        "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if not graph:
-            return
-        G = graph.G
-        if not G.has_node(s):
-            self._not_a_vertex(expression, 2, evaluation)
-        elif not G.has_node(t):
-            self._not_a_vertex(expression, 3, evaluation)
-        else:
-            try:
-                weight = graph.update_weights(evaluation)
-                return from_python(
-                    nx.shortest_path_length(graph.G, source=s, target=t, weight=weight)
-                )
-            except nx.exception.NetworkXNoPath:
-                return Expression("DirectedInfinity", 1)
-
-
 def _convert_networkx_graph(G, options):
     mapping = dict((v, Integer(i)) for i, v in enumerate(G.nodes))
     G = nx.relabel_nodes(G, mapping)
     edges = [Expression("System`UndirectedEdge", u, v) for u, v in G.edges]
     return Graph(
         G,
-        None,
-        options,
+        **options,
     )
-
-
-class RandomGraph(_NetworkXBuiltin):
-    def _generate(self, n, m, k, evaluation, options):
-        py_n = n.get_int_value()
-        py_m = m.get_int_value()
-        py_k = k.get_int_value()
-
-        with RandomEnv(evaluation) as rand:
-            for _ in range(py_k):
-                seed = rand.randint(0, 2 ** 63 - 1)
-                G = nx.gnm_random_graph(py_n, py_m, seed=seed)
-                yield _convert_networkx_graph(G, options)
-
-    def apply_nm(self, n, m, expression, evaluation, options):
-        "%(name)s[{n_Integer, m_Integer}, OptionsPattern[%(name)s]]"
-        return self._generate(n, m, Integer(1), evaluation, options)[0]
-
-    def apply_nm(self, n, m, k, expression, evaluation, options):
-        "%(name)s[{n_Integer, m_Integer}, k_Integer, OptionsPattern[%(name)s]]"
-        return Expression("List", *self._generate(n, m, k, evaluation, options))
 
 
 class VertexAdd(_NetworkXBuiltin):
