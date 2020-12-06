@@ -12,6 +12,7 @@ from pymathics.graph.__main__ import (
     WL_MARKER_TO_MATPLOTLIB,
     _NetworkXBuiltin,
     _convert_networkx_graph,
+    _graph_from_list,
     has_directed_option,
     _process_graph_options,
     nx,
@@ -180,19 +181,20 @@ class BinomialTree(_NetworkXBuiltin):
 
 
 def complete_graph_apply(self, n, expression, evaluation, options):
-        py_n = n.get_int_value()
+    py_n = n.get_int_value()
 
-        if py_n < 1:
-            evaluation.message(self.get_name(), "ilsmp", expression)
-            return
+    if py_n < 1:
+        evaluation.message(self.get_name(), "ilsmp", expression)
+        return
 
-        args = (py_n,)
-        g = graph_helper(nx.complete_graph, options, False, "circular", None, *args)
-        if not g:
-            return None
+    args = (py_n,)
+    g = graph_helper(nx.complete_graph, options, False, "circular", None, *args)
+    if not g:
+        return None
 
-        g.G.n = n
-        return g
+    g.G.n = n
+    return g
+
 
 class CompleteGraph(_NetworkXBuiltin):
     """
@@ -224,6 +226,7 @@ class CompleteGraph(_NetworkXBuiltin):
                 nx.complete_multipartite_graph(*[i.get_int_value() for i in n.leaves])
             )
 
+
 class CompleteKaryTree(_NetworkXBuiltin):
     """<dl>
       <dt>'CompleteKaryTree[$n$, $k$]'
@@ -252,7 +255,6 @@ class CompleteKaryTree(_NetworkXBuiltin):
         new_n_int = int(((k_int ** n_int) - 1) / (k_int - 1))
         return f_r_t_apply(self, k, Integer(new_n_int), expression, evaluation, options)
 
-
     # FIXME: can be done with rules?
     def apply_2(self, n, expression, evaluation, options):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
@@ -260,7 +262,9 @@ class CompleteKaryTree(_NetworkXBuiltin):
         n_int = n.get_int_value()
 
         new_n_int = int(2 ** n_int) - 1
-        return f_r_t_apply(self, Integer(2), Integer(new_n_int), expression, evaluation, options)
+        return f_r_t_apply(
+            self, Integer(2), Integer(new_n_int), expression, evaluation, options
+        )
 
 
 class CycleGraph(_NetworkXBuiltin):
@@ -279,7 +283,10 @@ class CycleGraph(_NetworkXBuiltin):
         if n_int < 3:
             return complete_graph_apply(self, n, expression, evaluation, options)
         else:
-            return hkn_harary_apply(self, Integer(2), n, expression, evaluation, options)
+            return hkn_harary_apply(
+                self, Integer(2), n, expression, evaluation, options
+            )
+
 
 def f_r_t_apply(self, r, n, expression, evaluation, options):
     py_r = r.get_int_value()
@@ -301,6 +308,7 @@ def f_r_t_apply(self, r, n, expression, evaluation, options):
     g.G.r = r
     g.G.n = n
     return g
+
 
 class FullRAryTree(_NetworkXBuiltin):
     """<dl>
@@ -324,6 +332,7 @@ class FullRAryTree(_NetworkXBuiltin):
     }
 
     options = DEFAULT_TREE_OPTIONS
+
     def apply(self, r, n, expression, evaluation, options):
         "%(name)s[r_Integer, n_Integer, OptionsPattern[%(name)s]]"
         return f_r_t_apply(self, r, n, expression, evaluation, options)
@@ -359,6 +368,7 @@ class GraphAtlas(_NetworkXBuiltin):
             return None
         g.n = n
         return g
+
 
 def hkn_harary_apply(self, k, n, expression, evaluation, options):
     py_k = k.get_int_value()
@@ -481,6 +491,7 @@ class KaryTree(_NetworkXBuiltin):
     }
 
     options = DEFAULT_TREE_OPTIONS
+
     def apply(self, n, expression, evaluation, options):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
         return f_r_t_apply(self, Integer(2), n, expression, evaluation, options)
@@ -488,6 +499,29 @@ class KaryTree(_NetworkXBuiltin):
     def apply_2(self, n, k, expression, evaluation, options):
         "%(name)s[n_Integer, k_Integer, OptionsPattern[%(name)s]]"
         return f_r_t_apply(self, k, n, expression, evaluation, options)
+
+
+class PathGraph(_NetworkXBuiltin):
+    """
+    <dl>
+      <dt>'PathGraph[{$v_1$, $v_2$, ...}]'
+      <dd>Returns a Graph with a path with vertices $v_i$ and edges between $v-i$ and $v_i+1$ .
+    </dl>
+    >> PathGraph[{1, 2, 3}]
+     = -Graph-
+    """
+
+    def apply(self, l, evaluation, options):
+        "PathGraph[l_List, OptionsPattern[%(name)s]]"
+        leaves = l.leaves
+
+        def edges():
+            for u, v in zip(leaves, leaves[1:]):
+                yield Expression("UndirectedEdge", u, v)
+
+        g = _graph_from_list(edges(), options)
+        g.G.graph_layout = options["System`GraphLayout"].get_string_value() or "spiral_equidistant"
+        return g
 
 
 class RandomGraph(_NetworkXBuiltin):
@@ -500,6 +534,7 @@ class RandomGraph(_NetworkXBuiltin):
       <dd>Returns list of $k$ RandomGraph[{$n$, $m$}].
     </dl>
     """
+
     def _generate(self, n, m, k, evaluation, options):
         py_n = n.get_int_value()
         py_m = m.get_int_value()

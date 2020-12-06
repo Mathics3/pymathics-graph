@@ -35,6 +35,12 @@ WL_MARKER_TO_MATPLOTLIB = {
     # And many others. Is there a list somewhere?
 }
 
+WL_COLOR_TO_MATPLOTLIB = {
+    "Green": "g",
+    "Blue": "b",
+    # And many others. Is there a list somewhere?
+}
+
 DEFAULT_GRAPH_OPTIONS = {
     "DirectedEdges": "False",
     "EdgeStyle": "{}",
@@ -72,6 +78,15 @@ def _process_graph_options(g, options: dict) -> None:
     )
 
     g.G.node_shape = g.node_shape = WL_MARKER_TO_MATPLOTLIB.get(shape, shape)
+
+    color = (
+        options["System`VertexStyle"].get_string_value()
+        if "System`VertexStyle" in options
+        else "Blue"
+    )
+
+    g.G.node_color = g.node_color = WL_COLOR_TO_MATPLOTLIB.get(color, color)
+
     g.G.title = g.title = (
         options["System`PlotLabel"].get_string_value()
         if "System`PlotLabel" in options
@@ -808,24 +823,6 @@ class GraphAtom(AtomBuiltin):
         return _graph_from_list(
             edges.leaves, options=options, new_vertices=vertices.leaves
         )
-
-
-class PathGraph(_NetworkXBuiltin):
-    """
-    >> PathGraph[{1, 2, 3}]
-     = -Graph-
-    """
-
-    def apply(self, l, evaluation, options):
-        "PathGraph[l_List, OptionsPattern[%(name)s]]"
-        leaves = l.leaves
-
-        def edges():
-            for u, v in zip(leaves, leaves[1:]):
-                yield Expression("UndirectedEdge", u, v)
-
-        return _graph_from_list(edges(), options)
-
 
 class PathGraphQ(_NetworkXBuiltin):
     """
