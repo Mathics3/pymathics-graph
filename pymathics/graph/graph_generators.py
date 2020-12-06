@@ -35,7 +35,7 @@ def graph_helper(
     G.graph_layout = options["System`GraphLayout"].get_string_value() or graph_layout
     g = Graph(G)
     G.vertex_labels = g.vertex_labels = options["System`VertexLabels"].get_string_value()
-    shape = options["System`VertexShape"]
+    shape = options["System`VertexShape"].get_string_value()
     G.node_shape = g.node_shape = WL_MARKER_TO_MATPLOTLIB.get(shape, shape)
 
     if root is not None:
@@ -445,6 +445,40 @@ class HmnHararyGraph(_NetworkXBuiltin):
         g.n = py_n
         g.m = py_m
         return g
+
+
+class KaryTree(_NetworkXBuiltin):
+    """<dl>
+      <dt>'KaryTree[$r$, $n$]'
+      <dd>Creates binary tree of $n$ vertices.
+    </dl>
+
+    <dl>
+      <dt>'KaryTree[$n$, $k]'
+      <dd>Creates $k$-ary tree with $n$ vertices.
+    </dl>
+    >> KaryTree[10]
+     = -Graph-
+
+    >> KaryTree[3, 10]
+     = -Graph-
+
+    """
+
+    messages = {
+        "ilsmp": "Expected a non-negative integer at position 1 in ``.",
+        "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
+        "mem": "Out of memory",
+    }
+
+    options = DEFAULT_TREE_OPTIONS
+    def apply(self, n, expression, evaluation, options):
+        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
+        return f_r_t_apply(self, Integer(2), n, expression, evaluation, options)
+
+    def apply_2(self, n, k, expression, evaluation, options):
+        "%(name)s[n_Integer, k_Integer, OptionsPattern[%(name)s]]"
+        return f_r_t_apply(self, k, n, expression, evaluation, options)
 
 
 class RandomTree(_NetworkXBuiltin):
