@@ -1318,7 +1318,7 @@ class VertexList(_PatternList):
     """
 
     def _items(self, graph):
-        return graph.vertices.expressions
+        return graph.vertices
 
 
 class EdgeCount(_PatternCount):
@@ -1338,7 +1338,7 @@ class EdgeList(_PatternList):
     """
 
     def _items(self, graph):
-        return graph.edges.expressions
+        return graph.edges
 
 
 class EdgeRules(_NetworkXBuiltin):
