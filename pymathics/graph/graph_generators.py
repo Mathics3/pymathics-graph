@@ -1,5 +1,6 @@
 from pymathics.graph.__main__ import (
     Graph,
+    WL_MARKER_TO_MATPLOTLIB,
     _NetworkXBuiltin,
     nx,
 )
@@ -33,7 +34,9 @@ def graph_helper(
         return None
     G.graph_layout = options["System`GraphLayout"].get_string_value() or graph_layout
     g = Graph(G)
-    G.vertex_labels = g.vertex_labels = options["System`VertexLabels"]
+    G.vertex_labels = g.vertex_labels = options["System`VertexLabels"].get_string_value()
+    shape = options["System`VertexShape"]
+    G.node_shape = g.node_shape = WL_MARKER_TO_MATPLOTLIB.get(shape, shape)
 
     if root is not None:
         G.root = g.root = root

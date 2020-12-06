@@ -22,6 +22,18 @@ from mathics.builtin.patterns import Matcher
 
 from inspect import isgenerator
 
+WL_MARKER_TO_MATPLOTLIB = {
+    "Circle": "o",
+    "Diamond" :"D",
+    "Square" :"s",
+    "Star": "*",
+    "Pentagon": "p",
+    "Octagon": "8",
+    "Hexagon": "h",
+    "Triangle": "^",
+    # And many others. Is there a list somewhere?
+}
+
 DEFAULT_GRAPH_OPTIONS = {
     "DirectedEdges": "False",
     "EdgeStyle": "{}",
@@ -30,6 +42,7 @@ DEFAULT_GRAPH_OPTIONS = {
     "PlotLabel": "Null",
     "VertexLabels": "False",
     "VertexSize": "{}",
+    "VertexShape": "o",
     "VertexStyle": "{}",
 }
 
@@ -660,6 +673,8 @@ def _create_graph(new_edges, new_edge_properties, options, from_graph=None, new_
     g = Graph(G)
     g.vertex_labels = G.vertex_labels = options["System`VertexLabels"]
     G.title = g.title = options["System`PlotLabel"]
+    shape = options["System`VertexShape"].get_string_value()
+    G.node_shape = g.vertex_shape = WL_MARKER_TO_MATPLOTLIB.get(shape, shape)
     return g
 
 

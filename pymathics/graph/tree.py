@@ -1,5 +1,5 @@
 import networkx as nx
-from pymathics.graph.__main__ import Graph, _graph_from_list, DEFAULT_GRAPH_OPTIONS, _NetworkXBuiltin
+from pymathics.graph.__main__ import Graph, _graph_from_list, DEFAULT_GRAPH_OPTIONS, _NetworkXBuiltin, WL_MARKER_TO_MATPLOTLIB
 from mathics.core.expression import String, Symbol
 
 DEFAULT_TREE_OPTIONS = {
