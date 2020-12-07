@@ -18,7 +18,9 @@ from mathics.core.expression import (
     from_python,
 )
 
-
+# FIXME: Add to Mathics Expression
+# SymbolFalse = Symbol("System`False")
+# SymbolTrue = Symbol("System`True")
 
 class GraphDistance(_NetworkXBuiltin):
     """
@@ -111,3 +113,25 @@ class FindSpanningTree(_NetworkXBuiltin):
             edges = [Expression("UndirectedEdge", u, v) for u, v in nx.minimum_spanning_edges(graph.G, data=False)]
             g = _create_graph(edges, [None] * len(edges), options)
             return g
+
+class PlanarGraphQ(_NetworkXBuiltin):
+    """
+    <dl>
+      <dd>PlanarGraphQ[g]
+      <dd>Returns True if g is a planar graph and False otherwise.
+    </dl>
+
+    >> PlanarGraphQ[CycleGraph[4]]
+    = True
+    >> PlanarGraphQ[CompleteGraph[5]]
+    = False
+    """
+
+    options = DEFAULT_GRAPH_OPTIONS
+    def apply(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if not graph:
+            return Symbol("System`False")
+        is_planar, _ = nx.check_planarity(graph.G)
+        return Symbol("System`True") if is_planar else Symbol("System`False")
