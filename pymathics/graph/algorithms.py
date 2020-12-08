@@ -140,3 +140,52 @@ class PlanarGraphQ(_NetworkXBuiltin):
             return Symbol("System`False")
         is_planar, _ = nx.check_planarity(graph.G)
         return Symbol("System`True") if is_planar else Symbol("System`False")
+
+class ConnectedComponents(_NetworkXBuiltin):
+    """
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
+     = {{3, 4}, {2}, {1}}
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
+     = {{1, 2, 3}}
+
+    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}]; ConnectedComponents[g]
+     = {{4, 5}, {1, 2, 3}}
+    """
+
+    def apply(self, graph, expression, evaluation, options):
+        "ConnectedComponents[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            connect_fn = nx.strongly_connected_components if graph.G.is_directed() else nx.connected_components
+            components = [
+                Expression("List", *c) for c in connect_fn(graph.G)
+            ]
+            return Expression("List", *components)
+
+
+class WeaklyConnectedComponents(_NetworkXBuiltin):
+    """
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; WeaklyConnectedComponents[g]
+     = {{1, 2, 3, 4}}
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; WeaklyConnectedComponents[g]
+     = {{1, 2, 3}}
+
+    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5, 6 <-> 7, 7 <-> 8}]; WeaklyConnectedComponents[g]
+     = {{1, 2, 3, 4, 5}, {6, 7, 8}}
+    """
+
+    def apply(self, graph, expression, evaluation, options):
+        "WeaklyConnectedComponents[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            components = nx.connected_components(graph.G.to_undirected())
+
+            index = graph.vertices.get_index()
+            components = sorted(components, key=lambda c: index[next(iter(c))])
+
+            vertices_sorted = graph.vertices.get_sorted()
+            result = [Expression("List", *vertices_sorted(c)) for c in components]
+
+            return Expression("List", *result)
