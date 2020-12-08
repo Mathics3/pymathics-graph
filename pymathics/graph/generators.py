@@ -45,7 +45,9 @@ def graph_helper(
     except MemoryError:
         evaluation.message(self.get_name(), "mem", expression)
         return None
-    G.graph_layout = options["System`GraphLayout"].get_string_value() or graph_layout
+    if graph_layout and not options["System`GraphLayout"].get_string_value():
+        options["System`GraphLayout"] = String(graph_layout)
+
     g = Graph(G)
     _process_graph_options(g, options)
 
@@ -619,3 +621,29 @@ class StarGraph(_NetworkXBuiltin):
             return None
         g.G.n = n
         return g
+
+WL_TO_NETWORKX_FN = {
+    "DodecahedralGraph": (nx.dodecahedral_graph, None),
+    "DiamondGraph": (nx.diamond_graph, "spring"),
+    "PappusGraph": (nx.pappus_graph, "circular"),
+    "IsohedralGraph": (nx.icosahedral_graph, "spring"),
+    "PetersenGraph": (nx.petersen_graph, None),
+}
+
+class GraphData(_NetworkXBuiltin):
+    """
+    <dl>
+      <dt>'GraphData[$name$]'
+      <dd>Returns a graph with the specified name.
+    </dl>
+
+    >> GraphData["PappusGraph"]
+    """
+    def apply(self, name, expression, evaluation, options):
+        "%(name)s[name_String, OptionsPattern[%(name)s]]"
+        py_name = name.get_string_value()
+        fn, layout = WL_TO_NETWORKX_FN.get(py_name, (None, None))
+        if fn:
+            g = graph_helper(fn, options, False, layout)
+            g.G.name = py_name
+            return g

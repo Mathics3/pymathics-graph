@@ -41,11 +41,19 @@ WL_COLOR_TO_MATPLOTLIB = {
     # And many others. Is there a list somewhere?
 }
 
+WL_LAYOUT_TO_MATPLOTLIB = {
+    "CircularEmbedding": "circular",
+    "SpiralEmbedding": "spiral",
+    "SpectralEmbedding": "spectral",
+    "SpringEmbedding": "spring",
+    # And many others. Is there a list somewhere?
+}
+
 DEFAULT_GRAPH_OPTIONS = {
     "DirectedEdges": "False",
     "EdgeStyle": "{}",
     "EdgeWeight": "{}",
-    "GraphLayout": "{}",
+    "GraphLayout": "Null",
     "PlotLabel": "Null",
     "VertexLabels": "False",
     "VertexSize": "{}",
@@ -58,6 +66,7 @@ import networkx as nx
 
 def has_directed_option(options: dict) -> bool:
     return options.get("System`DirectedEdges", False).to_python()
+
 
 def _process_graph_options(g, options: dict) -> None:
     """
@@ -84,6 +93,14 @@ def _process_graph_options(g, options: dict) -> None:
         if "System`VertexStyle" in options
         else "Blue"
     )
+
+    g.graph_layout = (
+        options["System`GraphLayout"].get_string_value()
+        if "System`GraphLayout" in options
+        else ""
+    )
+
+    g.G.graph_layout = g.graph_layout = WL_LAYOUT_TO_MATPLOTLIB.get(g.graph_layout, g.graph_layout)
 
     g.G.node_color = g.node_color = WL_COLOR_TO_MATPLOTLIB.get(color, color)
 
@@ -834,6 +851,7 @@ class GraphAtom(AtomBuiltin):
             edges.leaves, options=options, new_vertices=vertices.leaves
         )
 
+
 class PathGraphQ(_NetworkXBuiltin):
     """
     >> PathGraphQ[Graph[{1 -> 2, 2 -> 3}]]
@@ -1502,7 +1520,7 @@ class BetweennessCentrality(_Centrality):
             )
             return Expression(
                 "List",
-                *[Real(centrality.get(v, 0.0)) for v in graph.vertices.expressions]
+                *[Real(centrality.get(v, 0.0)) for v in graph.vertices.expressions],
             )
 
 
@@ -1526,7 +1544,7 @@ class ClosenessCentrality(_Centrality):
             centrality = nx.closeness_centrality(G, distance=weight, wf_improved=False)
             return Expression(
                 "List",
-                *[Real(centrality.get(v, 0.0)) for v in graph.vertices.expressions]
+                *[Real(centrality.get(v, 0.0)) for v in graph.vertices.expressions],
             )
 
 
@@ -1546,7 +1564,7 @@ class DegreeCentrality(_Centrality):
         s = len(graph.G) - 1  # undo networkx's normalization
         return Expression(
             "List",
-            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices.expressions]
+            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices.expressions],
         )
 
     def apply(self, graph, expression, evaluation, options):
@@ -1685,7 +1703,7 @@ class PageRankCentrality(_Centrality):
             centrality = nx.pagerank(G, alpha=py_alpha, weight=weight, tol=1.0e-7)
             return Expression(
                 "List",
-                *[Real(centrality.get(v, 0)) for v in graph.vertices.expressions]
+                *[Real(centrality.get(v, 0)) for v in graph.vertices.expressions],
             )
 
 
@@ -1775,7 +1793,7 @@ class FindShortestPath(_NetworkXBuiltin):
                 weight = graph.update_weights(evaluation)
                 return Expression(
                     "List",
-                    *list(nx.shortest_path(G, source=s, target=t, weight=weight))
+                    *list(nx.shortest_path(G, source=s, target=t, weight=weight)),
                 )
             except nx.exception.NetworkXNoPath:
                 return Expression("List")
