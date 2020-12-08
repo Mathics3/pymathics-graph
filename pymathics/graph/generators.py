@@ -530,7 +530,7 @@ class RandomGraph(_NetworkXBuiltin):
       <dt>'RandomGraph[{$n$, $m$}]'
       <dd>Returns a pseudorandom graph with $n$ vertices and $m$ edges.
 
-      <dt>'RandomGraph[$n$, $m$, $k$]'
+      <dt>'RandomGraph[{$n$, $m$}, $k$]'
       <dd>Returns list of $k$ RandomGraph[{$n$, $m$}].
     </dl>
     """

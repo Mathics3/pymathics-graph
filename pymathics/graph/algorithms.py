@@ -112,6 +112,11 @@ class FindSpanningTree(_NetworkXBuiltin):
             # FIXME: put in edge to Graph conversion function?
             edges = [Expression("UndirectedEdge", u, v) for u, v in nx.minimum_spanning_edges(graph.G, data=False)]
             g = _create_graph(edges, [None] * len(edges), options)
+            if not hasattr(g.G, "graph_layout"):
+                if hasattr(graph.G, "graph_layout"):
+                    g.G.graph_layout = graph.G.graph_layout
+                else:
+                    g.G.graph_layout = "tree"
             return g
 
 class PlanarGraphQ(_NetworkXBuiltin):

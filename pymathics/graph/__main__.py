@@ -760,7 +760,7 @@ class DirectedEdge(Builtin):
 class UndirectedEdge(Builtin):
     """
     <dl>
-    <dt>'UndirectedEdge[$u$, $v$]'
+      <dt>'UndirectedEdge[$u$, $v$]'
       <dd>an undirected edge between $u$ and $v$.
     </dl>
 
@@ -779,6 +779,16 @@ class UndirectedEdge(Builtin):
 
 class GraphAtom(AtomBuiltin):
     """
+    <dl>
+      <dt>'Graph[{$e1, $e2, ...}]'
+      <dd>returns a graph with edges $e_j$.
+    </dl>
+
+    <dl>
+      <dt>'Graph[{v1, v2, ...}, {$e1, $e2, ...}]'
+      <dd>returns a graph with vertices $v_i$ and edges $e_j$.
+    </dl>
+
     >> Graph[{1->2, 2->3, 3->1}]
      = -Graph-
 
