@@ -9,7 +9,7 @@ from mathics.builtin.randomnumbers import RandomEnv
 
 from pymathics.graph.__main__ import (
     Graph,
-    WL_MARKER_TO_MATPLOTLIB,
+    WL_MARKER_TO_NETWORKX,
     _NetworkXBuiltin,
     _convert_networkx_graph,
     _graph_from_list,
@@ -643,6 +643,17 @@ class GraphData(_NetworkXBuiltin):
         "%(name)s[name_String, OptionsPattern[%(name)s]]"
         py_name = name.get_string_value()
         fn, layout = WL_TO_NETWORKX_FN.get(py_name, (None, None))
+        if not fn:
+            if not py_name.endswith("_graph"):
+                py_name += "_graph"
+            if py_name in ("LCF_graph", "make_small_graph"):
+                # These graphs require parameters
+                return
+            import inspect
+            fn = dict(inspect.getmembers(nx, inspect.isfunction)).get(py_name, None)
+            # parameters = inspect.signature(nx.diamond_graph).parameters.values()
+            # if len([p for p in list(parameters) if p.kind in [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD]]) != 0:
+            #     return
         if fn:
             g = graph_helper(fn, options, False, layout)
             g.G.name = py_name

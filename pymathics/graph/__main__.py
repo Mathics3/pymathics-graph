@@ -23,7 +23,7 @@ from mathics.builtin.patterns import Matcher
 
 from inspect import isgenerator
 
-WL_MARKER_TO_MATPLOTLIB = {
+WL_MARKER_TO_NETWORKX = {
     "Circle": "o",
     "Diamond": "D",
     "Square": "s",
@@ -35,13 +35,13 @@ WL_MARKER_TO_MATPLOTLIB = {
     # And many others. Is there a list somewhere?
 }
 
-WL_COLOR_TO_MATPLOTLIB = {
+WL_COLOR_TO_NETWORKX = {
     "Green": "g",
     "Blue": "b",
     # And many others. Is there a list somewhere?
 }
 
-WL_LAYOUT_TO_MATPLOTLIB = {
+WL_LAYOUT_TO_NETWORKX = {
     "CircularEmbedding": "circular",
     "SpiralEmbedding": "spiral",
     "SpectralEmbedding": "spectral",
@@ -86,7 +86,7 @@ def _process_graph_options(g, options: dict) -> None:
         else "Circle"
     )
 
-    g.G.node_shape = g.node_shape = WL_MARKER_TO_MATPLOTLIB.get(shape, shape)
+    g.G.node_shape = g.node_shape = WL_MARKER_TO_NETWORKX.get(shape, shape)
 
     color = (
         options["System`VertexStyle"].get_string_value()
@@ -100,9 +100,9 @@ def _process_graph_options(g, options: dict) -> None:
         else ""
     )
 
-    g.G.graph_layout = g.graph_layout = WL_LAYOUT_TO_MATPLOTLIB.get(g.graph_layout, g.graph_layout)
+    g.G.graph_layout = g.graph_layout = WL_LAYOUT_TO_NETWORKX.get(g.graph_layout, g.graph_layout)
 
-    g.G.node_color = g.node_color = WL_COLOR_TO_MATPLOTLIB.get(color, color)
+    g.G.node_color = g.node_color = WL_COLOR_TO_NETWORKX.get(color, color)
 
     g.G.title = g.title = (
         options["System`PlotLabel"].get_string_value()
