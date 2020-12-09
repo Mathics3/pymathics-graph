@@ -202,7 +202,7 @@ class CompleteGraph(_NetworkXBuiltin):
     """
     <dl>
       <dt>'CompleteGraph[$n$]'
-      <dd>gives the complete graph with $n$ vertices, $K_n$
+      <dd>Returns the complete graph with $n$ vertices, $K_n$
     </dl>
 
     >> CompleteGraph[8]
@@ -343,7 +343,7 @@ class FullRAryTree(_NetworkXBuiltin):
 class GraphAtlas(_NetworkXBuiltin):
     """<dl>
       <dt>'GraphAtlas[$n$]'
-      <dd>gives graph number $i$ from the Networkx's Graph
+      <dd>Returns graph number $i$ from the Networkx's Graph
       Atlas. There are about 1200 of them and get large as $i$
       increases.
     </dl>
@@ -503,6 +503,36 @@ class KaryTree(_NetworkXBuiltin):
         return f_r_t_apply(self, k, n, expression, evaluation, options)
 
 
+class LadderGraph(_NetworkXBuiltin):
+    """
+    <dl>
+      <dt>'LadderGraph[$n$]'
+      <dd>Returns the Ladder graph of length $n$.
+    </dl>
+
+    >> StarGraph[8]
+     = -Graph-
+    """
+
+    messages = {
+        "ilsmp": "Expected a positive integer at position 1 in ``.",
+    }
+
+    def apply(self, n, expression, evaluation, options):
+        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
+        py_n = n.get_int_value()
+
+        if py_n < 1:
+            evaluation.message(self.get_name(), "ilsmp", expression)
+            return
+
+        args = (py_n,)
+        g = graph_helper(nx.ladder_graph, options, False, "spring", 0, *args)
+        if not g:
+            return None
+        g.G.n = n
+        return g
+
 class PathGraph(_NetworkXBuiltin):
     """
     <dl>
@@ -596,7 +626,7 @@ class StarGraph(_NetworkXBuiltin):
     """
     <dl>
       <dt>'StarGraph[$n$]'
-      <dd>gives a star graph with $n$ vertices
+      <dd>Returns a star graph with $n$ vertices
     </dl>
 
     >> StarGraph[8]
