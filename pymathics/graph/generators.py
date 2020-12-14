@@ -6,6 +6,7 @@ networkx does all the heavy lifting.
 """
 
 from mathics.builtin.randomnumbers import RandomEnv
+from mathics.core.expression import String
 
 from pymathics.graph.__main__ import (
     Graph,
@@ -141,6 +142,35 @@ class BarbellGraph(_NetworkXBuiltin):
         return g
 
 
+# Oddly, networkX doesn't allow the directed case.
+def binomial_tree(n, create_using=None):
+    """Returns the Binomial Tree of order n.
+
+    The binomial tree of order 0 consists of a single vertex. A binomial tree of order k
+    is defined recursively by linking two binomial trees of order k-1: the root of one is
+    the leftmost child of the root of the other.
+
+    Parameters
+    ----------
+    n : int
+        Order of the binomial tree.
+
+    Returns
+    -------
+    G : NetworkX graph
+        A binomial tree of $2^n$ vertices and $2^n - 1$ edges.
+
+    """
+    G = nx.empty_graph(1, create_using=create_using)
+    N = 1
+    for i in range(n):
+        edges = [(u + N, v + N) for (u, v) in G.edges]
+        G.add_edges_from(edges)
+        G.add_edge(0, N)
+        N *= 2
+    return G
+
+
 class BinomialTree(_NetworkXBuiltin):
     """
     <dl>
@@ -175,7 +205,7 @@ class BinomialTree(_NetworkXBuiltin):
             return
 
         args = (py_n,)
-        g = graph_helper(nx.binomial_tree, options, False, "tree", 0, *args)
+        g = graph_helper(binomial_tree, options, True, "tree", 0, *args)
         if not g:
             return None
         g.G.n = n

@@ -22,6 +22,47 @@ from mathics.core.expression import (
 # SymbolFalse = Symbol("System`False")
 # SymbolTrue = Symbol("System`True")
 
+class ConnectedComponents(_NetworkXBuiltin):
+    """
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
+     = {{3, 4}, {2}, {1}}
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
+     = {{1, 2, 3}}
+
+    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}]; ConnectedComponents[g]
+     = {{4, 5}, {1, 2, 3}}
+    """
+
+    def apply(self, graph, expression, evaluation, options):
+        "ConnectedComponents[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            connect_fn = nx.strongly_connected_components if graph.G.is_directed() else nx.connected_components
+            components = [
+                Expression("List", *c) for c in connect_fn(graph.G)
+            ]
+            return Expression("List", *components)
+
+
+# class FindHamiltonianPath(_NetworkXBuiltin):
+#     """
+#     <dl>
+#       <dt>'FindHamiltonianPath[$g$]'
+#       <dd>returns a Hamiltonian path in the given tournament graph.
+#       </dl>
+#     """
+#     def apply_(self, graph, expression, evaluation, options):
+#         "%(name)s[graph_, OptionsPattern[%(name)s]]"
+
+#         graph = self._build_graph(graph, evaluation, options, expression)
+#         if graph:
+#             # FIXME: for this to work we need to fill in all O(n^2) edges as an adjacency matrix?
+#             path = nx.algorithms.tournament.hamiltonian_path(graph.G)
+#             if path:
+#                 # int_path = map(Integer, path)
+#                 return Expression("List", *path)
+
 class GraphDistance(_NetworkXBuiltin):
     """
     <dl>
@@ -140,29 +181,6 @@ class PlanarGraphQ(_NetworkXBuiltin):
             return Symbol("System`False")
         is_planar, _ = nx.check_planarity(graph.G)
         return Symbol("System`True") if is_planar else Symbol("System`False")
-
-class ConnectedComponents(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
-     = {{3, 4}, {2}, {1}}
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
-     = {{1, 2, 3}}
-
-    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}]; ConnectedComponents[g]
-     = {{4, 5}, {1, 2, 3}}
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "ConnectedComponents[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            connect_fn = nx.strongly_connected_components if graph.G.is_directed() else nx.connected_components
-            components = [
-                Expression("List", *c) for c in connect_fn(graph.G)
-            ]
-            return Expression("List", *components)
-
 
 class WeaklyConnectedComponents(_NetworkXBuiltin):
     """

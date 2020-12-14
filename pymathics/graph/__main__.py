@@ -100,7 +100,9 @@ def _process_graph_options(g, options: dict) -> None:
         else ""
     )
 
-    g.G.graph_layout = g.graph_layout = WL_LAYOUT_TO_NETWORKX.get(g.graph_layout, g.graph_layout)
+    g.G.graph_layout = g.graph_layout = WL_LAYOUT_TO_NETWORKX.get(
+        g.graph_layout, g.graph_layout
+    )
 
     g.G.node_color = g.node_color = WL_COLOR_TO_NETWORKX.get(color, color)
 
@@ -232,7 +234,7 @@ class _NetworkXBuiltin(Builtin):
 
     def _build_graph(self, graph, evaluation, options, expr, quiet=False):
         head = graph.get_head_name()
-        if head == "System`Graph" and isinstance(graph, Atom):
+        if head == "System`Graph" and isinstance(graph, Atom) and hasattr(graph, "G"):
             return graph
         elif head == "System`List":
             return _graph_from_list(graph.leaves, options)
