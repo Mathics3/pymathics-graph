@@ -1,3 +1,5 @@
+|Pypi Installs| |Latest Version| |Supported Python Versions|
+
 `Mathics <https://mathics.org>`_ Graph Module using `NetworkX <https://networkx.org/>`_ and `Matplotlib <https://matplotlib.org>`_
 
 Example Session
@@ -55,3 +57,9 @@ Currently this works well in `mathicsscript` but not in the Django interface, al
 
 
 .. |screenshot| image:: https://github.com/Mathics3/pymathics-graph/blob/master/screenshots/BinomialTree-3.png
+.. |Latest Version| image:: https://badge.fury.io/py/pymathics-graph.svg
+		 :target: https://badge.fury.io/py/pymathics-graph
+.. |Pypi Installs| image:: https://pepy.tech/badge/pymathics-graph
+.. |Supported Python Versions| image:: https://img.shields.io/pypi/pyversions/pymathics-graph.svg
+.. |Packaging status| image:: https://repology.org/badge/vertical-allrepos/pymathics-graph.svg
+			    :target: https://repology.org/project/pymathics-graph/versions

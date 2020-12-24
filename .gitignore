@@ -1,5 +1,7 @@
 *~
 /.python-version
 /ChangeLog
+/build
+/dist
 /pymathics_graph.egg-info
 __pycache__
