@@ -1,7 +1,5 @@
 `Mathics <https://mathics.org>`_ Graph Module using `NetworkX <https://networkx.org/>`_ and `Matplotlib <https://matplotlib.org>`_
 
-::
-
 Example Session
 ---------------
 
@@ -25,7 +23,6 @@ Example Session
    In[2]:= BinomialTree[3]
    In[3]:= BinomialTree[6]
    In[4]:= CompleteKaryTree[3, VertexLabels->True]
-   In[5]:= CompleteKaryTree[6]
 
 Screenshots
 -----------
