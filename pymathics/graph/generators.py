@@ -266,7 +266,7 @@ class CompleteKaryTree(_NetworkXBuiltin):
     </dl>
 
     In the returned tree, with $n$ nodes, the from root $R$ to any
-    leaf be $k.
+    leaf be $k$.
 
     >> CompleteKaryTree[2, 3]
      = -Graph-
@@ -505,7 +505,7 @@ class KaryTree(_NetworkXBuiltin):
     </dl>
 
     <dl>
-      <dt>'KaryTree[$n$, $k]'
+      <dt>'KaryTree[$n$, $k$]'
       <dd>Creates $k$-ary tree with $n$ vertices.
     </dl>
     >> KaryTree[10]
