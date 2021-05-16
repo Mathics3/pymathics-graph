@@ -5,7 +5,7 @@ Routines for generating classes of Graphs.
 networkx does all the heavy lifting.
 """
 
-from mathics.builtin.randomnumbers import RandomEnv
+from mathics.builtin.numbers.randomnumbers import RandomEnv
 from mathics.core.expression import String
 
 from pymathics.graph.__main__ import (
