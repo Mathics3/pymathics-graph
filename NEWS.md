@@ -1,3 +1,8 @@
+2.2.0
+-----
+
+Small changes to track Mathics 2.2.0
+
 1.0.0
 -----
 
