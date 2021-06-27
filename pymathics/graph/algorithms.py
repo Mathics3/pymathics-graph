@@ -22,6 +22,7 @@ from mathics.core.expression import (
 # SymbolFalse = Symbol("System`False")
 # SymbolTrue = Symbol("System`True")
 
+
 class ConnectedComponents(_NetworkXBuiltin):
     """
     >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
@@ -38,10 +39,12 @@ class ConnectedComponents(_NetworkXBuiltin):
         "ConnectedComponents[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            connect_fn = nx.strongly_connected_components if graph.G.is_directed() else nx.connected_components
-            components = [
-                Expression("List", *c) for c in connect_fn(graph.G)
-            ]
+            connect_fn = (
+                nx.strongly_connected_components
+                if graph.G.is_directed()
+                else nx.connected_components
+            )
+            components = [Expression("List", *c) for c in connect_fn(graph.G)]
             return Expression("List", *components)
 
 
@@ -62,6 +65,7 @@ class ConnectedComponents(_NetworkXBuiltin):
 #             if path:
 #                 # int_path = map(Integer, path)
 #                 return Expression("List", *path)
+
 
 class GraphDistance(_NetworkXBuiltin):
     """
@@ -110,9 +114,7 @@ class GraphDistance(_NetworkXBuiltin):
             weight = graph.update_weights(evaluation)
             d = nx.shortest_path_length(graph.G, source=s, weight=weight)
             inf = Expression("DirectedInfinity", 1)
-            return Expression(
-                "List", *[d.get(v, inf) for v in graph.vertices]
-            )
+            return Expression("List", *[d.get(v, inf) for v in graph.vertices])
 
     def apply_s_t(self, graph, s, t, expression, evaluation, options):
         "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
@@ -133,6 +135,7 @@ class GraphDistance(_NetworkXBuiltin):
             except nx.exception.NetworkXNoPath:
                 return Expression("DirectedInfinity", 1)
 
+
 class FindSpanningTree(_NetworkXBuiltin):
     """
     <dl>
@@ -144,6 +147,7 @@ class FindSpanningTree(_NetworkXBuiltin):
     """
 
     options = DEFAULT_GRAPH_OPTIONS
+
     def apply(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
@@ -151,7 +155,10 @@ class FindSpanningTree(_NetworkXBuiltin):
             weight = graph.update_weights(evaluation)
             edge_type = "DirectedEdge" if graph.G.is_directed() else "UndirectedEdge"
             # FIXME: put in edge to Graph conversion function?
-            edges = [Expression("UndirectedEdge", u, v) for u, v in nx.minimum_spanning_edges(graph.G, data=False)]
+            edges = [
+                Expression("UndirectedEdge", u, v)
+                for u, v in nx.minimum_spanning_edges(graph.G, data=False)
+            ]
             g = _create_graph(edges, [None] * len(edges), options)
             if not hasattr(g.G, "graph_layout"):
                 if hasattr(graph.G, "graph_layout"):
@@ -159,6 +166,7 @@ class FindSpanningTree(_NetworkXBuiltin):
                 else:
                     g.G.graph_layout = "tree"
             return g
+
 
 class PlanarGraphQ(_NetworkXBuiltin):
     """
@@ -174,6 +182,7 @@ class PlanarGraphQ(_NetworkXBuiltin):
     """
 
     options = DEFAULT_GRAPH_OPTIONS
+
     def apply(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
@@ -181,6 +190,7 @@ class PlanarGraphQ(_NetworkXBuiltin):
             return Symbol("System`False")
         is_planar, _ = nx.check_planarity(graph.G)
         return Symbol("System`True") if is_planar else Symbol("System`False")
+
 
 class WeaklyConnectedComponents(_NetworkXBuiltin):
     """

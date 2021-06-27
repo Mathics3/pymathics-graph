@@ -31,6 +31,10 @@ pypi-setup:
 #: Set up to run from the source tree
 develop: pypi-setup
 
+#: Make distirbution: wheels, eggs, tarball
+dist:
+	./admin-tools/make-dist.sh
+
 #: Install pymathics.graph
 install: pypi-setup
 	$(PYTHON) setup.py install

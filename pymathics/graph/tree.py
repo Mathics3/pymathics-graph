@@ -1,13 +1,18 @@
 import networkx as nx
-from pymathics.graph.__main__ import Graph, _graph_from_list, DEFAULT_GRAPH_OPTIONS, _NetworkXBuiltin, WL_MARKER_TO_NETWORKX
-from mathics.core.expression import String, Symbol
+from pymathics.graph.__main__ import (
+    Graph,
+    _graph_from_list,
+    DEFAULT_GRAPH_OPTIONS,
+    _NetworkXBuiltin,
+)
+from mathics.core.expression import Atom, Symbol
 
 DEFAULT_TREE_OPTIONS = {
     **DEFAULT_GRAPH_OPTIONS,
     **{"GraphLayout": '"tree"'},
 }
 
-from mathics.builtin.base import Builtin, AtomBuiltin
+from mathics.builtin.base import AtomBuiltin
 
 
 class TreeGraphAtom(AtomBuiltin):
@@ -60,7 +65,7 @@ class TreeGraph(Graph):
     def __init__(self, G, **kwargs):
         super(Graph, self).__init__()
         if not nx.is_tree(G):
-            evaluation.message(self.get_name(), "notree")
+            raise ValueError
         self.G = G
 
 
