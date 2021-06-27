@@ -1,3 +1,12 @@
+2.3.0
+-----
+
+Small API changes to track Mathics 3.0.0.
+
+Blacken everything
+
+
+
 2.2.0
 -----
 

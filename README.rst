@@ -8,11 +8,11 @@ Example Session
 ::
 
    $ mathicsscript
-   Mathics 1.1.1
+   Mathics 3.0.1
    on CPython 3.6.12 (default, Oct 24 2020, 10:34:18)
-   using SymPy 1.8.dev, mpmath 1.1.0, cython 0.29.21
+   using SymPy 1.8, mpmath 1.2.1, cython 0.29.22
 
-   Copyright (C) 2011-2020 The Mathics Team.
+   Copyright (C) 2011-2021 The Mathics Team.
    This program comes with ABSOLUTELY NO WARRANTY.
    This is free software, and you are welcome to redistribute it
    under certain conditions.

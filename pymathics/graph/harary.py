@@ -113,7 +113,6 @@ def hnm_harary_graph(n, m, create_using=None):
     return H
 
 
-
 def hkn_harary_graph(k, n, create_using=None):
     """Returns the Harary graph with given node connectivity and node number.
 

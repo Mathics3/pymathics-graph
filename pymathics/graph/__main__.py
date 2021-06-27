@@ -10,13 +10,12 @@ networkx does all the heavy lifting.
 # uses networkx
 
 from mathics.builtin.base import Builtin, AtomBuiltin
-from mathics.builtin.graphics import GraphicsBox
+from mathics.builtin.box.graphics import GraphicsBox
 from mathics.core.expression import (
     Atom,
     Expression,
     Integer,
     Real,
-    String,
     Symbol,
 )
 from mathics.builtin.patterns import Matcher
@@ -730,7 +729,7 @@ def _create_graph(
             attr_dict = attr_dict or empty_dict
             G.add_edge(u, v, **attr_dict)
 
-    edge_collection = _EdgeCollection(
+    _EdgeCollection(
         edges,
         edge_properties,
         n_directed=len(directed_edges),
@@ -1804,7 +1803,7 @@ class FindShortestPath(_NetworkXBuiltin):
 def _convert_networkx_graph(G, options):
     mapping = dict((v, Integer(i)) for i, v in enumerate(G.nodes))
     G = nx.relabel_nodes(G, mapping)
-    edges = [Expression("System`UndirectedEdge", u, v) for u, v in G.edges]
+    [Expression("System`UndirectedEdge", u, v) for u, v in G.edges]
     return Graph(
         G,
         **options,

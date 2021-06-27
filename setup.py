@@ -11,6 +11,7 @@ if sys.version_info < (3, 6):
     print("Mathics support Python 3.6 and above; you have %d.%d" % sys.version_info[:2])
     sys.exit(-1)
 
+
 def get_srcdir():
     filename = osp.normcase(osp.dirname(osp.abspath(__file__)))
     return osp.realpath(filename)
@@ -30,10 +31,11 @@ setup(
     name="pymathics-graph",
     version=__version__,
     packages=find_namespace_packages(include=["pymathics.*"]),
-    install_requires=["Mathics3>=2.2.0", "networkx", "pydot", "matplotlib"],
+    install_requires=["Mathics3>=3.0.0", "networkx", "pydot", "matplotlib"],
     # don't pack Mathics in egg because of media files, etc.
     zip_safe=False,
     maintainer="Mathics Group",
+    maintainer_email="rb@dustyfeet.com",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     # metadata for upload to PyPI

@@ -6,11 +6,9 @@ networkx does all the heavy lifting.
 """
 
 from mathics.builtin.numbers.randomnumbers import RandomEnv
-from mathics.core.expression import String
 
 from pymathics.graph.__main__ import (
     Graph,
-    WL_MARKER_TO_NETWORKX,
     _NetworkXBuiltin,
     _convert_networkx_graph,
     _graph_from_list,
@@ -32,6 +30,7 @@ def graph_helper(
     options: dict,
     can_digraph: bool,
     graph_layout: str,
+    evaluation,
     root: Optional[int] = None,
     *args,
     **kwargs
@@ -94,7 +93,7 @@ class BalancedTree(_NetworkXBuiltin):
             return None
 
         args = (py_r, py_h)
-        g = graph_helper(nx.balanced_tree, options, True, "tree", 0, *args)
+        g = graph_helper(nx.balanced_tree, options, True, "tree", evaluation, 0, *args)
         if not g:
             return None
         g.G.r = r
@@ -133,7 +132,7 @@ class BarbellGraph(_NetworkXBuiltin):
             return
 
         args = (py_m1, py_m2)
-        g = graph_helper(nx.barbell_graph, options, False, "spring", None, *args)
+        g = graph_helper(nx.barbell_graph, options, False, "spring", evaluation, None, *args)
         if not g:
             return None
 
@@ -205,7 +204,7 @@ class BinomialTree(_NetworkXBuiltin):
             return
 
         args = (py_n,)
-        g = graph_helper(binomial_tree, options, True, "tree", 0, *args)
+        g = graph_helper(binomial_tree, options, True, "tree", evaluation, 0, *args)
         if not g:
             return None
         g.G.n = n
@@ -220,7 +219,7 @@ def complete_graph_apply(self, n, expression, evaluation, options):
         return
 
     args = (py_n,)
-    g = graph_helper(nx.complete_graph, options, False, "circular", None, *args)
+    g = graph_helper(nx.complete_graph, options, False, "circular", evaluation, None, *args)
     if not g:
         return None
 
@@ -333,7 +332,7 @@ def f_r_t_apply(self, r, n, expression, evaluation, options):
         return
 
     args = (py_r, py_n)
-    g = graph_helper(nx.full_rary_tree, options, True, "tree", 0, *args)
+    g = graph_helper(nx.full_rary_tree, options, True, "tree", evaluation, 0, *args)
     if not g:
         return None
 
@@ -395,7 +394,7 @@ class GraphAtlas(_NetworkXBuiltin):
             return
 
         args = (py_n,)
-        g = graph_helper(nx.graph_atlas, options, False, "spring", None, *args)
+        g = graph_helper(nx.graph_atlas, options, False, "spring", evaluation, None, *args)
         if not g:
             return None
         g.n = n
@@ -417,7 +416,7 @@ def hkn_harary_apply(self, k, n, expression, evaluation, options):
     from pymathics.graph.harary import hkn_harary_graph
 
     args = (py_k, py_n)
-    g = graph_helper(hkn_harary_graph, options, False, "circular", None, *args)
+    g = graph_helper(hkn_harary_graph, options, False, "circular", evaluation, None, *args)
     if not g:
         return None
     g.k = py_k
@@ -490,7 +489,7 @@ class HmnHararyGraph(_NetworkXBuiltin):
         from pymathics.graph.harary import hnm_harary_graph
 
         args = (py_n, py_m)
-        g = graph_helper(hmn_harary_graph, options, False, "circular", None, *args)
+        g = graph_helper(hnm_harary_graph, options, False, "circular", evaluation, None, *args)
         if not g:
             return None
         g.n = py_n
@@ -557,11 +556,12 @@ class LadderGraph(_NetworkXBuiltin):
             return
 
         args = (py_n,)
-        g = graph_helper(nx.ladder_graph, options, False, "spring", 0, *args)
+        g = graph_helper(nx.ladder_graph, options, False, "spring", evaluation, 0, *args)
         if not g:
             return None
         g.G.n = n
         return g
+
 
 class PathGraph(_NetworkXBuiltin):
     """
@@ -582,7 +582,9 @@ class PathGraph(_NetworkXBuiltin):
                 yield Expression("UndirectedEdge", u, v)
 
         g = _graph_from_list(edges(), options)
-        g.G.graph_layout = options["System`GraphLayout"].get_string_value() or "spiral_equidistant"
+        g.G.graph_layout = (
+            options["System`GraphLayout"].get_string_value() or "spiral_equidistant"
+        )
         return g
 
 
@@ -645,7 +647,7 @@ class RandomTree(_NetworkXBuiltin):
             return
 
         args = (py_n,)
-        g = graph_helper(nx.random_tree, options, False, "tree", 0, *args)
+        g = graph_helper(nx.random_tree, options, False, "tree", evaluation, 0, *args)
         if not g:
             return None
         g.G.n = n
@@ -676,11 +678,12 @@ class StarGraph(_NetworkXBuiltin):
             return
 
         args = (py_n,)
-        g = graph_helper(nx.star_graph, options, False, "spring", 0, *args)
+        g = graph_helper(nx.star_graph, options, False, "spring", evaluation, 0, *args)
         if not g:
             return None
         g.G.n = n
         return g
+
 
 WL_TO_NETWORKX_FN = {
     "DodecahedralGraph": (nx.dodecahedral_graph, None),
@@ -689,6 +692,7 @@ WL_TO_NETWORKX_FN = {
     "IsohedralGraph": (nx.icosahedral_graph, "spring"),
     "PetersenGraph": (nx.petersen_graph, None),
 }
+
 
 class GraphData(_NetworkXBuiltin):
     """
@@ -699,6 +703,7 @@ class GraphData(_NetworkXBuiltin):
 
     >> GraphData["PappusGraph"]
     """
+
     def apply(self, name, expression, evaluation, options):
         "%(name)s[name_String, OptionsPattern[%(name)s]]"
         py_name = name.get_string_value()
@@ -710,11 +715,12 @@ class GraphData(_NetworkXBuiltin):
                 # These graphs require parameters
                 return
             import inspect
+
             fn = dict(inspect.getmembers(nx, inspect.isfunction)).get(py_name, None)
             # parameters = inspect.signature(nx.diamond_graph).parameters.values()
             # if len([p for p in list(parameters) if p.kind in [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD]]) != 0:
             #     return
         if fn:
-            g = graph_helper(fn, options, False, layout)
+            g = graph_helper(fn, options, False, evaluation, layout)
             g.G.name = py_name
             return g
