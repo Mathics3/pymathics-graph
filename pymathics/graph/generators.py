@@ -132,7 +132,9 @@ class BarbellGraph(_NetworkXBuiltin):
             return
 
         args = (py_m1, py_m2)
-        g = graph_helper(nx.barbell_graph, options, False, "spring", evaluation, None, *args)
+        g = graph_helper(
+            nx.barbell_graph, options, False, "spring", evaluation, None, *args
+        )
         if not g:
             return None
 
@@ -219,7 +221,9 @@ def complete_graph_apply(self, n, expression, evaluation, options):
         return
 
     args = (py_n,)
-    g = graph_helper(nx.complete_graph, options, False, "circular", evaluation, None, *args)
+    g = graph_helper(
+        nx.complete_graph, options, False, "circular", evaluation, None, *args
+    )
     if not g:
         return None
 
@@ -394,7 +398,9 @@ class GraphAtlas(_NetworkXBuiltin):
             return
 
         args = (py_n,)
-        g = graph_helper(nx.graph_atlas, options, False, "spring", evaluation, None, *args)
+        g = graph_helper(
+            nx.graph_atlas, options, False, "spring", evaluation, None, *args
+        )
         if not g:
             return None
         g.n = n
@@ -416,7 +422,9 @@ def hkn_harary_apply(self, k, n, expression, evaluation, options):
     from pymathics.graph.harary import hkn_harary_graph
 
     args = (py_k, py_n)
-    g = graph_helper(hkn_harary_graph, options, False, "circular", evaluation, None, *args)
+    g = graph_helper(
+        hkn_harary_graph, options, False, "circular", evaluation, None, *args
+    )
     if not g:
         return None
     g.k = py_k
@@ -489,7 +497,9 @@ class HmnHararyGraph(_NetworkXBuiltin):
         from pymathics.graph.harary import hnm_harary_graph
 
         args = (py_n, py_m)
-        g = graph_helper(hnm_harary_graph, options, False, "circular", evaluation, None, *args)
+        g = graph_helper(
+            hnm_harary_graph, options, False, "circular", evaluation, None, *args
+        )
         if not g:
             return None
         g.n = py_n
@@ -556,7 +566,9 @@ class LadderGraph(_NetworkXBuiltin):
             return
 
         args = (py_n,)
-        g = graph_helper(nx.ladder_graph, options, False, "spring", evaluation, 0, *args)
+        g = graph_helper(
+            nx.ladder_graph, options, False, "spring", evaluation, 0, *args
+        )
         if not g:
             return None
         g.G.n = n
