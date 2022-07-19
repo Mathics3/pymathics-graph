@@ -11,14 +11,22 @@ networkx does all the heavy lifting.
 
 from mathics.builtin.base import Builtin, AtomBuiltin
 from mathics.builtin.box.graphics import GraphicsBox
+from mathics.builtin.patterns import Matcher
+from mathics.core.atoms import Integer, Integer0, Integer1, Real
+from mathics.core.convert.expression import ListExpression
 from mathics.core.expression import (
     Atom,
     Expression,
-    Integer,
-    Real,
-    Symbol,
 )
-from mathics.builtin.patterns import Matcher
+from mathics.core.symbols import Symbol
+from mathics.core.systemsymbols import (
+    SymbolBlank,
+    SymbolGraphics,
+    SymbolMakeBoxes,
+    SymbolMissing,
+    SymbolRGBColor,
+    SymbolRule,
+)
 
 from inspect import isgenerator
 
@@ -61,6 +69,13 @@ DEFAULT_GRAPH_OPTIONS = {
 }
 
 import networkx as nx
+
+SymbolDirectedEdge = Symbol("DirectedEdge")
+SymbolCases = Symbol("Cases")
+SymbolCases = Symbol("DirectedEdge")
+SymbolGraphBox = Symbol("GraphBox")
+SymbolLength = Symbol("Length")
+SymbolUndirectedEdge = Symbol("UndirectedEdge")
 
 
 def has_directed_option(options: dict) -> bool:
@@ -204,14 +219,14 @@ def _edge_style(expr):
 
 def _parse_property(expr, attr_dict=None):
     if expr.has_form("Rule", 2):
-        name, value = expr.leaves
+        name, value = expr.elements
         if isinstance(name, Symbol):
             if attr_dict is None:
                 attr_dict = {}
             attr_dict[name.get_name()] = value
     elif expr.has_form("List", None):
-        for item in expr.leaves:
-            attr_dict = _parse_property(item, attr_dict)
+        for element in expr.elements:
+            attr_dict = _parse_property(element, attr_dict)
     return attr_dict
 
 
@@ -236,7 +251,7 @@ class _NetworkXBuiltin(Builtin):
         if head == "System`Graph" and isinstance(graph, Atom) and hasattr(graph, "G"):
             return graph
         elif head == "System`List":
-            return _graph_from_list(graph.leaves, options)
+            return _graph_from_list(graph.elements, options)
         elif not quiet:
             evaluation.message(self.get_name(), "graph", expr)
 
@@ -245,29 +260,29 @@ class _NetworkXBuiltin(Builtin):
         if head == "System`Graph":
             return compute(graph)
         elif head == "System`List":
-            return compute(_graph_from_list(graph.leaves, options))
+            return compute(_graph_from_list(graph.elements, options))
 
     def __str__(self):
         return "-Graph-"
 
 
 class GraphBox(GraphicsBox):
-    def _graphics_box(self, leaves, options):
+    def _graphics_box(self, elements, options):
         evaluation = options["evaluation"]
-        graph, form = leaves
+        graph, form = elements
         primitives = graph._layout(evaluation)
-        graphics = Expression("Graphics", primitives)
-        graphics_box = Expression("MakeBoxes", graphics, form).evaluate(evaluation)
+        graphics = Expression(SymbolGraphics, primitives)
+        graphics_box = Expression(SymbolMakeBoxes, graphics, form).evaluate(evaluation)
         return graphics_box
 
-    def boxes_to_text(self, leaves, **options):
+    def boxes_to_text(self, elements, **options):
         return "-Graph-"
 
-    def boxes_to_xml(self, leaves, **options):
+    def boxes_to_xml(self, elements, **options):
         # Figure out what to do here.
         return "-Graph-XML-"
 
-    def boxes_to_tex(self, leaves, **options):
+    def boxes_to_tex(self, elements, **options):
         # Figure out what to do here.
         return "-Graph-TeX-"
 
@@ -328,12 +343,12 @@ class _Collection(object):
         index = self.get_index()
         return lambda c: sorted(c, key=lambda v: index[v])
 
-    def get_property(self, item, name):
+    def get_property(self, element, name):
         properties = self.properties
         if properties is None:
             return None
         index = self.get_index()
-        i = index.get(item)
+        i = index.get(element)
         if i is None:
             return None
         p = properties[i]
@@ -392,10 +407,10 @@ class _FullGraphRewrite(Exception):
 def _normalize_edges(edges):
     for edge in edges:
         if edge.has_form("Property", 2):
-            expr, prop = edge.leaves
+            expr, prop = edge.elements
             yield Expression(edge.get_head(), list(_normalize_edges([expr]))[0], prop)
         elif edge.get_head_name() == "System`Rule":
-            yield Expression("System`DirectedEdge", *edge.leaves)
+            yield Expression(SymbolDirectedEdge, *edge.elements)
         else:
             yield edge
 
@@ -459,17 +474,17 @@ class Graph(Atom):
         return hash(("Graph", self.G))  # FIXME self.properties, ...
 
     def atom_to_boxes(self, form, evaluation):
-        return Expression("GraphBox", self, form)
+        return Expression(SymbolGraphBox, self, form)
 
     def boxes_to_xml(self, **options):
         # Figure out what to do here.
         return "-Graph-XML-"
 
-    def get_property(self, item, name):
-        if item.get_head_name() in ("System`DirectedEdge", "System`UndirectedEdge"):
-            x = self.edges.get_property(item, name)
+    def get_property(self, element, name):
+        if element.get_head_name() in ("System`DirectedEdge", "System`UndirectedEdge"):
+            x = self.edges.get_property(element, name)
         if x is None:
-            x = self.vertices.get_property(item, name)
+            x = self.vertices.get_property(element, name)
         return x
 
     def delete_edges(self, edges_to_delete):
@@ -484,10 +499,10 @@ class Graph(Atom):
         for edge in edges_to_delete:
             if edge.has_form("DirectedEdge", 2):
                 if directed:
-                    u, v = edge.leaves
+                    u, v = edge.elements
                     G.remove_edge(u, v)
             elif edge.has_form("UndirectedEdge", 2):
-                u, v = edge.leaves
+                u, v = edge.elements
                 if directed:
                     G.remove_edge(u, v)
                     G.remove_edge(v, u)
@@ -538,7 +553,7 @@ def _edge_weights(options):
         return []
     if not expr.has_form("List", None):
         return []
-    return expr.leaves
+    return expr.elements
 
 
 class _GraphParseError(Exception):
@@ -547,7 +562,7 @@ class _GraphParseError(Exception):
 
 def _parse_item(x, attr_dict=None):
     if x.has_form("Property", 2):
-        expr, prop = x.leaves
+        expr, prop = x.elements
         attr_dict = _parse_property(prop, attr_dict)
         return _parse_item(expr, attr_dict)
     else:
@@ -574,7 +589,7 @@ def _create_graph(
 
     def add_vertex(x, attr_dict=None):
         if x.has_form("Property", 2):
-            expr, prop = x.leaves
+            expr, prop = x.elements
             attr_dict = _parse_property(prop, attr_dict)
             return add_vertex(expr, attr_dict)
         elif x not in known_vertices:
@@ -595,7 +610,7 @@ def _create_graph(
         edges, edge_properties = from_graph.edges.data()
 
         for edge, attr_dict in zip(edges, edge_properties):
-            u, v = edge.leaves
+            u, v = edge.elements
             if edge.get_head_name() == "System`DirectedEdge":
                 directed_edges.append((u, v, attr_dict))
             else:
@@ -628,19 +643,19 @@ def _create_graph(
     directed_edge_head = Symbol(
         "DirectedEdge" if use_directed_edges else "UndirectedEdge"
     )
-    undirected_edge_head = Symbol("UndirectedEdge")
+    undirected_edge_head = SymbolUndirectedEdge
 
     def parse_edge(r, attr_dict):
         if r.is_atom():
             raise _GraphParseError
 
         name = r.get_head_name()
-        leaves = r.leaves
+        elements = r.elements
 
-        if len(leaves) != 2:
+        if len(elements) != 2:
             raise _GraphParseError
 
-        u, v = leaves
+        u, v = elements
 
         u = add_vertex(u)
         v = add_vertex(v)
@@ -654,7 +669,7 @@ def _create_graph(
             head = undirected_edge_head
             track_edges((u, v), (v, u))
         elif name == "PyMathics`Property":
-            for prop in edge.leaves:
+            for prop in edge.elements:
                 prop_str = str(prop.head)
                 if prop_str in ("System`Rule", "System`DirectedEdge"):
                     edges_container = directed_edges
@@ -844,12 +859,12 @@ class GraphAtom(AtomBuiltin):
 
     def apply(self, graph, evaluation, options):
         "Graph[graph_List, OptionsPattern[%(name)s]]"
-        return _graph_from_list(graph.leaves, options)
+        return _graph_from_list(graph.elements, options)
 
     def apply_1(self, vertices, edges, evaluation, options):
         "Graph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
         return _graph_from_list(
-            edges.leaves, options=options, new_vertices=vertices.leaves
+            edges.elements, options=options, new_vertices=vertices.elements
         )
 
 
@@ -1183,10 +1198,10 @@ class FindVertexCut(_NetworkXBuiltin):
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             if graph.empty() or not _is_connected(graph.G):
-                return Expression("List")
+                return ListExpression()
             else:
-                return Expression(
-                    "List", *graph.sort_vertices(nx.minimum_node_cut(graph.G))
+                return ListExpression(
+                    *graph.sort_vertices(nx.minimum_node_cut(graph.G))
                 )
 
     def apply_st(self, graph, s, t, expression, evaluation, options):
@@ -1201,11 +1216,9 @@ class FindVertexCut(_NetworkXBuiltin):
         elif not G.has_node(t):
             self._not_a_vertex(expression, 3, evaluation)
         elif graph.empty() or not _is_connected(graph.G):
-            return Expression("List")
+            return ListExpression()
         else:
-            return Expression(
-                "List", *graph.sort_vertices(nx.minimum_node_cut(G, s, t))
-            )
+            return ListExpression(*graph.sort_vertices(nx.minimum_node_cut(G, s, t)))
 
 
 class HighlightGraph(_NetworkXBuiltin):
@@ -1213,27 +1226,27 @@ class HighlightGraph(_NetworkXBuiltin):
 
     def apply(self, graph, what, expression, evaluation, options):
         "HighlightGraph[graph_, what_List, OptionsPattern[%(name)s]]"
-        default_highlight = [Expression("RGBColor", 1, 0, 0)]
+        default_highlight = [Expression(SymbolRGBColor, Integer1, Integer0, Integer0)]
 
         def parse(item):
             if item.get_head_name() == "System`Rule":
-                return Expression("DirectedEdge", *item.leaves)
+                return Expression(SymbolDirectedEdge, *item.elements)
             else:
                 return item
 
         rules = []
-        for item in what.leaves:
-            if item.get_head_name() == "System`Style":
-                if len(item.leaves) >= 2:
-                    rules.append((parse(item.leaves[0]), item.leaves[1:]))
+        for element in what.elements:
+            if element.get_head_name() == "System`Style":
+                if len(element.elements) >= 2:
+                    rules.append((parse(element.elements[0]), element.elements[1:]))
             else:
-                rules.append((parse(item), default_highlight))
+                rules.append((parse(element), default_highlight))
 
-        rules.append((Expression("Blank"), Expression("Missing")))
+        rules.append((Expression(SymbolBlank), Expression(SymbolMissing)))
 
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            rule_exprs = Expression("List", *[Expression("Rule", *r) for r in rules])
+            rule_exprs = ListExpression(*[Expression(SymbolRule, *r) for r in rules])
             return graph.with_highlight(rule_exprs)
 
 
@@ -1242,13 +1255,13 @@ class _PatternList(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            return Expression("List", *self._items(graph))
+            return ListExpression(*self._items(graph))
 
     def apply_patt(self, graph, patt, expression, evaluation, options):
         "%(name)s[graph_, patt_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            return Expression("Cases", Expression("List", *self._items(graph)), patt)
+            return Expression(SymbolCases, ListExpression(*self._items(graph)), patt)
 
 
 class _PatternCount(_NetworkXBuiltin):
@@ -1263,8 +1276,8 @@ class _PatternCount(_NetworkXBuiltin):
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             return Expression(
-                "Length",
-                Expression("Cases", Expression("List", *self._items(graph)), patt),
+                SymbolLength,
+                Expression(SymbolCases, ListExpression(*self._items(graph)), patt),
             )
 
 
@@ -1330,10 +1343,10 @@ class EdgeRules(_NetworkXBuiltin):
 
             def rules():
                 for expr in graph.edges.expressions:
-                    u, v = expr.leaves
-                    yield Expression("Rule", u, v)
+                    u, v = expr.elements
+                    yield Expression(SymbolRule, u, v)
 
-            return Expression("List", *list(rules()))
+            return ListExpression(*list(rules()))
 
 
 class AdjacencyList(_NetworkXBuiltin):
@@ -1357,9 +1370,9 @@ class AdjacencyList(_NetworkXBuiltin):
             for v in graph.G.nodes:
                 if match(v, evaluation):
                     collected.update(neighbors(v))
-            return Expression("List", *graph.sort_vertices(list(collected)))
+            return ListExpression(*graph.sort_vertices(list(collected)))
         elif graph.G.has_node(what):
-            return Expression("List", *graph.sort_vertices(neighbors(what)))
+            return ListExpression(*graph.sort_vertices(neighbors(what)))
         else:
             self._not_a_vertex(expression, 2, evaluation)
 
@@ -1519,8 +1532,7 @@ class BetweennessCentrality(_Centrality):
             centrality = nx.betweenness_centrality(
                 graph.G, normalized=False, weight=weight
             )
-            return Expression(
-                "List",
+            return ListExpression(
                 *[Real(centrality.get(v, 0.0)) for v in graph.vertices.expressions],
             )
 
@@ -1543,8 +1555,7 @@ class ClosenessCentrality(_Centrality):
             if G.is_directed():
                 G = G.reverse()
             centrality = nx.closeness_centrality(G, distance=weight, wf_improved=False)
-            return Expression(
-                "List",
+            return ListExpression(
                 *[Real(centrality.get(v, 0.0)) for v in graph.vertices.expressions],
             )
 
@@ -1563,8 +1574,7 @@ class DegreeCentrality(_Centrality):
 
     def _from_dict(self, graph, centrality):
         s = len(graph.G) - 1  # undo networkx's normalization
-        return Expression(
-            "List",
+        return ListExpression(
             *[Integer(s * centrality.get(v, 0)) for v in graph.vertices.expressions],
         )
 
@@ -1613,7 +1623,7 @@ class _ComponentwiseCentrality(_Centrality):
                 for i, x in enumerate(values):
                     result[i] += x / s
 
-        return Expression("List", *[Real(x) for x in result])
+        return ListExpression(*[Real(x) for x in result])
 
 
 class EigenvectorCentrality(_ComponentwiseCentrality):
@@ -1702,8 +1712,7 @@ class PageRankCentrality(_Centrality):
                 return
             G, weight = graph.coalesced_graph(evaluation)
             centrality = nx.pagerank(G, alpha=py_alpha, weight=weight, tol=1.0e-7)
-            return Expression(
-                "List",
+            return ListExpression(
                 *[Real(centrality.get(v, 0)) for v in graph.vertices.expressions],
             )
 
@@ -1728,10 +1737,9 @@ class HITSCentrality(_Centrality):
                 return 0 if x < tol else x
 
             vertices = graph.vertices.expressions
-            return Expression(
-                "List",
-                Expression("List", *[Real(_crop(a.get(v, 0))) for v in vertices]),
-                Expression("List", *[Real(_crop(h.get(v, 0))) for v in vertices]),
+            return ListExpression(
+                ListExpression(*[Real(_crop(a.get(v, 0))) for v in vertices]),
+                ListExpression(*[Real(_crop(h.get(v, 0))) for v in vertices]),
             )
 
 
@@ -1746,8 +1754,8 @@ class VertexDegree(_Centrality):
 
         def degrees(graph):
             degrees = dict(list(graph.G.degree(graph.vertices)))
-            return Expression(
-                "List", *[Integer(degrees.get(v, 0)) for v in graph.vertices]
+            return ListExpression(
+                *[Integer(degrees.get(v, 0)) for v in graph.vertices]
             )
 
         return self._evaluate_atom(graph, options, degrees)
@@ -1792,18 +1800,17 @@ class FindShortestPath(_NetworkXBuiltin):
         else:
             try:
                 weight = graph.update_weights(evaluation)
-                return Expression(
-                    "List",
+                return ListExpression(
                     *list(nx.shortest_path(G, source=s, target=t, weight=weight)),
                 )
             except nx.exception.NetworkXNoPath:
-                return Expression("List")
+                return ListExpression()
 
 
 def _convert_networkx_graph(G, options):
     mapping = dict((v, Integer(i)) for i, v in enumerate(G.nodes))
     G = nx.relabel_nodes(G, mapping)
-    [Expression("System`UndirectedEdge", u, v) for u, v in G.edges]
+    [Expression(SymbolUndirectedEdge, u, v) for u, v in G.edges]
     return Graph(
         G,
         **options,
@@ -1826,7 +1833,9 @@ class VertexAdd(_NetworkXBuiltin):
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             if what.get_head_name() == "System`List":
-                return graph.add_vertices(*zip(*[_parse_item(x) for x in what.leaves]))
+                return graph.add_vertices(
+                    *zip(*[_parse_item(x) for x in what.elements])
+                )
             else:
                 return graph.add_vertices(*zip(*[_parse_item(what)]))
 
@@ -1851,12 +1860,12 @@ class VertexDelete(_NetworkXBuiltin):
             head_name = what.get_head_name()
             if head_name in pattern_objects:
                 cases = Expression(
-                    "Cases", Expression("List", *graph.vertices.expressions), what
+                    SymbolCases, ListExpression(*graph.vertices.expressions), what
                 ).evaluate(evaluation)
                 if cases.get_head_name() == "System`List":
-                    return graph.delete_vertices(cases.leaves)
+                    return graph.delete_vertices(cases.elements)
             elif head_name == "System`List":
-                return graph.delete_vertices(what.leaves)
+                return graph.delete_vertices(what.elements)
             else:
                 return graph.delete_vertices([what])
 
@@ -1872,7 +1881,7 @@ class EdgeAdd(_NetworkXBuiltin):
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             if what.get_head_name() == "System`List":
-                return graph.add_edges(*zip(*[_parse_item(x) for x in what.leaves]))
+                return graph.add_edges(*zip(*[_parse_item(x) for x in what.elements]))
             else:
                 return graph.add_edges(*zip(*[_parse_item(what)]))
 
@@ -1907,11 +1916,11 @@ class EdgeDelete(_NetworkXBuiltin):
             head_name = what.get_head_name()
             if head_name in pattern_objects:
                 cases = Expression(
-                    "Cases", Expression("List", *graph.edges.expressions), what
+                    SymbolCases, ListExpression(*graph.edges.expressions), what
                 ).evaluate(evaluation)
                 if cases.get_head_name() == "System`List":
-                    return graph.delete_edges(cases.leaves)
+                    return graph.delete_edges(cases.elements)
             elif head_name == "System`List":
-                return graph.delete_edges(what.leaves)
+                return graph.delete_edges(what.elements)
             else:
                 return graph.delete_edges([what])
