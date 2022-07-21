@@ -464,6 +464,10 @@ class Graph(Atom):
             return hash(self)
 
     @property
+    def value(self):
+        return self.G
+
+    @property
     def vertices(self):
         return self.G.nodes
 
