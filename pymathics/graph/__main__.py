@@ -11,6 +11,7 @@ networkx does all the heavy lifting.
 
 from mathics.builtin.base import Builtin, AtomBuiltin
 from mathics.builtin.box.graphics import GraphicsBox
+from mathics.builtin.box.inout import _BoxedString
 from mathics.builtin.patterns import Matcher
 from mathics.core.atoms import Integer, Integer0, Integer1, Real
 from mathics.core.convert.expression import ListExpression
@@ -27,7 +28,6 @@ from mathics.core.systemsymbols import (
     SymbolRGBColor,
     SymbolRule,
 )
-
 from inspect import isgenerator
 
 WL_MARKER_TO_NETWORKX = {
@@ -416,6 +416,7 @@ def _normalize_edges(edges):
 
 
 class Graph(Atom):
+    class_head_name = "Pymathics`Graph"
 
     options = DEFAULT_GRAPH_OPTIONS
 
@@ -423,16 +424,30 @@ class Graph(Atom):
         super(Graph, self).__init__()
         self.G = G
 
+    def __hash__(self):
+        return hash(("Pymathics`Graph", self.G))
+
+    def __str__(self):
+        return "-Graph-"
+
+    def atom_to_boxes(self, f, evaluation) -> _BoxedString:
+        return _BoxedString("-Graph-")
+
+    def default_format(self, evaluation, form):
+        return "-Graph-"
+
+    def do_format(self, evaluation, form):
+        return self
+
     @property
     def edges(self):
         return self.G.edges
 
-    @property
-    def vertices(self):
-        return self.G.nodes
-
     def empty(self):
         return len(self.G) == 0
+
+    def is_loop_free(self):
+        return not any(True for _ in nx.nodes_with_selfloops(self.G))
 
     # networkx graphs can't be for mixed
     def is_mixed_graph(self):
@@ -442,100 +457,85 @@ class Graph(Atom):
     def is_multigraph(self):
         return isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph))
 
-    def is_loop_free(self):
-        return not any(True for _ in nx.nodes_with_selfloops(self.G))
-
-    def __str__(self):
-        return "-Graph-"
-
-    def do_copy(self):
-        return Graph(self.G)
-
     def get_sort_key(self, pattern_sort=False):
         if pattern_sort:
             return super(Graph, self).get_sort_key(True)
         else:
             return hash(self)
 
-    def default_format(self, evaluation, form):
-        return "-Graph-"
+    @property
+    def vertices(self):
+        return self.G.nodes
 
-    def same(self, other):
-        return isinstance(other, Graph) and self.G == other.G
-        # FIXME
-        # self.properties == other.properties
-        # self.options == other.options
-        # self.highlights == other.highlights
 
-    def to_python(self, *args, **kwargs):
-        return self.G
+class _Collection(object):
+    def __init__(self, expressions, properties=None, index=None):
+        self.expressions = expressions
+        self.properties = properties if properties else None
+        self.index = index
 
-    def __hash__(self):
-        return hash(("Graph", self.G))  # FIXME self.properties, ...
+    def clone(self):
+        properties = self.properties
+        return _Collection(
+            self.expressions[:], properties[:] if properties else None, None
+        )
 
-    def atom_to_boxes(self, form, evaluation):
-        return Expression(SymbolGraphBox, self, form)
+    def filter(self, expressions):
+        index = self.get_index()
+        return [expr for expr in expressions if expr in index]
 
-    def boxes_to_xml(self, **options):
-        # Figure out what to do here.
-        return "-Graph-XML-"
+    def extend(self, expressions, properties):
+        if properties:
+            if self.properties is None:
+                self.properties = [None] * len(self.expressions)
+            self.properties.extend(properties)
+        self.expressions.extend(expressions)
+        self.index = None
+        return expressions
+
+    def delete(self, expressions):
+        index = self.get_index()
+        trash = set(index[x] for x in expressions)
+        deleted = [self.expressions[i] for i in trash]
+        self.expressions = [x for i, x in enumerate(self.expressions) if i not in trash]
+        self.properties = [x for i, x in enumerate(self.properties) if i not in trash]
+        self.index = None
+        return deleted
+
+    def data(self):
+        return self.expressions, list(self.get_properties())
+
+    def get_index(self):
+        index = self.index
+        if index is None:
+            index = dict((v, i) for i, v in enumerate(self.expressions))
+            self.index = index
+        return index
+
+    def get_properties(self):
+        if self.properties:
+            for p in self.properties:
+                yield p
+        else:
+            for _ in range(len(self.expressions)):
+                yield None
+
+    def get_sorted(self):
+        index = self.get_index()
+        return lambda c: sorted(c, key=lambda v: index[v])
 
     def get_property(self, element, name):
-        if element.get_head_name() in ("System`DirectedEdge", "System`UndirectedEdge"):
-            x = self.edges.get_property(element, name)
-        if x is None:
-            x = self.vertices.get_property(element, name)
-        return x
-
-    def delete_edges(self, edges_to_delete):
-        G = self.G.copy()
-        directed = G.is_directed()
-
-        edges_to_delete = list(_normalize_edges(edges_to_delete))
-        # FIXME: edges_to_delete is needs to be a tuple. tuples
-        # are edges in networkx
-        edges_to_delete = [edge for edge in self.edges if edge in edges_to_delete]
-
-        for edge in edges_to_delete:
-            if edge.has_form("DirectedEdge", 2):
-                if directed:
-                    u, v = edge.elements
-                    G.remove_edge(u, v)
-            elif edge.has_form("UndirectedEdge", 2):
-                u, v = edge.elements
-                if directed:
-                    G.remove_edge(u, v)
-                    G.remove_edge(v, u)
-                else:
-                    G.remove_edge(u, v)
-
-        edges = self.edges.clone()
-        edges.delete(edges_to_delete)
-
-        return Graph(G)
-
-    def update_weights(self, evaluation):
-        weights = None
-        G = self.G
-
-        if self.is_multigraph():
-            for u, v, k, w in G.edges.data(
-                "System`EdgeWeight", default=None, keys=True
-            ):
-                data = G.get_edge_data(u, v, key=k)
-                w = data.get()
-                if w is not None:
-                    w = w.evaluate(evaluation).to_mpmath()
-                    G[u][v][k]["WEIGHT"] = w
-                    weights = "WEIGHT"
-        else:
-            for u, v, w in G.edges.data("System`EdgeWeight", default=None):
-                if w is not None:
-                    w = w.evaluate(evaluation).to_mpmath()
-                    G[u][v]["WEIGHT"] = w
-                    weights = "WEIGHT"
-
-        return weights
+        properties = self.properties
+        if properties is None:
+            return None
+        index = self.get_index()
+        i = index.get(element)
+        if i is None:
+            return None
+        p = properties[i]
+        if p is None:
+            return None
+        return p.get(name)
 
 
 def _is_connected(G):
@@ -1754,9 +1754,7 @@ class VertexDegree(_Centrality):
 
         def degrees(graph):
             degrees = dict(list(graph.G.degree(graph.vertices)))
-            return ListExpression(
-                *[Integer(degrees.get(v, 0)) for v in graph.vertices]
-            )
+            return ListExpression(*[Integer(degrees.get(v, 0)) for v in graph.vertices])
 
         return self._evaluate_atom(graph, options, degrees)
 
