@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 
@@ -6,4 +5,4 @@
 # well as importing into Python. That's why there is no
 # space around "=" below.
 # fmt: off
-__version__="2.3.1.dev0"
+__version__="5.0.0.dev0"

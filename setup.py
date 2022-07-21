@@ -29,7 +29,7 @@ is_PyPy = platform.python_implementation() == "PyPy"
 
 setup(
     name="pymathics-graph",
-    version=__version__,
+    version=__version__,  # noqa
     packages=find_namespace_packages(include=["pymathics.*"]),
     install_requires=["Mathics3>=3.0.0", "networkx", "pydot", "matplotlib"],
     # don't pack Mathics in egg because of media files, etc.

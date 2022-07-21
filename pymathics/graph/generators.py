@@ -9,11 +9,12 @@ from mathics.builtin.numbers.randomnumbers import RandomEnv
 
 from pymathics.graph.__main__ import (
     Graph,
+    SymbolUndirectedEdge,
     _NetworkXBuiltin,
     _convert_networkx_graph,
     _graph_from_list,
-    has_directed_option,
     _process_graph_options,
+    has_directed_option,
     nx,
 )
 
@@ -43,7 +44,7 @@ def graph_helper(
             else graph_generator_func(*args, **kwargs)
         )
     except MemoryError:
-        evaluation.message(self.get_name(), "mem", expression)
+        evaluation.message("Graph", "mem", evaluation)
         return None
     if graph_layout and not options["System`GraphLayout"].get_string_value():
         options["System`GraphLayout"] = String(graph_layout)
@@ -297,7 +298,7 @@ class CompleteKaryTree(_NetworkXBuiltin):
         n_int = n.get_int_value()
         k_int = k.get_int_value()
 
-        new_n_int = int(((k_int ** n_int) - 1) / (k_int - 1))
+        new_n_int = int(((k_int**n_int) - 1) / (k_int - 1))
         return f_r_t_apply(self, k, Integer(new_n_int), expression, evaluation, options)
 
     # FIXME: can be done with rules?
@@ -306,7 +307,7 @@ class CompleteKaryTree(_NetworkXBuiltin):
 
         n_int = n.get_int_value()
 
-        new_n_int = int(2 ** n_int) - 1
+        new_n_int = int(2**n_int) - 1
         return f_r_t_apply(
             self, Integer(2), Integer(new_n_int), expression, evaluation, options
         )
@@ -595,13 +596,13 @@ class PathGraph(_NetworkXBuiltin):
      = -Graph-
     """
 
-    def apply(self, l, evaluation, options):
+    def apply(self, element, evaluation, options):
         "PathGraph[l_List, OptionsPattern[%(name)s]]"
-        leaves = l.leaves
+        elements = element.elements
 
         def edges():
-            for u, v in zip(leaves, leaves[1:]):
-                yield Expression("UndirectedEdge", u, v)
+            for u, v in zip(elements, elements[1:]):
+                yield Expression(SymbolUndirectedEdge, u, v)
 
         g = _graph_from_list(edges(), options)
         g.G.graph_layout = (
@@ -627,7 +628,7 @@ class RandomGraph(_NetworkXBuiltin):
         py_k = k.get_int_value()
         is_directed = has_directed_option(options)
 
-        with RandomEnv(evaluation) as rand:
+        with RandomEnv(evaluation) as _:
             for _ in range(py_k):
                 # seed = rand.randint(0, 2 ** 63 - 1) # 2**63 is too large
                 G = nx.gnm_random_graph(py_n, py_m, directed=is_directed)
