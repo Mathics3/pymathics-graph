@@ -9,17 +9,16 @@ networkx does all the heavy lifting.
 
 # uses networkx
 
-from mathics.builtin.base import Builtin, AtomBuiltin
+from inspect import isgenerator
+
+from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.builtin.box.graphics import GraphicsBox
 from mathics.builtin.box.inout import _BoxedString
 from mathics.builtin.patterns import Matcher
 from mathics.core.atoms import Integer, Integer0, Integer1, Real
 from mathics.core.convert.expression import ListExpression
-from mathics.core.expression import (
-    Atom,
-    Expression,
-)
-from mathics.core.symbols import Symbol
+from mathics.core.expression import Atom, Expression
+from mathics.core.symbols import Symbol, SymbolTrue
 from mathics.core.systemsymbols import (
     SymbolBlank,
     SymbolGraphics,
@@ -28,7 +27,6 @@ from mathics.core.systemsymbols import (
     SymbolRGBColor,
     SymbolRule,
 )
-from inspect import isgenerator
 
 WL_MARKER_TO_NETWORKX = {
     "Circle": "o",
@@ -642,15 +640,14 @@ def _create_graph(
             multigraph[0] = True
 
     edge_weights = _edge_weights(options)
-    use_directed_edges = options.get("System`DirectedEdges", Symbol("True")).is_true()
+    use_directed_edges = options.get("System`DirectedEdges", SymbolTrue) is SymbolTrue
 
-    directed_edge_head = Symbol(
-        "DirectedEdge" if use_directed_edges else "UndirectedEdge"
+    directed_edge_head = (
+        SymbolDirectedEdge if use_directed_edges else SymbolUndirectedEdge
     )
-    undirected_edge_head = SymbolUndirectedEdge
 
     def parse_edge(r, attr_dict):
-        if r.is_atom():
+        if isinstance(r, Atom):
             raise _GraphParseError
 
         name = r.get_head_name()
@@ -670,7 +667,7 @@ def _create_graph(
             track_edges((u, v))
         elif name == "System`UndirectedEdge":
             edges_container = undirected_edges
-            head = undirected_edge_head
+            head = SymbolUndirectedEdge
             track_edges((u, v), (v, u))
         elif name == "PyMathics`Property":
             for prop in edge.elements:
@@ -680,8 +677,8 @@ def _create_graph(
                     head = directed_edge_head
                     track_edges((u, v))
                 elif prop_str == "System`UndirectedEdge":
-                    edges_container = undirected_edges
-                    head = undirected_edge_head
+                    edges_container = SymbolDirectedEdge
+                    head = SymbolUndirectedEdge
                 else:
                     pass
             pass
