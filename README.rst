@@ -8,11 +8,13 @@ Example Session
 ::
 
    $ mathicsscript
-   Mathics 3.0.1
-   on CPython 3.6.12 (default, Oct 24 2020, 10:34:18)
-   using SymPy 1.8, mpmath 1.2.1, cython 0.29.22
+   Mathicscript: 5.0.0, Mathics 5.0.0
+   on CPython 3.10.4 (main, Jun 29 2022, 12:14:53) [GCC 11.2.0]
+   using SymPy 1.9, mpmath 1.2.1, numpy 1.21.5
+   matplotlib 3.5.2,
+   Asymptote version 2.81
 
-   Copyright (C) 2011-2021 The Mathics Team.
+   Copyright (C) 2011-2022 The Mathics Team.
    This program comes with ABSOLUTELY NO WARRANTY.
    This is free software, and you are welcome to redistribute it
    under certain conditions.
@@ -21,6 +23,7 @@ Example Session
    Quit by pressing CONTROL-D
 
    In[1]:= LoadModule["pymathics.graph"]
+
    Out[1]= pymathics.graph
    In[2]:= BinomialTree[3]
    In[3]:= BinomialTree[6]
