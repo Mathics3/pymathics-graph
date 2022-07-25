@@ -11,11 +11,11 @@ Example:
    In[4]:= CompleteKaryTree[3, VertexLabels->True]
 """
 
-from pymathics.graph.version import __version__
 from pymathics.graph.__main__ import *  # noqa
-from pymathics.graph.tree import *  # qoqa
-from pymathics.graph.generators import *  # noqa
 from pymathics.graph.algorithms import *  # noqa
+from pymathics.graph.generators import *  # noqa
+from pymathics.graph.tree import *  # noqa
+from pymathics.graph.version import __version__  # noqa
 
 pymathics_version_data = {
     "author": "The Mathics Team",

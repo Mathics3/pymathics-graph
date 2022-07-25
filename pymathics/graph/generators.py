@@ -5,23 +5,22 @@ Routines for generating classes of Graphs.
 networkx does all the heavy lifting.
 """
 
+from typing import Callable, Optional
+
 from mathics.builtin.numbers.randomnumbers import RandomEnv
+from mathics.core.expression import Expression, Integer, String
 
 from pymathics.graph.__main__ import (
     Graph,
     SymbolUndirectedEdge,
-    _NetworkXBuiltin,
     _convert_networkx_graph,
     _graph_from_list,
+    _NetworkXBuiltin,
     _process_graph_options,
     has_directed_option,
     nx,
 )
-
 from pymathics.graph.tree import DEFAULT_TREE_OPTIONS
-
-from mathics.core.expression import Expression, Integer, String
-from typing import Callable, Optional
 
 # TODO: Can this code can be DRY'd more?
 

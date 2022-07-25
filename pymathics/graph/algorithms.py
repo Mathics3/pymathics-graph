@@ -5,22 +5,19 @@ Algorithms on Graphs.
 networkx does all the heavy lifting.
 """
 
-from mathics.core.expression import Expression, Symbol
+from mathics.core.convert.python import from_python
+from mathics.core.expression import Expression
+from mathics.core.list import ListExpression
+from mathics.core.symbols import SymbolFalse
 
 from pymathics.graph.__main__ import (
     DEFAULT_GRAPH_OPTIONS,
-    _NetworkXBuiltin,
+    SymbolDirectedEdge,
+    SymbolUndirectedEdge,
     _create_graph,
+    _NetworkXBuiltin,
     nx,
 )
-
-from mathics.core.expression import (
-    from_python,
-)
-
-# FIXME: Add to Mathics Expression
-# SymbolFalse = Symbol("System`False")
-# SymbolTrue = Symbol("System`True")
 
 
 class ConnectedComponents(_NetworkXBuiltin):
@@ -152,8 +149,8 @@ class FindSpanningTree(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            weight = graph.update_weights(evaluation)
-            edge_type = "DirectedEdge" if graph.G.is_directed() else "UndirectedEdge"
+            graph.update_weights(evaluation)
+            SymbolDirectedEdge if graph.G.is_directed() else SymbolUndirectedEdge
             # FIXME: put in edge to Graph conversion function?
             edges = [
                 Expression("UndirectedEdge", u, v)
@@ -187,9 +184,9 @@ class PlanarGraphQ(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph:
-            return Symbol("System`False")
+            return SymbolFalse
         is_planar, _ = nx.check_planarity(graph.G)
-        return Symbol("System`True") if is_planar else Symbol("System`False")
+        return from_python(is_planar)
 
 
 class WeaklyConnectedComponents(_NetworkXBuiltin):
@@ -214,6 +211,6 @@ class WeaklyConnectedComponents(_NetworkXBuiltin):
             components = sorted(components, key=lambda c: index[next(iter(c))])
 
             vertices_sorted = graph.vertices.get_sorted()
-            result = [Expression("List", *vertices_sorted(c)) for c in components]
+            result = [ListExpression(*vertices_sorted(c)) for c in components]
 
-            return Expression("List", *result)
+            return ListExpression(*result)

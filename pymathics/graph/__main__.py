@@ -11,7 +11,6 @@ networkx does all the heavy lifting.
 
 from inspect import isgenerator
 
-
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.builtin.box.graphics import GraphicsBox
 from mathics.builtin.box.inout import _BoxedString
@@ -269,8 +268,7 @@ class _NetworkXBuiltin(Builtin):
     def __str__(self):
         return "-Graph-"
 
-    # FIXME: return type should be a specific kind of Tuple, not a list.
-    def get_sort_key(self, pattern_sort=False) -> list:
+    def get_sort_key(self, pattern_sort=False) -> tuple:
         """
         Returns a particular encoded list (which should be a tuple) that is used
         in ``Sort[]`` comparisons and in the ordering that occurs
@@ -471,6 +469,24 @@ class Graph(Atom):
     def do_format(self, evaluation, form):
         return self
 
+    @property
+    def edges(self):
+        return self.G.edges
+
+    def empty(self):
+        return len(self.G) == 0
+
+    def is_loop_free(self):
+        return not any(True for _ in nx.nodes_with_selfloops(self.G))
+
+    # networkx graphs can't be for mixed
+    def is_mixed_graph(self):
+        return False
+        # return self.edges. ... is_mixed()
+
+    def is_multigraph(self):
+        return isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph))
+
     def get_sort_key(self, pattern_sort=False) -> tuple:
         """
         Returns a particular encoded list (which should be a tuple) that is used
@@ -497,30 +513,6 @@ class Graph(Atom):
                 hash(self),
             ]
             return hash(self)
-
-    @property
-    def edges(self):
-        return self.G.edges
-
-    def empty(self):
-        return len(self.G) == 0
-
-    def is_loop_free(self):
-        return not any(True for _ in nx.nodes_with_selfloops(self.G))
-
-    # networkx graphs can't be for mixed
-    def is_mixed_graph(self):
-        return False
-        # return self.edges. ... is_mixed()
-
-    def is_multigraph(self):
-        return isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph))
-
-    def get_sort_key(self, pattern_sort=False):
-        if pattern_sort:
-            return super(Graph, self).get_sort_key(True)
-        else:
-            return (1, 3, Symbol("Pymathics`Graph"), tuple(), 2, len(self.pixels), hash(self))
 
     @property
     def value(self):
