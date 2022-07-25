@@ -11,14 +11,15 @@ networkx does all the heavy lifting.
 
 from inspect import isgenerator
 
+
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.builtin.box.graphics import GraphicsBox
 from mathics.builtin.box.inout import _BoxedString
 from mathics.builtin.patterns import Matcher
 from mathics.core.atoms import Integer, Integer0, Integer1, Real
-from mathics.core.convert.expression import ListExpression
+from mathics.core.convert.expression import ListExpression, from_python
 from mathics.core.expression import Atom, Expression
-from mathics.core.symbols import Symbol, SymbolTrue
+from mathics.core.symbols import Symbol, SymbolFalse, SymbolTrue
 from mathics.core.systemsymbols import (
     SymbolBlank,
     SymbolGraphics,
@@ -71,6 +72,7 @@ import networkx as nx
 SymbolDirectedEdge = Symbol("DirectedEdge")
 SymbolCases = Symbol("Cases")
 SymbolCases = Symbol("DirectedEdge")
+SymbolGraph = Symbol("Graph")
 SymbolGraphBox = Symbol("GraphBox")
 SymbolLength = Symbol("Length")
 SymbolUndirectedEdge = Symbol("UndirectedEdge")
@@ -246,7 +248,11 @@ class _NetworkXBuiltin(Builtin):
 
     def _build_graph(self, graph, evaluation, options, expr, quiet=False):
         head = graph.get_head_name()
-        if head == "System`Graph" and isinstance(graph, Atom) and hasattr(graph, "G"):
+        if (
+            head == "Pymathics`Graph"
+            and isinstance(graph, Atom)
+            and hasattr(graph, "G")
+        ):
             return graph
         elif head == "System`List":
             return _graph_from_list(graph.elements, options)
@@ -262,6 +268,34 @@ class _NetworkXBuiltin(Builtin):
 
     def __str__(self):
         return "-Graph-"
+
+    # FIXME: return type should be a specific kind of Tuple, not a list.
+    def get_sort_key(self, pattern_sort=False) -> list:
+        """
+        Returns a particular encoded list (which should be a tuple) that is used
+        in ``Sort[]`` comparisons and in the ordering that occurs
+        in an M-Expression which has the ``Orderless`` property.
+
+        See the docstring for element.get_sort_key() for more detail.
+        """
+
+        if pattern_sort:
+            return super(_NetworkXBuiltin, self).get_sort_key(True)
+        else:
+            # Return a sort_key tuple.
+            # but with a `2` instead of `1` in the 5th position,
+            # and adding two extra fields: the length in the 5th position,
+            # and a hash in the 6th place.
+            return [
+                1,
+                3,
+                self.class_head_name,
+                tuple(),
+                2,
+                len(self.vertices),
+                hash(self),
+            ]
+            return hash(self)
 
 
 class GraphBox(GraphicsBox):
@@ -285,7 +319,7 @@ class GraphBox(GraphicsBox):
         return "-Graph-TeX-"
 
 
-class _Collection(object):
+class _Collection:
     def __init__(self, expressions, properties=None, index=None):
         self.expressions = expressions
         self.properties = properties if properties else None
@@ -437,6 +471,33 @@ class Graph(Atom):
     def do_format(self, evaluation, form):
         return self
 
+    def get_sort_key(self, pattern_sort=False) -> list:
+        """
+        Returns a particular encoded list (which should be a tuple) that is used
+        in ``Sort[]`` comparisons and in the ordering that occurs
+        in an M-Expression which has the ``Orderless`` property.
+
+        See the docstring for element.get_sort_key() for more detail.
+        """
+
+        if pattern_sort:
+            return super(Graph, self).get_sort_key(True)
+        else:
+            # Return a sort_key tuple.
+            # but with a `2` instead of `1` in the 5th position,
+            # and adding two extra fields: the length in the 5th position,
+            # and a hash in the 6th place.
+            return [
+                1,
+                3,
+                self.class_head_name,
+                tuple(),
+                2,
+                len(self.vertices),
+                hash(self),
+            ]
+            return hash(self)
+
     @property
     def edges(self):
         return self.G.edges
@@ -455,12 +516,6 @@ class Graph(Atom):
     def is_multigraph(self):
         return isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph))
 
-    def get_sort_key(self, pattern_sort=False):
-        if pattern_sort:
-            return super(Graph, self).get_sort_key(True)
-        else:
-            return hash(self)
-
     @property
     def value(self):
         return self.G
@@ -470,7 +525,7 @@ class Graph(Atom):
         return self.G.nodes
 
 
-class _Collection(object):
+class _Collection:
     def __init__(self, expressions, properties=None, index=None):
         self.expressions = expressions
         self.properties = properties if properties else None
@@ -783,11 +838,12 @@ class PropertyValue(Builtin):
 class DirectedEdge(Builtin):
     """
     <dl>
-    <dt>'DirectedEdge[$u$, $v$]'
-      <dd>a directed edge from $u$ to $v$.
+      <dt>'DirectedEdge[$u$, $v$]'
+      <dd>create a directed edge from $u$ to $v$.
     </dl>
     """
 
+    summary_text = "make a directed graph edge"
     pass
 
 
@@ -795,7 +851,7 @@ class UndirectedEdge(Builtin):
     """
     <dl>
       <dt>'UndirectedEdge[$u$, $v$]'
-      <dd>an undirected edge between $u$ and $v$.
+      <dd>create an undirected edge between $u$ and $v$.
     </dl>
 
     >> a <-> b
@@ -807,6 +863,8 @@ class UndirectedEdge(Builtin):
     >> a <-> (b <-> c)
      = UndirectedEdge[a, UndirectedEdge[b, c]]
     """
+
+    summary_text = "makes undirected graph edge"
 
     pass
 
@@ -904,25 +962,22 @@ class PathGraphQ(_NetworkXBuiltin):
 
     def apply(self, graph, expression, evaluation, options):
         "PathGraphQ[graph_, OptionsPattern[%(name)s]]"
-        if not isinstance(graph, Graph):
-            return Symbol("False")
+        if not isinstance(graph, Graph) or graph.empty():
+            return SymbolFalse
 
-        if graph.empty():
-            is_path = False
+        G = graph.G
+
+        if G.is_directed():
+            connected = nx.is_semiconnected(G)
         else:
-            G = graph.G
+            connected = nx.is_connected(G)
 
-            if G.is_directed():
-                connected = nx.is_semiconnected(G)
-            else:
-                connected = nx.is_connected(G)
+        if connected:
+            is_path = all(d <= 2 for _, d in G.degree(graph.vertices))
+        else:
+            is_path = False
 
-            if connected:
-                is_path = all(d <= 2 for _, d in G.degree(graph.vertices))
-            else:
-                is_path = False
-
-        return Symbol("True" if is_path else "False")
+        return from_python(is_path)
 
 
 class MixedGraphQ(_NetworkXBuiltin):
@@ -951,9 +1006,7 @@ class MixedGraphQ(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
-            return Symbol("True" if graph.is_mixed_graph() else "False")
-        else:
-            return Symbol("False")
+            return from_python(graph.is_mixed_graph())
 
 
 class MultigraphQ(_NetworkXBuiltin):
@@ -975,9 +1028,9 @@ class MultigraphQ(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
-            return Symbol("True" if graph.is_multigraph() else "False")
+            return from_python(graph.is_multigraph())
         else:
-            return Symbol("False")
+            return SymbolFalse
 
 
 class AcyclicGraphQ(_NetworkXBuiltin):
@@ -1002,19 +1055,20 @@ class AcyclicGraphQ(_NetworkXBuiltin):
 
     #> AcyclicGraphQ["abc"]
      = False
+     : Expected a graph at position 1 in AcyclicGraphQ[abc].
     """
 
     def apply(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph and not graph.empty():
-            try:
-                cycles = nx.find_cycle(graph.G)
-            except nx.exception.NetworkXNoCycle:
-                cycles = None
-            return Symbol("True" if not cycles else "False")
-        else:
-            return Symbol("False")
+        graph = self._build_graph(graph, evaluation, options, expression, quiet=False)
+        if not graph or graph.empty():
+            return SymbolFalse
+
+        try:
+            cycles = nx.find_cycle(graph.G)
+        except nx.exception.NetworkXNoCycle:
+            return SymbolTrue
+        return from_python(not cycles)
 
 
 class LoopFreeGraphQ(_NetworkXBuiltin):
@@ -1035,13 +1089,10 @@ class LoopFreeGraphQ(_NetworkXBuiltin):
     def apply(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            if graph.empty():
-                return Symbol("False")
-            else:
-                return Symbol("True" if graph.is_loop_free() else "False")
-        else:
-            return Symbol("False")
+        if not graph or graph.empty():
+            return SymbolFalse
+
+        return from_python(graph.is_loop_free())
 
 
 class DirectedGraphQ(_NetworkXBuiltin):
@@ -1064,9 +1115,9 @@ class DirectedGraphQ(_NetworkXBuiltin):
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             directed = graph.G.is_directed() and not graph.is_mixed_graph()
-            return Symbol("True" if directed else "False")
+            return from_python(directed)
         else:
-            return Symbol("False")
+            return SymbolFalse
 
 
 class ConnectedGraphQ(_NetworkXBuiltin):
@@ -1100,9 +1151,9 @@ class ConnectedGraphQ(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
-            return Symbol("True" if _is_connected(graph.G) else "False")
+            return from_python(_is_connected(graph.G))
         else:
-            return Symbol("False")
+            return SymbolFalse
 
 
 class SimpleGraphQ(_NetworkXBuiltin):
@@ -1128,17 +1179,17 @@ class SimpleGraphQ(_NetworkXBuiltin):
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             if graph.empty():
-                return Symbol("True")
+                return SymbolTrue
             else:
                 simple = graph.is_loop_free() and not graph.is_multigraph()
-                return Symbol("True" if simple else "False")
+                return from_python(simple)
         else:
-            return Symbol("False")
+            return SymbolFalse
 
 
 class PlanarGraphQ(_NetworkXBuiltin):
     """
-    # see https://en.wikipedia.org/wiki/Planar_graph
+    See <url>https://en.wikipedia.org/wiki/Planar_graph</url>
 
     >> PlanarGraphQ[CompleteGraph[4]]
      = True
@@ -1153,20 +1204,15 @@ class PlanarGraphQ(_NetworkXBuiltin):
      = False
     """
 
-    requires = _NetworkXBuiltin.requires + ("planarity",)
+    requires = _NetworkXBuiltin.requires
 
     def apply(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            if graph.empty():
-                return Symbol("False")
-            else:
-                import planarity
+        if not graph or graph.empty():
+            return SymbolFalse
 
-                return Symbol("True" if planarity.is_planar(graph.G) else "False")
-        else:
-            return Symbol("False")
+        return from_python(nx.is_planar(graph.G))
 
 
 class FindVertexCut(_NetworkXBuiltin):
@@ -1359,7 +1405,7 @@ class AdjacencyList(_NetworkXBuiltin):
      = {1, 3}
 
     >> AdjacencyList[{x -> 2, x -> 3, x -> 4, 2 -> 10, 2 -> 11, 4 -> 20, 4 -> 21, 10 -> 100}, 10, 2]
-     = {x, 2, 11, 100}
+     = {2, 11, 100, x}
     """
 
     def _retrieve(self, graph, what, neighbors, expression, evaluation):
@@ -1371,9 +1417,9 @@ class AdjacencyList(_NetworkXBuiltin):
             for v in graph.G.nodes:
                 if match(v, evaluation):
                     collected.update(neighbors(v))
-            return ListExpression(*graph.sort_vertices(list(collected)))
+            return ListExpression(*sorted(collected))
         elif graph.G.has_node(what):
-            return ListExpression(*graph.sort_vertices(neighbors(what)))
+            return ListExpression(*sorted(neighbors(what)))
         else:
             self._not_a_vertex(expression, 2, evaluation)
 

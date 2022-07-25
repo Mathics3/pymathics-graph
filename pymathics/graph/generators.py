@@ -121,13 +121,13 @@ class BarbellGraph(_NetworkXBuiltin):
 
     def apply(self, m1, m2, expression, evaluation, options):
         "%(name)s[m1_Integer, m2_Integer, OptionsPattern[%(name)s]]"
-        py_m1 = m1.get_int_value()
+        py_m1 = m1.value
 
         if py_m1 < 0:
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        py_m2 = m2.get_int_value()
+        py_m2 = m2.value
         if py_m2 < 0:
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
