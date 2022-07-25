@@ -471,7 +471,7 @@ class Graph(Atom):
     def do_format(self, evaluation, form):
         return self
 
-    def get_sort_key(self, pattern_sort=False) -> list:
+    def get_sort_key(self, pattern_sort=False) -> tuple:
         """
         Returns a particular encoded list (which should be a tuple) that is used
         in ``Sort[]`` comparisons and in the ordering that occurs
@@ -515,6 +515,12 @@ class Graph(Atom):
 
     def is_multigraph(self):
         return isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph))
+
+    def get_sort_key(self, pattern_sort=False):
+        if pattern_sort:
+            return super(Graph, self).get_sort_key(True)
+        else:
+            return (1, 3, Symbol("Pymathics`Graph"), tuple(), 2, len(self.pixels), hash(self))
 
     @property
     def value(self):

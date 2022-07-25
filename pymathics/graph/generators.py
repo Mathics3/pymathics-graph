@@ -144,7 +144,8 @@ class BarbellGraph(_NetworkXBuiltin):
         return g
 
 
-# Oddly, networkX doesn't allow the directed case.
+# This code will be in the 2.6 release of networkx.
+# See https://github.com/networkx/networkx/pull/4461
 def binomial_tree(n, create_using=None):
     """Returns the Binomial Tree of order n.
 
@@ -162,11 +163,20 @@ def binomial_tree(n, create_using=None):
     G : NetworkX graph
         A binomial tree of $2^n$ vertices and $2^n - 1$ edges.
 
+    create_using : NetworkX graph constructor, optional (default=nx.Graph)
+       Graph type to create. If graph instance, then cleared before populated.
+
+    Returns
+    -------
+    G : NetworkX graph
+        A binomial tree of $2^n$ nodes and $2^n - 1$ edges.
+
     """
-    G = nx.empty_graph(1, create_using=create_using)
+    G = nx.empty_graph(1, create_using)
     N = 1
     for i in range(n):
-        edges = [(u + N, v + N) for (u, v) in G.edges]
+        # Use G.edges() to ensure 2-tuples. G.edges is 3-tuple for MultiGraph
+        edges = [(u + N, v + N) for (u, v) in G.edges()]
         G.add_edges_from(edges)
         G.add_edge(0, N)
         N *= 2
