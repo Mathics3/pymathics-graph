@@ -461,7 +461,7 @@ class Graph(Atom):
         if pattern_sort:
             return super(Graph, self).get_sort_key(True)
         else:
-            return hash(self)
+            return (1, 3, Symbol("Pymathics`Graph"), tuple(), 2, len(self.pixels), hash(self))
 
     @property
     def value(self):
