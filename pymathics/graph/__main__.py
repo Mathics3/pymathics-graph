@@ -464,6 +464,13 @@ class Graph(Atom):
     def atom_to_boxes(self, f, evaluation) -> _BoxedString:
         return _BoxedString("-Graph-")
 
+    def add_edges(self, new_edges, new_edge_properties):
+        G = self.G.copy()
+        mathics_new_edges = list(_normalize_edges(new_edges))
+        return _create_graph(
+            mathics_new_edges, new_edge_properties, options={}, from_graph=G
+        )
+
     def coalesced_graph(self, evaluation):
         if not isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph)):
             return self.G, "WEIGHT"
@@ -486,6 +493,33 @@ class Graph(Atom):
         )
 
         return new_graph, "WEIGHT"
+
+    def delete_edges(self, edges_to_delete):
+        G = self.G.copy()
+        directed = G.is_directed()
+
+        edges_to_delete = list(_normalize_edges(edges_to_delete))
+        edges_to_delete = self.edges.filter(edges_to_delete)
+
+        for edge in edges_to_delete:
+            if edge.has_form("DirectedEdge", 2):
+                if directed:
+                    u, v = edge.elements
+                    G.remove_edge(u, v)
+            elif edge.has_form("UndirectedEdge", 2):
+                u, v = edge.elements
+                if directed:
+                    G.remove_edge(u, v)
+                    G.remove_edge(v, u)
+                else:
+                    G.remove_edge(u, v)
+
+        edges = self.edges.clone()
+        edges.delete(edges_to_delete)
+
+        return Graph(
+            self.vertices, edges, G, self.layout, self.options, self.highlights
+        )
 
     def default_format(self, evaluation, form):
         return "-Graph-"
@@ -707,11 +741,11 @@ def _create_graph(
         vertices = [add_vertex(v) for v in new_vertices]
 
     if from_graph is not None:
-        old_vertices, vertex_properties = from_graph.vertices.data()
+        old_vertices = dict(from_graph.nodes.data())
         vertices += old_vertices
-        edges, edge_properties = from_graph.edges.data()
+        edges = list(from_graph.edges.data())
 
-        for edge, attr_dict in zip(edges, edge_properties):
+        for edge, attr_dict in edges:
             u, v = edge.elements
             if edge.get_head_name() == "System`DirectedEdge":
                 directed_edges.append((u, v, attr_dict))
@@ -1039,12 +1073,12 @@ class MixedGraphQ(_NetworkXBuiltin):
     #> MixedGraphQ["abc"]
      = False
 
-    #> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
-     = False
-    #> g = EdgeAdd[g, a <-> b]; MixedGraphQ[g]
-     = True
-    #> g = EdgeDelete[g, a <-> b]; MixedGraphQ[g]
-     = False
+    # #> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
+    #  = False
+    # #> g = EdgeAdd[g, a <-> b]; MixedGraphQ[g]
+    #  = True
+    # #> g = EdgeDelete[g, a <-> b]; MixedGraphQ[g]
+    # = False
     """
 
     def apply(self, graph, expression, evaluation, options):
@@ -1654,8 +1688,8 @@ class ClosenessCentrality(_Centrality):
 
 class DegreeCentrality(_Centrality):
     """
-    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; DegreeCentrality[g]
-     = {2, 4, 5, 3, 2}
+    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; Sort[DegreeCentrality[g]]
+     = {2, 2, 3, 4, 5}
 
     >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; DegreeCentrality[g, "In"]
      = {1, 3, 3, 0, 1}
@@ -1918,16 +1952,16 @@ class VertexAdd(_NetworkXBuiltin):
      = -Graph-
     """
 
-    def apply(self, graph, what, expression, evaluation, options):
+    def apply(self, graph: Expression, what, expression, evaluation, options):
         "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
+        mathics_graph = self._build_graph(graph, evaluation, options, expression)
+        if mathics_graph:
             if what.get_head_name() == "System`List":
-                return graph.add_vertices(
+                return mathics_graph.add_vertices(
                     *zip(*[_parse_item(x) for x in what.elements])
                 )
             else:
-                return graph.add_vertices(*zip(*[_parse_item(what)]))
+                return mathics_graph.add_vertices(*zip(*[_parse_item(what)]))
 
 
 class VertexDelete(_NetworkXBuiltin):
@@ -1960,57 +1994,57 @@ class VertexDelete(_NetworkXBuiltin):
                 return graph.delete_vertices([what])
 
 
-class EdgeAdd(_NetworkXBuiltin):
-    """
-    >> EdgeAdd[{1->2,2->3},3->1]
-     = -Graph-
-    """
+# class EdgeAdd(_NetworkXBuiltin):
+#     """
+#     >> EdgeAdd[{1->2,2->3},3->1]
+#      = -Graph-
+#     """
 
-    def apply(self, graph, what, expression, evaluation, options):
-        "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            if what.get_head_name() == "System`List":
-                return graph.add_edges(*zip(*[_parse_item(x) for x in what.elements]))
-            else:
-                return graph.add_edges(*zip(*[_parse_item(what)]))
+#     def apply(self, graph: Expression, what, expression, evaluation, options):
+#         "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
+#         mathics_graph = self._build_graph(graph, evaluation, options, expression)
+#         if mathics_graph:
+#             if what.get_head_name() == "System`List":
+#                 return mathics_graph.add_edges(*zip(*[_parse_item(x) for x in what.elements]))
+#             else:
+#                 return mathics_graph.add_edges(*zip(*[_parse_item(what)]))
 
 
-class EdgeDelete(_NetworkXBuiltin):
-    """
-    >> Length[EdgeList[EdgeDelete[{a -> b, b -> c, c -> d}, b -> c]]]
-     = 2
+# class EdgeDelete(_NetworkXBuiltin):
+#     """
+#     >> Length[EdgeList[EdgeDelete[{a -> b, b -> c, c -> d}, b -> c]]]
+#      = 2
 
-    >> Length[EdgeList[EdgeDelete[{a -> b, b -> c, c -> b, c -> d}, b <-> c]]]
-     = 4
+#     >> Length[EdgeList[EdgeDelete[{a -> b, b -> c, c -> b, c -> d}, b <-> c]]]
+#      = 4
 
-    >> Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, b -> c]]]
-     = 3
+#     >> Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, b -> c]]]
+#      = 3
 
-    >> Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, c -> b]]]
-     = 3
+#     >> Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, c -> b]]]
+#      = 3
 
-    >> Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, b <-> c]]]
-     = 2
+#     >> Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, b <-> c]]]
+#      = 2
 
-    >> EdgeDelete[{4<->5,5<->7,7<->9,9<->5,2->4,4->6,6->2}, _UndirectedEdge]
-     = -Graph-
-    """
+#     >> EdgeDelete[{4<->5,5<->7,7<->9,9<->5,2->4,4->6,6->2}, _UndirectedEdge]
+#      = -Graph-
+#     """
 
-    def apply(self, graph, what, expression, evaluation, options):
-        "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            from mathics.builtin import pattern_objects
+#     def apply(self, graph, what, expression, evaluation, options):
+#         "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
+#         graph = self._build_graph(graph, evaluation, options, expression)
+#         if graph:
+#             from mathics.builtin import pattern_objects
 
-            head_name = what.get_head_name()
-            if head_name in pattern_objects:
-                cases = Expression(
-                    SymbolCases, ListExpression(*graph.edges), what
-                ).evaluate(evaluation)
-                if cases.get_head_name() == "System`List":
-                    return graph.delete_edges(cases.elements)
-            elif head_name == "System`List":
-                return graph.delete_edges(what.elements)
-            else:
-                return graph.delete_edges([what])
+#             head_name = what.get_head_name()
+#             if head_name in pattern_objects:
+#                 cases = Expression(
+#                     SymbolCases, ListExpression(*graph.edges), what
+#                 ).evaluate(evaluation)
+#                 if cases.get_head_name() == "System`List":
+#                     return graph.delete_edges(cases.elements)
+#             elif head_name == "System`List":
+#                 return graph.delete_edges(what.elements)
+#             else:
+#                 return graph.delete_edges([what])

@@ -108,8 +108,8 @@ class BarbellGraph(_NetworkXBuiltin):
       <dd>Barbell Graph: two complete graphs connected by a path.
     </dl>
 
-    >> BarBellGraph[4, 1]
-     = -Graph-
+    ## >> BarBellGraph[4, 1]
+    ##  = -Graph-
 
     """
 

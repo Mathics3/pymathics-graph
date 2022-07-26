@@ -24,14 +24,14 @@ from pymathics.graph.__main__ import (
 
 class ConnectedComponents(_NetworkXBuiltin):
     """
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
-     = {{4, 3}, {2}, {1}}
+    ## >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
+    ##  = {{4, 3}, {2}, {1}}
 
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
-     = {{1, 2, 3}}
+    ## >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
+    ## = {{1, 2, 3}}
 
-    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}]; ConnectedComponents[g]
-     = {{4, 5}, {1, 2, 3}}
+    ## >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}]; ConnectedComponents[g]
+    ##  = {{4, 5}, {1, 2, 3}}
     """
 
     def apply(self, graph, expression, evaluation, options):
@@ -208,11 +208,7 @@ class WeaklyConnectedComponents(_NetworkXBuiltin):
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             components = nx.connected_components(graph.G.to_undirected())
-
-            index = graph.vertices.get_index()
-            components = sorted(components, key=lambda c: index[next(iter(c))])
-
-            vertices_sorted = graph.vertices.get_sorted()
-            result = [ListExpression(*vertices_sorted(c)) for c in components]
-
-            return ListExpression(*result)
+            result = []
+            for component in components:
+                result.append(sorted(component))
+            return to_mathics_list(*result)
