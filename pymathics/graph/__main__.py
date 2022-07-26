@@ -9,6 +9,7 @@ networkx does all the heavy lifting.
 
 # uses networkx
 
+from collections import defaultdict
 from inspect import isgenerator
 
 from mathics.builtin.base import AtomBuiltin, Builtin
@@ -463,6 +464,29 @@ class Graph(Atom):
     def atom_to_boxes(self, f, evaluation) -> _BoxedString:
         return _BoxedString("-Graph-")
 
+    def coalesced_graph(self, evaluation):
+        if not isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph)):
+            return self.G, "WEIGHT"
+
+        new_edges = defaultdict(lambda: 0)
+        for u, v, w in self.G.edges.data("System`EdgeWeight", default=None):
+            if w is not None:
+                w = w.evaluate(evaluation).to_mpmath()
+            else:
+                w = 1
+            new_edges[(u, v)] += w
+
+        if self.G.is_directed():
+            new_graph = nx.DiGraph()
+        else:
+            new_graph = nx.Graph()
+
+        new_graph.add_edges_from(
+            ((u, v, {"WEIGHT": w}) for (u, v), w in new_edges.items())
+        )
+
+        return new_graph, "WEIGHT"
+
     def default_format(self, evaluation, form):
         return "-Graph-"
 
@@ -513,6 +537,29 @@ class Graph(Atom):
                 hash(self),
             ]
             return hash(self)
+
+    def update_weights(self, evaluation):
+        weights = None
+        G = self.G
+
+        if self.is_multigraph():
+            for u, v, k, w in G.edges.data(
+                "System`EdgeWeight", default=None, keys=True
+            ):
+                data = G.get_edge_data(u, v, key=k)
+                w = data.get()
+                if w is not None:
+                    w = w.evaluate(evaluation).to_mpmath()
+                    G[u][v][k]["WEIGHT"] = w
+                    weights = "WEIGHT"
+        else:
+            for u, v, w in G.edges.data("System`EdgeWeight", default=None):
+                if w is not None:
+                    w = w.evaluate(evaluation).to_mpmath()
+                    G[u][v]["WEIGHT"] = w
+                    weights = "WEIGHT"
+
+        return weights
 
     @property
     def value(self):
@@ -1578,7 +1625,7 @@ class BetweennessCentrality(_Centrality):
                 graph.G, normalized=False, weight=weight
             )
             return ListExpression(
-                *[Real(centrality.get(v, 0.0)) for v in graph.vertices.expressions],
+                *[Real(centrality.get(v, 0.0)) for v in graph.vertices],
             )
 
 
@@ -1601,7 +1648,7 @@ class ClosenessCentrality(_Centrality):
                 G = G.reverse()
             centrality = nx.closeness_centrality(G, distance=weight, wf_improved=False)
             return ListExpression(
-                *[Real(centrality.get(v, 0.0)) for v in graph.vertices.expressions],
+                *[Real(centrality.get(v, 0.0)) for v in graph.vertices],
             )
 
 
@@ -1620,7 +1667,7 @@ class DegreeCentrality(_Centrality):
     def _from_dict(self, graph, centrality):
         s = len(graph.G) - 1  # undo networkx's normalization
         return ListExpression(
-            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices.expressions],
+            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices],
         )
 
     def apply(self, graph, expression, evaluation, options):
@@ -1647,7 +1694,7 @@ class _ComponentwiseCentrality(_Centrality):
         raise NotImplementedError
 
     def _compute(self, graph, evaluation, reverse=False, normalized=True, **kwargs):
-        vertices = graph.vertices.expressions
+        vertices = graph.vertices
         G, weight = graph.coalesced_graph(evaluation)
         if reverse:
             G = G.reverse()
@@ -1758,7 +1805,7 @@ class PageRankCentrality(_Centrality):
             G, weight = graph.coalesced_graph(evaluation)
             centrality = nx.pagerank(G, alpha=py_alpha, weight=weight, tol=1.0e-7)
             return ListExpression(
-                *[Real(centrality.get(v, 0)) for v in graph.vertices.expressions],
+                *[Real(centrality.get(v, 0)) for v in graph.vertices],
             )
 
 
@@ -1781,7 +1828,7 @@ class HITSCentrality(_Centrality):
             def _crop(x):
                 return 0 if x < tol else x
 
-            vertices = graph.vertices.expressions
+            vertices = graph.vertices
             return ListExpression(
                 ListExpression(*[Real(_crop(a.get(v, 0))) for v in vertices]),
                 ListExpression(*[Real(_crop(h.get(v, 0))) for v in vertices]),
@@ -1903,7 +1950,7 @@ class VertexDelete(_NetworkXBuiltin):
             head_name = what.get_head_name()
             if head_name in pattern_objects:
                 cases = Expression(
-                    SymbolCases, ListExpression(*graph.vertices.expressions), what
+                    SymbolCases, ListExpression(*graph.vertices), what
                 ).evaluate(evaluation)
                 if cases.get_head_name() == "System`List":
                     return graph.delete_vertices(cases.elements)
@@ -1959,7 +2006,7 @@ class EdgeDelete(_NetworkXBuiltin):
             head_name = what.get_head_name()
             if head_name in pattern_objects:
                 cases = Expression(
-                    SymbolCases, ListExpression(*graph.edges.expressions), what
+                    SymbolCases, ListExpression(*graph.edges), what
                 ).evaluate(evaluation)
                 if cases.get_head_name() == "System`List":
                     return graph.delete_edges(cases.elements)

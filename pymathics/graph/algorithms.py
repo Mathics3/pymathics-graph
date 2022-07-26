@@ -5,10 +5,12 @@ Algorithms on Graphs.
 networkx does all the heavy lifting.
 """
 
+from mathics.core.convert.expression import to_mathics_list
 from mathics.core.convert.python import from_python
 from mathics.core.expression import Expression
 from mathics.core.list import ListExpression
 from mathics.core.symbols import SymbolFalse
+from mathics.core.systemsymbols import SymbolDirectedInfinity
 
 from pymathics.graph.__main__ import (
     DEFAULT_GRAPH_OPTIONS,
@@ -23,7 +25,7 @@ from pymathics.graph.__main__ import (
 class ConnectedComponents(_NetworkXBuiltin):
     """
     >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
-     = {{3, 4}, {2}, {1}}
+     = {{4, 3}, {2}, {1}}
 
     >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
      = {{1, 2, 3}}
@@ -41,8 +43,8 @@ class ConnectedComponents(_NetworkXBuiltin):
                 if graph.G.is_directed()
                 else nx.connected_components
             )
-            components = [Expression("List", *c) for c in connect_fn(graph.G)]
-            return Expression("List", *components)
+            components = [to_mathics_list(*c) for c in connect_fn(graph.G)]
+            return ListExpression(*components)
 
 
 # class FindHamiltonianPath(_NetworkXBuiltin):
@@ -61,7 +63,7 @@ class ConnectedComponents(_NetworkXBuiltin):
 #             path = nx.algorithms.tournament.hamiltonian_path(graph.G)
 #             if path:
 #                 # int_path = map(Integer, path)
-#                 return Expression("List", *path)
+#                 return to_mathics_list(*path)
 
 
 class GraphDistance(_NetworkXBuiltin):
@@ -110,8 +112,8 @@ class GraphDistance(_NetworkXBuiltin):
         if graph:
             weight = graph.update_weights(evaluation)
             d = nx.shortest_path_length(graph.G, source=s, weight=weight)
-            inf = Expression("DirectedInfinity", 1)
-            return Expression("List", *[d.get(v, inf) for v in graph.vertices])
+            inf = Expression(SymbolDirectedInfinity, 1)
+            return to_mathics_list(*[d.get(v, inf) for v in graph.vertices])
 
     def apply_s_t(self, graph, s, t, expression, evaluation, options):
         "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
@@ -130,7 +132,7 @@ class GraphDistance(_NetworkXBuiltin):
                     nx.shortest_path_length(graph.G, source=s, target=t, weight=weight)
                 )
             except nx.exception.NetworkXNoPath:
-                return Expression("DirectedInfinity", 1)
+                return Expression(SymbolDirectedInfinity, 1)
 
 
 class FindSpanningTree(_NetworkXBuiltin):
