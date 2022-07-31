@@ -1,11 +1,12 @@
 import networkx as nx
+from mathics.core.expression import Atom, Symbol
+
 from pymathics.graph.__main__ import (
+    DEFAULT_GRAPH_OPTIONS,
     Graph,
     _graph_from_list,
-    DEFAULT_GRAPH_OPTIONS,
     _NetworkXBuiltin,
 )
-from mathics.core.expression import Atom, Symbol
 
 DEFAULT_TREE_OPTIONS = {
     **DEFAULT_GRAPH_OPTIONS,

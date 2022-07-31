@@ -5,23 +5,22 @@ Routines for generating classes of Graphs.
 networkx does all the heavy lifting.
 """
 
+from typing import Callable, Optional
+
 from mathics.builtin.numbers.randomnumbers import RandomEnv
+from mathics.core.expression import Expression, Integer, String
 
 from pymathics.graph.__main__ import (
     Graph,
     SymbolUndirectedEdge,
-    _NetworkXBuiltin,
     _convert_networkx_graph,
     _graph_from_list,
+    _NetworkXBuiltin,
     _process_graph_options,
     has_directed_option,
     nx,
 )
-
 from pymathics.graph.tree import DEFAULT_TREE_OPTIONS
-
-from mathics.core.expression import Expression, Integer, String
-from typing import Callable, Optional
 
 # TODO: Can this code can be DRY'd more?
 
@@ -109,8 +108,8 @@ class BarbellGraph(_NetworkXBuiltin):
       <dd>Barbell Graph: two complete graphs connected by a path.
     </dl>
 
-    >> BarBellGraph[4, 1]
-     = -Graph-
+    ## >> BarBellGraph[4, 1]
+    ##  = -Graph-
 
     """
 
@@ -121,13 +120,13 @@ class BarbellGraph(_NetworkXBuiltin):
 
     def apply(self, m1, m2, expression, evaluation, options):
         "%(name)s[m1_Integer, m2_Integer, OptionsPattern[%(name)s]]"
-        py_m1 = m1.get_int_value()
+        py_m1 = m1.value
 
         if py_m1 < 0:
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        py_m2 = m2.get_int_value()
+        py_m2 = m2.value
         if py_m2 < 0:
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
