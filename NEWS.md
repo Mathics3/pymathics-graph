@@ -1,3 +1,12 @@
+5.0.0.alpha0
+------------
+
+Track API changes in Mathics 5.0.0.
+
+Changed to use networkx 2.8 or greater.
+
+Some functionality has been removed for now, because networkx 2.8's API is a bit different with its new NodeView and EdgeView API.
+
 2.3.0
 -----
 

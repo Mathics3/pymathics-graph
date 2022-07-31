@@ -22,6 +22,7 @@ from mathics.core.expression import Atom, Expression
 from mathics.core.symbols import Symbol, SymbolFalse, SymbolTrue
 from mathics.core.systemsymbols import (
     SymbolBlank,
+    SymbolFailed,
     SymbolGraphics,
     SymbolMakeBoxes,
     SymbolMissing,
@@ -910,7 +911,7 @@ class PropertyValue(Builtin):
         "PropertyValue[{graph_Graph, item_}, name_Symbol]"
         value = graph.get_property(item, name.get_name())
         if value is None:
-            return Symbol("$Failed")
+            return SymbolFailed
         return value
 
 
@@ -1688,8 +1689,8 @@ class ClosenessCentrality(_Centrality):
 
 class DegreeCentrality(_Centrality):
     """
-    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; Sort[DegreeCentrality[g]]
-     = {2, 2, 3, 4, 5}
+    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; DegreeCentrality[g]
+     = {2, 4, 5, 3, 2}
 
     >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; DegreeCentrality[g, "In"]
      = {1, 3, 3, 0, 1}
@@ -1701,7 +1702,7 @@ class DegreeCentrality(_Centrality):
     def _from_dict(self, graph, centrality):
         s = len(graph.G) - 1  # undo networkx's normalization
         return ListExpression(
-            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices],
+            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices.expressions],
         )
 
     def apply(self, graph, expression, evaluation, options):
