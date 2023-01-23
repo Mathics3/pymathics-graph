@@ -34,7 +34,7 @@ class ConnectedComponents(_NetworkXBuiltin):
     ##  = {{4, 5}, {1, 2, 3}}
     """
 
-    def apply(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation, options):
         "ConnectedComponents[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
@@ -54,7 +54,7 @@ class ConnectedComponents(_NetworkXBuiltin):
 #       <dd>returns a Hamiltonian path in the given tournament graph.
 #       </dl>
 #     """
-#     def apply_(self, graph, expression, evaluation, options):
+#     def eval_(self, graph, expression, evaluation, options):
 #         "%(name)s[graph_, OptionsPattern[%(name)s]]"
 
 #         graph = self._build_graph(graph, evaluation, options, expression)
@@ -106,7 +106,7 @@ class GraphDistance(_NetworkXBuiltin):
      = GraphDistance[{1 -> 2}, 3, 4]
     """
 
-    def apply_s(self, graph, s, expression, evaluation, options):
+    def eval_s(self, graph, s, expression, evaluation, options):
         "%(name)s[graph_, s_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
@@ -115,7 +115,7 @@ class GraphDistance(_NetworkXBuiltin):
             inf = Expression(SymbolDirectedInfinity, 1)
             return to_mathics_list(*[d.get(v, inf) for v in graph.vertices])
 
-    def apply_s_t(self, graph, s, t, expression, evaluation, options):
+    def eval_s_t(self, graph, s, t, expression, evaluation, options):
         "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph:
@@ -147,7 +147,7 @@ class FindSpanningTree(_NetworkXBuiltin):
 
     options = DEFAULT_GRAPH_OPTIONS
 
-    def apply(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
@@ -182,7 +182,7 @@ class PlanarGraphQ(_NetworkXBuiltin):
 
     options = DEFAULT_GRAPH_OPTIONS
 
-    def apply(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph:
@@ -203,7 +203,7 @@ class WeaklyConnectedComponents(_NetworkXBuiltin):
      = {{1, 2, 3, 4, 5}, {6, 7, 8}}
     """
 
-    def apply(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation, options):
         "WeaklyConnectedComponents[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:

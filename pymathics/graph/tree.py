@@ -30,7 +30,7 @@ class TreeGraphAtom(AtomBuiltin):
         "notree": "Graph is not a tree.",
     }
 
-    def apply(self, rules, evaluation, options):
+    def eval(self, rules, evaluation, options):
         "TreeGraph[rules_List, OptionsPattern[%(name)s]]"
         g = _graph_from_list(rules.leaves, options)
         if not nx.is_tree(g.G):
@@ -40,7 +40,7 @@ class TreeGraphAtom(AtomBuiltin):
         # Compute/check/set for root?
         return g
 
-    def apply_1(self, vertices, edges, evaluation, options):
+    def eval_with_v_e(self, vertices, edges, evaluation, options):
         "TreeGraph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
         if not all(isinstance(v, Atom) for v in vertices.leaves):
             evaluation.message(self.get_name(), "v")
@@ -85,7 +85,7 @@ class TreeGraphQ(_NetworkXBuiltin):
      = False
     """
 
-    def apply(self, g, expression, evaluation, options):
+    def eval(self, g, expression, evaluation, options):
         "TreeGraphQ[g_, OptionsPattern[%(name)s]]"
         if not isinstance(g, Graph):
             return Symbol("False")
