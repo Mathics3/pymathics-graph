@@ -23,7 +23,6 @@ Example Session
    Quit by pressing CONTROL-D
 
    In[1]:= LoadModule["pymathics.graph"]
-
    Out[1]= pymathics.graph
    In[2]:= BinomialTree[3]
    In[3]:= BinomialTree[6]

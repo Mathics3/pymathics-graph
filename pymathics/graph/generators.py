@@ -8,7 +8,9 @@ networkx does all the heavy lifting.
 from typing import Callable, Optional
 
 from mathics.builtin.numbers.randomnumbers import RandomEnv
-from mathics.core.expression import Expression, Integer, String
+from mathics.core.atoms import Integer, String
+from mathics.core.evaluation import Evaluation
+from mathics.core.expression import Expression
 
 from pymathics.graph.__main__ import (
     Graph,
@@ -23,6 +25,80 @@ from pymathics.graph.__main__ import (
 from pymathics.graph.tree import DEFAULT_TREE_OPTIONS
 
 # TODO: Can this code can be DRY'd more?
+
+
+def eval_complete_graph(
+    self, n: Integer, expression, evaluation: Evaluation, options: dict
+) -> Optional[Graph]:
+    py_n = n.value
+
+    if py_n < 1:
+        evaluation.message(self.get_name(), "ilsmp", expression)
+        return
+
+    args = (py_n,)
+    g = graph_helper(
+        nx.complete_graph, options, False, "circular", evaluation, None, *args
+    )
+    if not g:
+        return None
+
+    g.G.n = n
+    return g
+
+
+def eval_full_rary_tree(
+    self, r: Integer, n: Integer, expression, evaluation: Evaluation, options: dict
+) -> Optional[Graph]:
+    """
+    Call networkx to get a full_raray_tree using parameters, ``r`` and ``t``.
+    """
+    py_r = r.value
+
+    if py_r < 0:
+        evaluation.message(self.get_name(), "ilsmp", expression)
+        return
+
+    py_n = n.value
+    if py_n < 0:
+        evaluation.message(self.get_name(), "ilsmp", expression)
+        return
+
+    args = (py_r, py_n)
+    g = graph_helper(nx.full_rary_tree, options, True, "tree", evaluation, 0, *args)
+    if not g:
+        return None
+
+    g.G.r = r
+    g.G.n = n
+    return g
+
+
+def eval_hkn_harary(
+    self, k: Integer, n: Integer, expression, evaluation: Evaluation, options: dict
+) -> Optional[Graph]:
+    py_k = k.value
+
+    if py_k < 0:
+        evaluation.message(self.get_name(), "ilsmp", expression)
+        return
+
+    py_n = n.value
+    if py_n < 0:
+        evaluation.message(self.get_name(), "ilsmp2", expression)
+        return
+
+    from pymathics.graph.harary import hkn_harary_graph
+
+    args = (py_k, py_n)
+    g = graph_helper(
+        hkn_harary_graph, options, False, "circular", evaluation, None, *args
+    )
+    if not g:
+        return None
+    g.k = py_k
+    g.n = py_n
+    return g
 
 
 def graph_helper(
@@ -79,15 +155,17 @@ class BalancedTree(_NetworkXBuiltin):
 
     options = DEFAULT_TREE_OPTIONS
 
-    def eval(self, r, h, expression, evaluation, options: dict):
+    def eval(
+        self, r: Integer, h: Integer, expression, evaluation: Evaluation, options: dict
+    ) -> Optional[Graph]:
         "%(name)s[r_Integer, h_Integer, OptionsPattern[%(name)s]]"
-        py_r = r.get_int_value()
+        py_r = r.value
 
         if py_r < 0:
             evaluation.message(self.get_name(), "ilsmp", expression)
             return None
 
-        py_h = h.get_int_value()
+        py_h = h.value
         if py_h < 0:
             evaluation.message(self.get_name(), "ilsmp2", expression)
             return None
@@ -108,7 +186,7 @@ class BarbellGraph(_NetworkXBuiltin):
       <dd>Barbell Graph: two complete graphs connected by a path.
     </dl>
 
-    ## >> BarBellGraph[4, 1]
+    ## >> BarbellGraph[4, 1]
     ##  = -Graph-
 
     """
@@ -118,8 +196,15 @@ class BarbellGraph(_NetworkXBuiltin):
         "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
     }
 
-    def eval(self, m1, m2, expression, evaluation, options: dict):
-        "%(name)s[m1_Integer, m2_Integer, OptionsPattern[%(name)s]]"
+    def eval(
+        self,
+        m1: Integer,
+        m2: Integer,
+        expression,
+        evaluation: Evaluation,
+        options: dict,
+    ) -> Optional[Graph]:
+        "BarbellGraph[m1_Integer, m2_Integer, OptionsPattern[BarbellGraph]]"
         py_m1 = m1.value
 
         if py_m1 < 0:
@@ -128,7 +213,7 @@ class BarbellGraph(_NetworkXBuiltin):
 
         py_m2 = m2.value
         if py_m2 < 0:
-            evaluation.message(self.get_name(), "ilsmp", expression)
+            evaluation.message(self.get_name(), "ilsmp2", expression)
             return
 
         args = (py_m1, py_m2)
@@ -145,7 +230,7 @@ class BarbellGraph(_NetworkXBuiltin):
 
 # This code will be in the 2.6 release of networkx.
 # See https://github.com/networkx/networkx/pull/4461
-def binomial_tree(n, create_using=None):
+def binomial_tree(n, create_using=None) -> Graph:
     """Returns the Binomial Tree of order n.
 
     The binomial tree of order 0 consists of a single vertex. A binomial tree of order k
@@ -207,9 +292,11 @@ class BinomialTree(_NetworkXBuiltin):
         "mem": "Out of memory",
     }
 
-    def eval(self, n, expression, evaluation, options: dict):
+    def eval(
+        self, n: Integer, expression, evaluation: Evaluation, options: dict
+    ) -> Graph:
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        py_n = n.get_int_value()
+        py_n = n.value
 
         if py_n < 0:
             evaluation.message(self.get_name(), "ilsmp", expression)
@@ -221,24 +308,6 @@ class BinomialTree(_NetworkXBuiltin):
             return None
         g.G.n = n
         return g
-
-
-def complete_graph_eval(self, n: Integer, expression, evaluation, options: dict):
-    py_n = n.value
-
-    if py_n < 1:
-        evaluation.message(self.get_name(), "ilsmp", expression)
-        return
-
-    args = (py_n,)
-    g = graph_helper(
-        nx.complete_graph, options, False, "circular", evaluation, None, *args
-    )
-    if not g:
-        return None
-
-    g.G.n = n
-    return g
 
 
 class CompleteGraph(_NetworkXBuiltin):
@@ -260,11 +329,11 @@ class CompleteGraph(_NetworkXBuiltin):
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
 
-    def eval(self, n: Integer, expression, evaluation, options: dict):
+    def eval(self, n: Integer, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        return complete_graph_eval(self, n, expression, evaluation, options)
+        return eval_complete_graph(self, n, expression, evaluation, options)
 
-    def eval_multipartite(self, n, evaluation, options: dict):
+    def eval_multipartite(self, n, evaluation: Evaluation, options: dict):
         "%(name)s[n_List, OptionsPattern[%(name)s]]"
         if all(isinstance(i, Integer) for i in n.leaves):
             return Graph(
@@ -291,23 +360,25 @@ class CompleteKaryTree(_NetworkXBuiltin):
 
     options = DEFAULT_TREE_OPTIONS
 
-    def eval(self, k, n, expression, evaluation, options: dict):
+    def eval(self, k, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, k_Integer, OptionsPattern[%(name)s]]"
 
         n_int = n.get_int_value()
         k_int = k.get_int_value()
 
         new_n_int = int(((k_int**n_int) - 1) / (k_int - 1))
-        return f_r_t_apply(self, k, Integer(new_n_int), expression, evaluation, options)
+        return eval_full_rary_tree(
+            self, k, Integer(new_n_int), expression, evaluation, options
+        )
 
     # FIXME: can be done with rules?
-    def eval_2(self, n, expression, evaluation, options: dict):
+    def eval_2(self, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
 
         n_int = n.get_int_value()
 
         new_n_int = int(2**n_int) - 1
-        return f_r_t_apply(
+        return eval_full_rary_tree(
             self, Integer(2), Integer(new_n_int), expression, evaluation, options
         )
 
@@ -322,37 +393,13 @@ class CycleGraph(_NetworkXBuiltin):
      = -Graph-
     """
 
-    def eval(self, n: Integer, expression, evaluation, options: dict):
+    def eval(self, n: Integer, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
         n_int = n.get_int_value()
         if n_int < 3:
-            return complete_graph_eval(self, n, expression, evaluation, options)
+            return eval_complete_graph(self, n, expression, evaluation, options)
         else:
-            return hkn_harary_apply(
-                self, Integer(2), n, expression, evaluation, options
-            )
-
-
-def f_r_t_apply(self, r, n, expression, evaluation, options: dict):
-    py_r = r.get_int_value()
-
-    if py_r < 0:
-        evaluation.message(self.get_name(), "ilsmp", expression)
-        return
-
-    py_n = n.get_int_value()
-    if py_n < 0:
-        evaluation.message(self.get_name(), "ilsmp", expression)
-        return
-
-    args = (py_r, py_n)
-    g = graph_helper(nx.full_rary_tree, options, True, "tree", evaluation, 0, *args)
-    if not g:
-        return None
-
-    g.G.r = r
-    g.G.n = n
-    return g
+            return eval_hkn_harary(self, Integer(2), n, expression, evaluation, options)
 
 
 class FullRAryTree(_NetworkXBuiltin):
@@ -378,9 +425,9 @@ class FullRAryTree(_NetworkXBuiltin):
 
     options = DEFAULT_TREE_OPTIONS
 
-    def eval(self, r, n, expression, evaluation, options: dict):
+    def eval(self, r, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[r_Integer, n_Integer, OptionsPattern[%(name)s]]"
-        return f_r_t_apply(self, r, n, expression, evaluation, options)
+        return eval_full_rary_tree(self, r, n, expression, evaluation, options)
 
 
 class GraphAtlas(_NetworkXBuiltin):
@@ -399,7 +446,7 @@ class GraphAtlas(_NetworkXBuiltin):
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
 
-    def eval(self, n, expression, evaluation, options: dict):
+    def eval(self, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
         py_n = n.get_int_value()
 
@@ -415,31 +462,6 @@ class GraphAtlas(_NetworkXBuiltin):
             return None
         g.n = n
         return g
-
-
-def hkn_harary_apply(self, k, n, expression, evaluation, options: dict):
-    py_k = k.get_int_value()
-
-    if py_k < 0:
-        evaluation.message(self.get_name(), "ilsmp", expression)
-        return
-
-    py_n = n.get_int_value()
-    if py_n < 0:
-        evaluation.message(self.get_name(), "ilsmp2", expression)
-        return
-
-    from pymathics.graph.harary import hkn_harary_graph
-
-    args = (py_k, py_n)
-    g = graph_helper(
-        hkn_harary_graph, options, False, "circular", evaluation, None, *args
-    )
-    if not g:
-        return None
-    g.k = py_k
-    g.n = py_n
-    return g
 
 
 class HknHararyGraph(_NetworkXBuiltin):
@@ -464,9 +486,9 @@ class HknHararyGraph(_NetworkXBuiltin):
         "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
     }
 
-    def eval(self, k, n, expression, evaluation, options: dict):
+    def eval(self, k, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[k_Integer, n_Integer, OptionsPattern[%(name)s]]"
-        return hkn_harary_apply(self, k, n, expression, evaluation, options)
+        return eval_hkn_harary(self, k, n, expression, evaluation, options)
 
 
 class HmnHararyGraph(_NetworkXBuiltin):
@@ -490,7 +512,7 @@ class HmnHararyGraph(_NetworkXBuiltin):
         "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
     }
 
-    def eval(self, n, m, expression, evaluation, options: dict):
+    def eval(self, n, m, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, m_Integer, OptionsPattern[%(name)s]]"
         py_n = n.get_int_value()
 
@@ -543,13 +565,15 @@ class KaryTree(_NetworkXBuiltin):
 
     options = DEFAULT_TREE_OPTIONS
 
-    def eval(self, n, expression, evaluation, options: dict):
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        return f_r_t_apply(self, Integer(2), n, expression, evaluation, options)
+    def eval(self, n, expression, evaluation: Evaluation, options: dict) -> Graph:
+        "KaryTree[n_Integer, OptionsPattern[KaryTree]]"
+        return eval_full_rary_tree(self, Integer(2), n, expression, evaluation, options)
 
-    def eval_2(self, n, k, expression, evaluation, options: dict):
-        "%(name)s[n_Integer, k_Integer, OptionsPattern[%(name)s]]"
-        return f_r_t_apply(self, k, n, expression, evaluation, options)
+    def eval_with_k(
+        self, n, k, expression, evaluation: Evaluation, options: dict
+    ) -> Graph:
+        "KaryTree[n_Integer, k_Integer, OptionsPattern[KaryTree]]"
+        return eval_full_rary_tree(self, k, n, expression, evaluation, options)
 
 
 class LadderGraph(_NetworkXBuiltin):
@@ -559,7 +583,7 @@ class LadderGraph(_NetworkXBuiltin):
       <dd>Returns the Ladder graph of length $n$.
     </dl>
 
-    >> StarGraph[8]
+    >> LadderGraph[8]
      = -Graph-
     """
 
@@ -567,9 +591,11 @@ class LadderGraph(_NetworkXBuiltin):
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
 
-    def eval(self, n, expression, evaluation, options: dict):
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        py_n = n.get_int_value()
+    def eval(
+        self, n: Integer, expression, evaluation: Evaluation, options: dict
+    ) -> Graph:
+        "LadderGraph[n_Integer, OptionsPattern[%(name)s]]"
+        py_n = n.value
 
         if py_n < 1:
             evaluation.message(self.get_name(), "ilsmp", expression)
@@ -595,9 +621,9 @@ class PathGraph(_NetworkXBuiltin):
      = -Graph-
     """
 
-    def eval(self, element, evaluation, options: dict):
-        "PathGraph[l_List, OptionsPattern[%(name)s]]"
-        elements = element.elements
+    def eval(self, e, evaluation: Evaluation, options: dict) -> Graph:
+        "PathGraph[e_List, OptionsPattern[PathGraph]]"
+        elements = e.elements
 
         def edges():
             for u, v in zip(elements, elements[1:]):
@@ -621,10 +647,12 @@ class RandomGraph(_NetworkXBuiltin):
     </dl>
     """
 
-    def _generate(self, n, m, k, evaluation, options: dict):
-        py_n = n.get_int_value()
-        py_m = m.get_int_value()
-        py_k = k.get_int_value()
+    def _generate(
+        self, n: Integer, m: Integer, k: Integer, evaluation: Evaluation, options: dict
+    ) -> Graph:
+        py_n = n.value
+        py_m = m.value
+        py_k = k.value
         is_directed = has_directed_option(options)
 
         with RandomEnv(evaluation) as _:
@@ -633,13 +661,15 @@ class RandomGraph(_NetworkXBuiltin):
                 G = nx.gnm_random_graph(py_n, py_m, directed=is_directed)
                 yield _convert_networkx_graph(G, options)
 
-    def eval_nm(self, n, m, expression, evaluation, options: dict):
+    def eval_nm(self, n, m, expression, evaluation: Evaluation, options: dict) -> Graph:
         "%(name)s[{n_Integer, m_Integer}, OptionsPattern[%(name)s]]"
         g = list(self._generate(n, m, Integer(1), evaluation, options))[0]
         _process_graph_options(g, options)
         return g
 
-    def eval_nmk(self, n, m, k, expression, evaluation, options: dict):
+    def eval_nmk(
+        self, n, m, k, expression, evaluation: Evaluation, options: dict
+    ) -> Graph:
         "%(name)s[{n_Integer, m_Integer}, k_Integer, OptionsPattern[%(name)s]]"
         return Expression("List", *self._generate(n, m, k, evaluation, options))
 
@@ -660,9 +690,11 @@ class RandomTree(_NetworkXBuiltin):
         "ilsmp": "Expected a non-negative integer at position 1 in ``.",
     }
 
-    def eval(self, n, expression, evaluation, options: dict):
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        py_n = n.get_int_value()
+    def eval(
+        self, n: Integer, expression, evaluation: Evaluation, options: dict
+    ) -> Graph:
+        "RandomTree[n_Integer, OptionsPattern[RandomTree]]"
+        py_n = n.value
 
         if py_n < 0:
             evaluation.message(self.get_name(), "ilsmp", expression)
@@ -691,9 +723,11 @@ class StarGraph(_NetworkXBuiltin):
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
 
-    def eval(self, n, expression, evaluation, options: dict):
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        py_n = n.get_int_value()
+    def eval(
+        self, n: Integer, expression, evaluation: Evaluation, options: dict
+    ) -> Graph:
+        "StarGraph[n_Integer, OptionsPattern[StarGraph]]"
+        py_n = n.value
 
         if py_n < 1:
             evaluation.message(self.get_name(), "ilsmp", expression)
@@ -726,7 +760,7 @@ class GraphData(_NetworkXBuiltin):
     >> GraphData["PappusGraph"]
     """
 
-    def eval(self, name, expression, evaluation, options: dict):
+    def eval(self, name, expression, evaluation: Evaluation, options: dict) -> Graph:
         "%(name)s[name_String, OptionsPattern[%(name)s]]"
         py_name = name.get_string_value()
         fn, layout = WL_TO_NETWORKX_FN.get(py_name, (None, None))
