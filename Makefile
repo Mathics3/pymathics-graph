@@ -5,8 +5,8 @@
 # remake --tasks to shows the targets and the comments
 
 GIT2CL ?= admin-tools/git2cl
-PYTHON ?= python3
-PIP ?= pip3
+PYTHON ?= python
+PIP ?= $(PYTHON) -m pip
 RM  ?= rm
 
 .PHONY: all build \
@@ -40,7 +40,7 @@ install: pypi-setup
 	$(PYTHON) setup.py install
 
 # Run tests
-check: pytest doctest
+test check: pytest
 
 #: Remove derived files
 clean: clean-pyc
@@ -51,7 +51,7 @@ clean-pyc:
 
 #: Run py.test tests. Use environment variable "o" for pytest options
 pytest:
-	py.test test $o
+	$(PYTHON) -m pytest test $o
 
 
 # #: Create data that is used to in Django docs and to build TeX PDF
