@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Unit tests for mathics.builtins.numbers.algebra
+Unit tests for pymathics.graph.algorithms
 """
 from test.helper import check_evaluation, evaluate, evaluate_value
 

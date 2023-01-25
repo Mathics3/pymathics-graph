@@ -1,5 +1,7 @@
 import networkx as nx
-from mathics.core.expression import Atom, Symbol
+from mathics.core.atoms import Atom
+from mathics.core.evaluation import Evaluation
+from mathics.core.symbols import SymbolConstant, SymbolFalse, SymbolTrue
 
 from pymathics.graph.__main__ import (
     DEFAULT_GRAPH_OPTIONS,
@@ -16,13 +18,19 @@ DEFAULT_TREE_OPTIONS = {
 from mathics.builtin.base import AtomBuiltin
 
 
+def eval_TreeGraphQ(g: Graph) -> SymbolConstant:
+    """
+    Returns SymbolTrue if g is a (networkx) tree and SymbolFalse
+    otherwise.
+    """
+    if not isinstance(g, Graph):
+        return SymbolFalse
+    return SymbolTrue if nx.is_tree(g.G) else SymbolFalse
+
+
+# FIXME: do we need to have TreeGraphAtom and TreeGraph?
+# Can't these be combined into one?
 class TreeGraphAtom(AtomBuiltin):
-    """
-    >> TreeGraph[{1->2, 2->3, 3->1}]
-     = -Graph-
-
-    """
-
     options = DEFAULT_TREE_OPTIONS
 
     messages = {
@@ -30,9 +38,9 @@ class TreeGraphAtom(AtomBuiltin):
         "notree": "Graph is not a tree.",
     }
 
-    def eval(self, rules, evaluation, options):
+    def eval(self, rules, evaluation: Evaluation, options: dict):
         "TreeGraph[rules_List, OptionsPattern[%(name)s]]"
-        g = _graph_from_list(rules.leaves, options)
+        g = _graph_from_list(rules.elements, options)
         if not nx.is_tree(g.G):
             evaluation.message(self.get_name(), "notree")
 
@@ -40,13 +48,13 @@ class TreeGraphAtom(AtomBuiltin):
         # Compute/check/set for root?
         return g
 
-    def eval_with_v_e(self, vertices, edges, evaluation, options):
+    def eval_with_v_e(self, vertices, edges, evaluation: Evaluation, options: dict):
         "TreeGraph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
-        if not all(isinstance(v, Atom) for v in vertices.leaves):
+        if not all(isinstance(v, Atom) for v in vertices.elements):
             evaluation.message(self.get_name(), "v")
 
         g = _graph_from_list(
-            edges.leaves, options=options, new_vertices=vertices.leaves
+            edges.elements, options=options, new_vertices=vertices.elements
         )
         if not nx.is_tree(g.G):
             evaluation.message(self.get_name(), "notree")
@@ -57,6 +65,12 @@ class TreeGraphAtom(AtomBuiltin):
 
 
 class TreeGraph(Graph):
+    """
+    >> TreeGraph[{1->2, 2->3, 2->4}]
+     = -Graph-
+
+    """
+
     options = DEFAULT_TREE_OPTIONS
 
     messages = {
@@ -85,8 +99,8 @@ class TreeGraphQ(_NetworkXBuiltin):
      = False
     """
 
-    def eval(self, g, expression, evaluation, options):
+    def eval(
+        self, g, expression, evaluation: Evaluation, options: dict
+    ) -> SymbolConstant:
         "TreeGraphQ[g_, OptionsPattern[%(name)s]]"
-        if not isinstance(g, Graph):
-            return Symbol("False")
-        return Symbol("True" if nx.is_tree(g.G) else "False")
+        return eval_TreeGraphQ(g)

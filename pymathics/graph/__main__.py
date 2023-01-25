@@ -14,9 +14,9 @@ from inspect import isgenerator
 
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.builtin.box.graphics import GraphicsBox
-from mathics.core.atoms import Integer, Integer0, Integer1, Real
+from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Real
 from mathics.core.convert.expression import ListExpression, from_python
-from mathics.core.expression import Atom, Expression
+from mathics.core.expression import Expression
 from mathics.core.symbols import Symbol, SymbolFalse, SymbolTrue
 from mathics.core.systemsymbols import (
     SymbolBlank,
