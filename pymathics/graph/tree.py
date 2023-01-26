@@ -3,7 +3,7 @@ from mathics.core.atoms import Atom
 from mathics.core.evaluation import Evaluation
 from mathics.core.symbols import SymbolConstant, SymbolFalse, SymbolTrue
 
-from pymathics.graph.__main__ import (
+from pymathics.graph.main import (
     DEFAULT_GRAPH_OPTIONS,
     Graph,
     _graph_from_list,

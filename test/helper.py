@@ -4,7 +4,9 @@ from typing import Optional
 
 from mathics.session import MathicsSession
 
-# Set up a Mathics session with definitions.
+session = MathicsSession(add_builtin=True, catch_interrupt=False)
+
+# Set up a Mathics3 session with definitions.
 # For consistency set the character encoding ASCII which is
 # the lowest common denominator available on all systems.
 session = MathicsSession(character_encoding="ASCII")
