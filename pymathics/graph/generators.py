@@ -12,7 +12,7 @@ from mathics.core.atoms import Integer, String
 from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
 
-from pymathics.graph.main import (
+from pymathics.graph.base import (
     Graph,
     SymbolUndirectedEdge,
     _convert_networkx_graph,

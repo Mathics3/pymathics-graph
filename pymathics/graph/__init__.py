@@ -11,7 +11,7 @@ Example:
    In[4]:= CompleteKaryTree[3, VertexLabels->True]
 """
 
-from pymathics.graph.main import (
+from pymathics.graph.base import (
     AcyclicGraphQ,
     BetweennessCentrality,
     ClosenessCentrality,
@@ -20,7 +20,6 @@ from pymathics.graph.main import (
     DirectedEdge,
     DirectedGraphQ,
     EdgeConnectivity,
-    EdgeCount,
     EdgeIndex,
     EdgeList,
     EdgeRules,
@@ -44,12 +43,14 @@ from pymathics.graph.main import (
     UndirectedEdge,
     VertexAdd,
     VertexConnectivity,
-    VertexCount,
-    VertexDegree,
     VertexDelete,
     VertexIndex,
     VertexList,
 )
+
+from pymathics.graph.measures_and_metrics.basic import EdgeCount, VertexCount
+from pymathics.graph.measures_and_metrics.degree import VertexDegree
+
 from pymathics.graph.algorithms import *  # noqa
 from pymathics.graph.generators import *  # noqa
 from pymathics.graph.tree import *  # noqa

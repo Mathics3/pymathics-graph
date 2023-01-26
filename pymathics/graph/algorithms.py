@@ -15,7 +15,7 @@ from mathics.core.list import ListExpression
 from mathics.core.symbols import SymbolFalse
 from mathics.core.systemsymbols import SymbolDirectedInfinity
 
-from pymathics.graph.main import (
+from pymathics.graph.base import (
     DEFAULT_GRAPH_OPTIONS,
     SymbolDirectedEdge,
     SymbolUndirectedEdge,
