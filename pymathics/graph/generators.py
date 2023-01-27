@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Routines for generating classes of Graphs.
-
-networkx does all the heavy lifting.
+Routines for generating classes of Graphs
 """
 
 from typing import Callable, Optional

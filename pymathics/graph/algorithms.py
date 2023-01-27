@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Algorithms on Graphs.
-
-networkx does all the heavy lifting.
+Algorithms on Graphs
 """
 
 from typing import Optional

@@ -1,7 +1,7 @@
-"""Pymathics Graph - Working with Graphs (Vertices and Edges)
+"""
+Graphs - Vertices and Edges
 
-This module provides functions and variables for working with
-graphs.
+A Pymathics module that provides functions and variables for working with graphs.
 
 Example:
    In[1]:= LoadModule["pymathics.graph"]
@@ -9,6 +9,8 @@ Example:
    In[2]:= BinomialTree[3]
    In[3]:= BinomialTree[6]
    In[4]:= CompleteKaryTree[3, VertexLabels->True]
+
+Networkx does the heavy lifting here.
 """
 
 from pymathics.graph.base import (
