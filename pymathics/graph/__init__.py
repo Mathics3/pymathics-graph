@@ -50,8 +50,7 @@ from pymathics.graph.base import (
     VertexList,
 )
 
-from pymathics.graph.measures_and_metrics.basic import EdgeCount, VertexCount
-from pymathics.graph.measures_and_metrics.degree import VertexDegree
+from pymathics.graph.measures_and_metrics import EdgeCount, VertexCount, VertexDegree
 
 from pymathics.graph.algorithms import *  # noqa
 from pymathics.graph.generators import *  # noqa
