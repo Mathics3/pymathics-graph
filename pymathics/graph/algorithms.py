@@ -176,6 +176,8 @@ class FindSpanningTree(_NetworkXBuiltin):
 
 class PlanarGraphQ(_NetworkXBuiltin):
     """
+    See <url>https://en.wikipedia.org/wiki/Planar_graph</url>
+
     <dl>
       <dd>PlanarGraphQ[g]
       <dd>Returns True if g is a planar graph and False otherwise.
@@ -183,16 +185,30 @@ class PlanarGraphQ(_NetworkXBuiltin):
 
     >> PlanarGraphQ[CycleGraph[4]]
     = True
+
     >> PlanarGraphQ[CompleteGraph[5]]
     = False
+
+    >> PlanarGraphQ[CompleteGraph[4]]
+     = True
+
+    >> PlanarGraphQ[CompleteGraph[5]]
+     = False
+
+    #> PlanarGraphQ[Graph[{}]]
+     = False
+
+    #> PlanarGraphQ["abc"]
+     : Expected a graph at position 1 in PlanarGraphQ[abc].
+     = False
     """
 
     options = DEFAULT_GRAPH_OPTIONS
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "PlanarGraphQ[graph_, OptionsPattern[PlanarGraphQ]]"
+        "%(name)s[graph_, OptionsPattern[PlanarGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression)
-        if not graph:
+        if not graph or graph.empty():
             return SymbolFalse
         is_planar, _ = nx.check_planarity(graph.G)
         return from_python(is_planar)

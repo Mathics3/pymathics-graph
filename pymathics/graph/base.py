@@ -1738,33 +1738,6 @@ class PathGraphQ(_NetworkXBuiltin):
         return from_python(is_path)
 
 
-class PlanarGraphQ(_NetworkXBuiltin):
-    """
-    See <url>https://en.wikipedia.org/wiki/Planar_graph</url>
-
-    >> PlanarGraphQ[CompleteGraph[4]]
-     = True
-
-    >> PlanarGraphQ[CompleteGraph[5]]
-     = False
-
-    #> PlanarGraphQ[Graph[{}]]
-     = False
-
-    #> PlanarGraphQ["abc"]
-     = False
-    """
-
-    requires = _NetworkXBuiltin.requires
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if not graph or graph.empty():
-            return SymbolFalse
-
-        return from_python(nx.is_planar(graph.G))
-
 
 class Property(Builtin):
     pass

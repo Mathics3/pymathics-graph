@@ -38,7 +38,6 @@ from pymathics.graph.base import (
     MixedGraphQ,
     MultigraphQ,
     PageRankCentrality,
-    PlanarGraphQ,
     PathGraphQ,
     Property,
     PropertyValue,
