@@ -205,6 +205,7 @@ class PlanarGraphQ(_NetworkXBuiltin):
 
     
     >> PlanarGraphQ["abc"]
+
      : Expected a graph at position 1 in PlanarGraphQ[abc].
      = False
     """
