@@ -60,7 +60,7 @@ pytest:
 
 #: Run tests that appear in docstring in the code.
 doctest:
-	$(PYTHON) mathics/test.py $o
+	$(PYTHON) -m mathics.docpipeline -l pymathics.graph -c  'Graphs - Vertices and Edges' $o
 
 # #: Make Mathics PDF manual
 # doc mathics.pdf: mathics/doc/tex/data
