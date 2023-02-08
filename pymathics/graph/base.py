@@ -14,7 +14,7 @@ from inspect import isgenerator
 
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.builtin.box.graphics import GraphicsBox
-from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Real
+from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, Real
 from mathics.core.convert.expression import ListExpression, from_python
 from mathics.core.element import BaseElement
 from mathics.core.expression import Expression
@@ -627,7 +627,8 @@ class Graph(Atom):
         return self
 
     @property
-    def edges(self):
+    def edges(self)->tuple:
+        # TODO: check if this should not return expressions
         return self.G.edges
 
     def empty(self):
@@ -1135,8 +1136,9 @@ class DegreeCentrality(_Centrality):
 
     def _from_dict(self, graph, centrality):
         s = len(graph.G) - 1  # undo networkx's normalization
+        print("_from_dict", (graph, type(graph)))
         return ListExpression(
-            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices.expressions],
+            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices],
         )
 
     def eval(self, graph, expression, evaluation, options):
@@ -1239,11 +1241,13 @@ class EdgeIndex(_NetworkXBuiltin):
         "%(name)s[graph_, v_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            i = graph.edges.get_index().get(v)
-            if i is None:
-                self._not_an_edge(expression, 2, evaluation)
-            else:
-                return Integer(i + 1)
+            # FIXME: check if directionality must be considered or not.
+            try:
+                i = list(graph.edges).index(v.elements)
+            except:
+                self._not_an_edge(expression, Integer2, evaluation)
+                return
+            return Integer(i + 1)
 
 
 class EdgeList(_PatternList):
@@ -1268,8 +1272,9 @@ class EdgeRules(_NetworkXBuiltin):
         if graph:
 
             def rules():
-                for expr in graph.edges.expressions:
-                    u, v = expr.elements
+                print("Looking for Edge rules")
+                for edge in graph.edges:
+                    u, v = edge
                     yield Expression(SymbolRule, u, v)
 
             return ListExpression(*list(rules()))

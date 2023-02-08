@@ -5,6 +5,7 @@ Algorithms on Graphs
 
 from typing import Optional
 
+from mathics.core.atoms import Integer1, Integer2, Integer3
 from mathics.core.convert.expression import to_mathics_list
 from mathics.core.convert.python import from_python
 from mathics.core.evaluation import Evaluation
@@ -117,7 +118,7 @@ class GraphDistance(_NetworkXBuiltin):
         if graph:
             weight = graph.update_weights(evaluation)
             d = nx.shortest_path_length(graph.G, source=s, weight=weight)
-            inf = Expression(SymbolDirectedInfinity, 1)
+            inf = Expression(SymbolDirectedInfinity, Integer1)
             return to_mathics_list(*[d.get(v, inf) for v in graph.vertices])
 
     def eval_s_t(self, graph, s, t, expression, evaluation: Evaluation, options: dict):
@@ -127,9 +128,9 @@ class GraphDistance(_NetworkXBuiltin):
             return
         G = graph.G
         if not G.has_node(s):
-            self._not_a_vertex(expression, 2, evaluation)
+            self._not_a_vertex(expression, Integer2, evaluation)
         elif not G.has_node(t):
-            self._not_a_vertex(expression, 3, evaluation)
+            self._not_a_vertex(expression, Integer3, evaluation)
         else:
             try:
                 weight = graph.update_weights(evaluation)
@@ -137,7 +138,7 @@ class GraphDistance(_NetworkXBuiltin):
                     nx.shortest_path_length(graph.G, source=s, target=t, weight=weight)
                 )
             except nx.exception.NetworkXNoPath:
-                return Expression(SymbolDirectedInfinity, 1)
+                return Expression(SymbolDirectedInfinity, Integer1)
 
 
 class FindSpanningTree(_NetworkXBuiltin):
