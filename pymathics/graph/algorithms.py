@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Algorithms on Graphs.
-
-networkx does all the heavy lifting.
+Algorithms on Graphs
 """
+
+from typing import Optional
 
 from mathics.core.convert.expression import to_mathics_list
 from mathics.core.convert.python import from_python
+from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
 from mathics.core.list import ListExpression
 from mathics.core.symbols import SymbolFalse
 from mathics.core.systemsymbols import SymbolDirectedInfinity
 
-from pymathics.graph.__main__ import (
+from pymathics.graph.base import (
     DEFAULT_GRAPH_OPTIONS,
     SymbolDirectedEdge,
     SymbolUndirectedEdge,
@@ -25,7 +26,7 @@ from pymathics.graph.__main__ import (
 class ConnectedComponents(_NetworkXBuiltin):
     """
     ## >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
-    ##  = {{4, 3}, {2}, {1}}
+    ##  = {{3, 4}, {2}, {1}}
 
     ## >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
     ## = {{1, 2, 3}}
@@ -34,7 +35,9 @@ class ConnectedComponents(_NetworkXBuiltin):
     ##  = {{4, 5}, {1, 2, 3}}
     """
 
-    def apply(self, graph, expression, evaluation, options):
+    def eval(
+        self, graph, expression, evaluation: Evaluation, options: dict
+    ) -> Optional[ListExpression]:
         "ConnectedComponents[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
@@ -54,10 +57,10 @@ class ConnectedComponents(_NetworkXBuiltin):
 #       <dd>returns a Hamiltonian path in the given tournament graph.
 #       </dl>
 #     """
-#     def apply_(self, graph, expression, evaluation, options):
-#         "%(name)s[graph_, OptionsPattern[%(name)s]]"
+#     def eval_(self, graph, expression, evaluation: Evaluation, options):
+#         "FindHamiltonianPath[graph_, OptionsPattern[FindHamiltonPath]]"
 
-#         graph = self._build_graph(graph, evaluation, options, expression)
+#         graph = self._build_graph(graph, evaluation: Evaluation, options, expression)
 #         if graph:
 #             # FIXME: for this to work we need to fill in all O(n^2) edges as an adjacency matrix?
 #             path = nx.algorithms.tournament.hamiltonian_path(graph.G)
@@ -106,8 +109,10 @@ class GraphDistance(_NetworkXBuiltin):
      = GraphDistance[{1 -> 2}, 3, 4]
     """
 
-    def apply_s(self, graph, s, expression, evaluation, options):
-        "%(name)s[graph_, s_, OptionsPattern[%(name)s]]"
+    def eval_s(
+        self, graph, s, expression, evaluation: Evaluation, options: dict
+    ) -> Optional[ListExpression]:
+        "GraphDistance[graph_, s_, OptionsPattern[GraphDistance]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             weight = graph.update_weights(evaluation)
@@ -115,8 +120,8 @@ class GraphDistance(_NetworkXBuiltin):
             inf = Expression(SymbolDirectedInfinity, 1)
             return to_mathics_list(*[d.get(v, inf) for v in graph.vertices])
 
-    def apply_s_t(self, graph, s, t, expression, evaluation, options):
-        "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
+    def eval_s_t(self, graph, s, t, expression, evaluation: Evaluation, options: dict):
+        "GraphDistance[graph_, s_, t_, OptionsPattern[GraphDistance]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph:
             return
@@ -147,7 +152,7 @@ class FindSpanningTree(_NetworkXBuiltin):
 
     options = DEFAULT_GRAPH_OPTIONS
 
-    def apply(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
@@ -182,8 +187,8 @@ class PlanarGraphQ(_NetworkXBuiltin):
 
     options = DEFAULT_GRAPH_OPTIONS
 
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
+        "PlanarGraphQ[graph_, OptionsPattern[PlanarGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph:
             return SymbolFalse
@@ -203,8 +208,8 @@ class WeaklyConnectedComponents(_NetworkXBuiltin):
      = {{1, 2, 3, 4, 5}, {6, 7, 8}}
     """
 
-    def apply(self, graph, expression, evaluation, options):
-        "WeaklyConnectedComponents[graph_, OptionsPattern[%(name)s]]"
+    def eval(self, graph, expression, evaluation: Evaluation, options):
+        "WeaklyConnectedComponents[graph_, OptionsPattern[WeaklyConnectedComponents]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             components = nx.connected_components(graph.G.to_undirected())

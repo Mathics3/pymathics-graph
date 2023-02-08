@@ -14,11 +14,9 @@ from inspect import isgenerator
 
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.builtin.box.graphics import GraphicsBox
-from mathics.builtin.box.inout import _BoxedString
-from mathics.builtin.patterns import Matcher
-from mathics.core.atoms import Integer, Integer0, Integer1, Real
+from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Real
 from mathics.core.convert.expression import ListExpression, from_python
-from mathics.core.expression import Atom, Expression
+from mathics.core.expression import Expression
 from mathics.core.symbols import Symbol, SymbolFalse, SymbolTrue
 from mathics.core.systemsymbols import (
     SymbolBlank,
@@ -29,6 +27,8 @@ from mathics.core.systemsymbols import (
     SymbolRGBColor,
     SymbolRule,
 )
+from mathics.eval.makeboxes import _boxed_string
+from mathics.eval.patterns import Matcher
 
 WL_MARKER_TO_NETWORKX = {
     "Circle": "o",
@@ -71,11 +71,9 @@ DEFAULT_GRAPH_OPTIONS = {
 import networkx as nx
 
 SymbolDirectedEdge = Symbol("DirectedEdge")
-SymbolCases = Symbol("Cases")
 SymbolCases = Symbol("DirectedEdge")
 SymbolGraph = Symbol("Graph")
 SymbolGraphBox = Symbol("GraphBox")
-SymbolLength = Symbol("Length")
 SymbolUndirectedEdge = Symbol("UndirectedEdge")
 
 
@@ -207,6 +205,16 @@ def _components(G):
         return nx.connected_components(G)
 
 
+def _convert_networkx_graph(G, options):
+    mapping = dict((v, Integer(i)) for i, v in enumerate(G.nodes))
+    G = nx.relabel_nodes(G, mapping)
+    [Expression(SymbolUndirectedEdge, u, v) for u, v in G.edges]
+    return Graph(
+        G,
+        **options,
+    )
+
+
 _default_minimum_distance = 0.3
 
 
@@ -296,27 +304,6 @@ class _NetworkXBuiltin(Builtin):
                 hash(self),
             ]
             return hash(self)
-
-
-class GraphBox(GraphicsBox):
-    def _graphics_box(self, elements, options):
-        evaluation = options["evaluation"]
-        graph, form = elements
-        primitives = graph._layout(evaluation)
-        graphics = Expression(SymbolGraphics, primitives)
-        graphics_box = Expression(SymbolMakeBoxes, graphics, form).evaluate(evaluation)
-        return graphics_box
-
-    def boxes_to_text(self, elements, **options):
-        return "-Graph-"
-
-    def boxes_to_xml(self, elements, **options):
-        # Figure out what to do here.
-        return "-Graph-XML-"
-
-    def boxes_to_tex(self, elements, **options):
-        # Figure out what to do here.
-        return "-Graph-TeX-"
 
 
 class _Collection:
@@ -447,6 +434,98 @@ def _normalize_edges(edges):
             yield edge
 
 
+class _Collection:
+    def __init__(self, expressions, properties=None, index=None):
+        self.expressions = expressions
+        self.properties = properties if properties else None
+        self.index = index
+
+    def clone(self):
+        properties = self.properties
+        return _Collection(
+            self.expressions[:], properties[:] if properties else None, None
+        )
+
+    def filter(self, expressions):
+        index = self.get_index()
+        return [expr for expr in expressions if expr in index]
+
+    def extend(self, expressions, properties):
+        if properties:
+            if self.properties is None:
+                self.properties = [None] * len(self.expressions)
+            self.properties.extend(properties)
+        self.expressions.extend(expressions)
+        self.index = None
+        return expressions
+
+    def delete(self, expressions):
+        index = self.get_index()
+        trash = set(index[x] for x in expressions)
+        deleted = [self.expressions[i] for i in trash]
+        self.expressions = [x for i, x in enumerate(self.expressions) if i not in trash]
+        self.properties = [x for i, x in enumerate(self.properties) if i not in trash]
+        self.index = None
+        return deleted
+
+    def data(self):
+        return self.expressions, list(self.get_properties())
+
+    def get_index(self):
+        index = self.index
+        if index is None:
+            index = dict((v, i) for i, v in enumerate(self.expressions))
+            self.index = index
+        return index
+
+    def get_properties(self):
+        if self.properties:
+            for p in self.properties:
+                yield p
+        else:
+            for _ in range(len(self.expressions)):
+                yield None
+
+    def get_sorted(self):
+        index = self.get_index()
+        return lambda c: sorted(c, key=lambda v: index[v])
+
+    def get_property(self, element, name):
+        properties = self.properties
+        if properties is None:
+            return None
+        index = self.get_index()
+        i = index.get(element)
+        if i is None:
+            return None
+        p = properties[i]
+        if p is None:
+            return None
+        return p.get(name)
+
+
+def _is_connected(G):
+    if len(G) == 0:  # empty graph?
+        return True
+    elif G.is_directed():
+        return nx.is_strongly_connected(G)
+    else:
+        return nx.is_connected(G)
+
+
+def _edge_weights(options):
+    expr = options.get("System`EdgeWeight")
+    if expr is None:
+        return []
+    if not expr.has_form("List", None):
+        return []
+    return expr.elements
+
+
+class _GraphParseError(Exception):
+    pass
+
+
 class Graph(Atom):
     class_head_name = "Pymathics`Graph"
 
@@ -462,8 +541,8 @@ class Graph(Atom):
     def __str__(self):
         return "-Graph-"
 
-    def atom_to_boxes(self, f, evaluation) -> _BoxedString:
-        return _BoxedString("-Graph-")
+    def atom_to_boxes(self, f, evaluation) -> _boxed_string:
+        return _boxed_string("-Graph-")
 
     def add_edges(self, new_edges, new_edge_properties):
         G = self.G.copy()
@@ -603,98 +682,6 @@ class Graph(Atom):
     @property
     def vertices(self):
         return self.G.nodes
-
-
-class _Collection:
-    def __init__(self, expressions, properties=None, index=None):
-        self.expressions = expressions
-        self.properties = properties if properties else None
-        self.index = index
-
-    def clone(self):
-        properties = self.properties
-        return _Collection(
-            self.expressions[:], properties[:] if properties else None, None
-        )
-
-    def filter(self, expressions):
-        index = self.get_index()
-        return [expr for expr in expressions if expr in index]
-
-    def extend(self, expressions, properties):
-        if properties:
-            if self.properties is None:
-                self.properties = [None] * len(self.expressions)
-            self.properties.extend(properties)
-        self.expressions.extend(expressions)
-        self.index = None
-        return expressions
-
-    def delete(self, expressions):
-        index = self.get_index()
-        trash = set(index[x] for x in expressions)
-        deleted = [self.expressions[i] for i in trash]
-        self.expressions = [x for i, x in enumerate(self.expressions) if i not in trash]
-        self.properties = [x for i, x in enumerate(self.properties) if i not in trash]
-        self.index = None
-        return deleted
-
-    def data(self):
-        return self.expressions, list(self.get_properties())
-
-    def get_index(self):
-        index = self.index
-        if index is None:
-            index = dict((v, i) for i, v in enumerate(self.expressions))
-            self.index = index
-        return index
-
-    def get_properties(self):
-        if self.properties:
-            for p in self.properties:
-                yield p
-        else:
-            for _ in range(len(self.expressions)):
-                yield None
-
-    def get_sorted(self):
-        index = self.get_index()
-        return lambda c: sorted(c, key=lambda v: index[v])
-
-    def get_property(self, element, name):
-        properties = self.properties
-        if properties is None:
-            return None
-        index = self.get_index()
-        i = index.get(element)
-        if i is None:
-            return None
-        p = properties[i]
-        if p is None:
-            return None
-        return p.get(name)
-
-
-def _is_connected(G):
-    if len(G) == 0:  # empty graph?
-        return True
-    elif G.is_directed():
-        return nx.is_strongly_connected(G)
-    else:
-        return nx.is_connected(G)
-
-
-def _edge_weights(options):
-    expr = options.get("System`EdgeWeight")
-    if expr is None:
-        return []
-    if not expr.has_form("List", None):
-        return []
-    return expr.elements
-
-
-class _GraphParseError(Exception):
-    pass
 
 
 def _parse_item(x, attr_dict=None):
@@ -892,27 +879,261 @@ def _create_graph(
     return g
 
 
-class Property(Builtin):
+class _Centrality(_NetworkXBuiltin):
     pass
 
 
-class PropertyValue(Builtin):
+class _ComponentwiseCentrality(_Centrality):
+    def _centrality(self, g, weight):
+        raise NotImplementedError
+
+    def _compute(self, graph, evaluation, reverse=False, normalized=True, **kwargs):
+        vertices = graph.vertices
+        G, weight = graph.coalesced_graph(evaluation)
+        if reverse:
+            G = G.reverse()
+
+        components = list(_components(G))
+        components = [c for c in components if len(c) > 1]
+
+        result = [0] * len(vertices)
+        for bunch in components:
+            g = G.subgraph(bunch)
+            centrality = self._centrality(g, weight, **kwargs)
+            values = [centrality.get(v, 0) for v in vertices]
+            if normalized:
+                s = sum(values) * len(components)
+            else:
+                s = 1
+            if s > 0:
+                for i, x in enumerate(values):
+                    result[i] += x / s
+
+        return ListExpression(*[Real(x) for x in result])
+
+
+class _PatternList(_NetworkXBuiltin):
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            return ListExpression(*self._items(graph))
+
+    def eval_patt(self, graph, patt, expression, evaluation, options):
+        "%(name)s[graph_, patt_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            return Expression(SymbolCases, ListExpression(*self._items(graph)), patt)
+
+
+class AcyclicGraphQ(_NetworkXBuiltin):
     """
-    >> g = Graph[{a <-> b, Property[b <-> c, SomeKey -> 123]}];
-    >> PropertyValue[{g, b <-> c}, SomeKey]
-     = 123
-    >> PropertyValue[{g, b <-> c}, SomeUnknownKey]
-     = $Failed
+    >> g = Graph[{1 -> 2, 2 -> 3}]; AcyclicGraphQ[g]
+     = True
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 3 -> 5}]; AcyclicGraphQ[g]
+     = False
+
+    #> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 5 -> 3}]; AcyclicGraphQ[g]
+     = True
+
+    #> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 5 <-> 3}]; AcyclicGraphQ[g]
+     = False
+
+    #> g = Graph[{1 <-> 2, 2 <-> 3, 5 <-> 2, 3 <-> 4, 5 <-> 3}]; AcyclicGraphQ[g]
+     = False
+
+    #> g = Graph[{}]; AcyclicGraphQ[{}]
+     = False
+
+    #> AcyclicGraphQ["abc"]
+     = False
+     : Expected a graph at position 1 in AcyclicGraphQ[abc].
     """
 
-    requires = ("networkx",)
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression, quiet=False)
+        if not graph or graph.empty():
+            return SymbolFalse
 
-    def apply(self, graph, item, name, evaluation):
-        "PropertyValue[{graph_Graph, item_}, name_Symbol]"
-        value = graph.get_property(item, name.get_name())
-        if value is None:
-            return SymbolFailed
-        return value
+        try:
+            cycles = nx.find_cycle(graph.G)
+        except nx.exception.NetworkXNoCycle:
+            return SymbolTrue
+        return from_python(not cycles)
+
+
+class AdjacencyList(_NetworkXBuiltin):
+    """
+    >> AdjacencyList[{1 -> 2, 2 -> 3}, 3]
+     = {2}
+
+    >> AdjacencyList[{1 -> 2, 2 -> 3}, _?EvenQ]
+     = {1, 3}
+
+    >> AdjacencyList[{x -> 2, x -> 3, x -> 4, 2 -> 10, 2 -> 11, 4 -> 20, 4 -> 21, 10 -> 100}, 10, 2]
+     = {2, 11, 100, x}
+    """
+
+    def _retrieve(self, graph, what, neighbors, expression, evaluation):
+        from mathics.builtin import pattern_objects
+
+        if what.get_head_name() in pattern_objects:
+            collected = set()
+            match = Matcher(what).match
+            for v in graph.G.nodes:
+                if match(v, evaluation):
+                    collected.update(neighbors(v))
+            return ListExpression(*sorted(collected))
+        elif graph.G.has_node(what):
+            return ListExpression(*sorted(neighbors(what)))
+        else:
+            self._not_a_vertex(expression, 2, evaluation)
+
+    def eval(self, graph, what, expression, evaluation, options):
+        "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            G = graph.G.to_undirected()  # FIXME inefficient
+            return self._retrieve(
+                graph, what, lambda v: G.neighbors(v), expression, evaluation
+            )
+
+    def eval_d(self, graph, what, d, expression, evaluation, options):
+        "%(name)s[graph_, what_, d_, OptionsPattern[%(name)s]]"
+        py_d = d.to_mpmath()
+        if py_d is None:
+            return
+
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            G = graph.G
+
+            def neighbors(v):
+                return nx.ego_graph(
+                    G, v, radius=py_d, undirected=True, center=False
+                ).nodes()
+
+            return self._retrieve(graph, what, neighbors, expression, evaluation)
+
+
+class BetweennessCentrality(_Centrality):
+    """
+    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]; BetweennessCentrality[g]
+     = {0., 1., 0., 0., 0.}
+
+    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; BetweennessCentrality[g]
+     = {3., 3., 6., 6., 6.}
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            weight = graph.update_weights(evaluation)
+            centrality = nx.betweenness_centrality(
+                graph.G, normalized=False, weight=weight
+            )
+            return ListExpression(
+                *[Real(centrality.get(v, 0.0)) for v in graph.vertices],
+            )
+
+
+class ClosenessCentrality(_Centrality):
+    """
+    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]; ClosenessCentrality[g]
+     = {0.666667, 1., 0., 1., 1.}
+
+    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; ClosenessCentrality[g]
+     = {0.4, 0.4, 0.4, 0.5, 0.666667}
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            weight = graph.update_weights(evaluation)
+            G = graph.G
+            if G.is_directed():
+                G = G.reverse()
+            centrality = nx.closeness_centrality(G, distance=weight, wf_improved=False)
+            return ListExpression(
+                *[Real(centrality.get(v, 0.0)) for v in graph.vertices],
+            )
+
+
+class ConnectedGraphQ(_NetworkXBuiltin):
+    """
+    >> g = Graph[{1 -> 2, 2 -> 3}]; ConnectedGraphQ[g]
+     = False
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedGraphQ[g]
+     = True
+
+    #> g = Graph[{1 -> 2, 2 -> 3, 2 -> 3, 3 -> 1}]; ConnectedGraphQ[g]
+     = True
+
+    #> g = Graph[{1 -> 2, 2 -> 3}]; ConnectedGraphQ[g]
+     = False
+
+    >> g = Graph[{1 <-> 2, 2 <-> 3}]; ConnectedGraphQ[g]
+     = True
+
+    >> g = Graph[{1 <-> 2, 2 <-> 3, 4 <-> 5}]; ConnectedGraphQ[g]
+     = False
+
+    #> ConnectedGraphQ[Graph[{}]]
+     = True
+
+    #> ConnectedGraphQ["abc"]
+     = False
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
+        if graph:
+            return from_python(_is_connected(graph.G))
+        else:
+            return SymbolFalse
+
+
+class DegreeCentrality(_Centrality):
+    """
+    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; DegreeCentrality[g]
+     = {2, 4, 5, 3, 2}
+
+    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; DegreeCentrality[g, "In"]
+     = {1, 3, 3, 0, 1}
+
+    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; DegreeCentrality[g, "Out"]
+     = {1, 1, 2, 3, 1}
+    """
+
+    def _from_dict(self, graph, centrality):
+        s = len(graph.G) - 1  # undo networkx's normalization
+        return ListExpression(
+            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices.expressions],
+        )
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            return self._from_dict(graph, nx.degree_centrality(graph.G))
+
+    def eval_in(self, graph, expression, evaluation, options):
+        '%(name)s[graph_, "In", OptionsPattern[%(name)s]]'
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            return self._from_dict(graph, nx.in_degree_centrality(graph.G))
+
+    def eval_out(self, graph, expression, evaluation, options):
+        '%(name)s[graph_, "Out", OptionsPattern[%(name)s]]'
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            return self._from_dict(graph, nx.out_degree_centrality(graph.G))
 
 
 class DirectedEdge(Builtin):
@@ -927,26 +1148,248 @@ class DirectedEdge(Builtin):
     pass
 
 
-class UndirectedEdge(Builtin):
+class DirectedGraphQ(_NetworkXBuiltin):
+    """
+    >> g = Graph[{1 -> 2, 2 -> 3}]; DirectedGraphQ[g]
+     = True
+
+    >> g = Graph[{1 -> 2, 2 <-> 3}]; DirectedGraphQ[g]
+     = False
+
+    #> g = Graph[{}]; DirectedGraphQ[{}]
+     = False
+
+    #> DirectedGraphQ["abc"]
+     = False
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
+        if graph:
+            directed = graph.G.is_directed() and not graph.is_mixed_graph()
+            return from_python(directed)
+        else:
+            return SymbolFalse
+
+
+class EdgeConnectivity(_NetworkXBuiltin):
+    """
+    >> EdgeConnectivity[{1 <-> 2, 2 <-> 3}]
+     = 1
+
+    >> EdgeConnectivity[{1 -> 2, 2 -> 3}]
+     = 0
+
+    >> EdgeConnectivity[{1 -> 2, 2 -> 3, 3 -> 1}]
+     = 1
+
+    >> EdgeConnectivity[{1 <-> 2, 2 <-> 3, 1 <-> 3}]
+     = 2
+
+    >> EdgeConnectivity[{1 <-> 2, 3 <-> 4}]
+     = 0
+
+    #> EdgeConnectivity[Graph[{}]]
+     = EdgeConnectivity[-Graph-]
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph and not graph.empty():
+            return Integer(nx.edge_connectivity(graph.G))
+
+    def eval_st(self, graph, s, t, expression, evaluation, options):
+        "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph and not graph.empty():
+            return Integer(nx.edge_connectivity(graph.G, s, t))
+
+
+class EdgeIndex(_NetworkXBuiltin):
+    """
+    >> EdgeIndex[{c <-> d, d <-> a, a -> e}, d <-> a]
+     = 2
+    """
+
+    def eval(self, graph, v, expression, evaluation, options):
+        "%(name)s[graph_, v_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            i = graph.edges.get_index().get(v)
+            if i is None:
+                self._not_an_edge(expression, 2, evaluation)
+            else:
+                return Integer(i + 1)
+
+
+class EdgeList(_PatternList):
+    """
+    >> EdgeList[{1 -> 2, 2 <-> 3}]
+     = {DirectedEdge[1, 2], UndirectedEdge[2, 3]}
+    """
+
+    def _items(self, graph):
+        return graph.edges
+
+
+class EdgeRules(_NetworkXBuiltin):
+    """
+    >> EdgeRules[{1 <-> 2, 2 -> 3, 3 <-> 4}]
+     = {1 -> 2, 2 -> 3, 3 -> 4}
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+
+            def rules():
+                for expr in graph.edges.expressions:
+                    u, v = expr.elements
+                    yield Expression(SymbolRule, u, v)
+
+            return ListExpression(*list(rules()))
+
+
+class EigenvectorCentrality(_ComponentwiseCentrality):
+    """
+    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; EigenvectorCentrality[g, "In"]
+     = {0.16238, 0.136013, 0.276307, 0.23144, 0.193859}
+
+    >> EigenvectorCentrality[g, "Out"]
+     = {0.136013, 0.16238, 0.193859, 0.23144, 0.276307}
+
+    >> g = Graph[{a <-> b, b <-> c, c <-> d, d <-> e, e <-> c, e <-> a}]; EigenvectorCentrality[g]
+     = {0.162435, 0.162435, 0.240597, 0.193937, 0.240597}
+
+    >> g = Graph[{a <-> b, b <-> c, a <-> c, d <-> e, e <-> f, f <-> d, e <-> d}]; EigenvectorCentrality[g]
+     = {0.166667, 0.166667, 0.166667, 0.183013, 0.183013, 0.133975}
+
+    #> g = Graph[{a -> b, b -> c, c -> d, b -> e, a -> e}]; EigenvectorCentrality[g]
+     = {0., 0., 0., 0., 0.}
+
+    >> g = Graph[{a -> b, b -> c, c -> d, b -> e, a -> e, c -> a}]; EigenvectorCentrality[g]
+     = {0.333333, 0.333333, 0.333333, 0., 0.}
+    """
+
+    def _centrality(self, g, weight):
+        return nx.eigenvector_centrality(g, max_iter=10000, tol=1.0e-7, weight=weight)
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            return self._compute(graph, evaluation)
+
+    def eval_in_out(self, graph, dir, expression, evaluation, options):
+        "%(name)s[graph_, dir_String, OptionsPattern[%(name)s]]"
+        py_dir = dir.get_string_value()
+        if py_dir not in ("In", "Out"):
+            return
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            return self._compute(graph, evaluation, py_dir == "Out")
+
+
+class FindShortestPath(_NetworkXBuiltin):
+    """
+    >> FindShortestPath[{1 <-> 2, 2 <-> 3, 3 <-> 4, 2 <-> 4, 4 -> 5}, 1, 5]
+     = {1, 2, 4, 5}
+
+    >> FindShortestPath[{1 <-> 2, 2 <-> 3, 3 <-> 4, 4 -> 2, 4 -> 5}, 1, 5]
+     = {1, 2, 3, 4, 5}
+
+    >> FindShortestPath[{1 <-> 2, 2 <-> 3, 4 -> 3, 4 -> 2, 4 -> 5}, 1, 5]
+     = {}
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 3}, EdgeWeight -> {0.5, a, 3}];
+    >> a = 0.5; FindShortestPath[g, 1, 3]
+     = {1, 2, 3}
+    >> a = 10; FindShortestPath[g, 1, 3]
+     = {1, 3}
+
+    #> FindShortestPath[{}, 1, 2]
+     : The vertex at position 2 in FindShortestPath[{}, 1, 2] does not belong to the graph at position 1.
+     = FindShortestPath[{}, 1, 2]
+
+    #> FindShortestPath[{1 -> 2}, 1, 3]
+     : The vertex at position 3 in FindShortestPath[{1 -> 2}, 1, 3] does not belong to the graph at position 1.
+     = FindShortestPath[{1 -> 2}, 1, 3]
+    """
+
+    def eval_s_t(self, graph, s, t, expression, evaluation, options):
+        "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if not graph:
+            return
+        G = graph.G
+        if not G.has_node(s):
+            self._not_a_vertex(expression, 2, evaluation)
+        elif not G.has_node(t):
+            self._not_a_vertex(expression, 3, evaluation)
+        else:
+            try:
+                weight = graph.update_weights(evaluation)
+                return ListExpression(
+                    *list(nx.shortest_path(G, source=s, target=t, weight=weight)),
+                )
+            except nx.exception.NetworkXNoPath:
+                return ListExpression()
+
+
+class FindVertexCut(_NetworkXBuiltin):
     """
     <dl>
-      <dt>'UndirectedEdge[$u$, $v$]'
-      <dd>create an undirected edge between $u$ and $v$.
+    <dt>'FindVertexCut[$g$]'
+        <dd>finds a set of vertices of minimum cardinality that, if removed, renders $g$ disconnected.
+    <dt>'FindVertexCut[$g$, $s$, $t$]'
+        <dd>finds a vertex cut that disconnects all paths from $s$ to $t$.
     </dl>
 
-    >> a <-> b
-     = UndirectedEdge[a, b]
+    >> g = Graph[{1 -> 2, 2 -> 3}]; FindVertexCut[g]
+     = {}
 
-    >> (a <-> b) <-> c
-     = UndirectedEdge[UndirectedEdge[a, b], c]
+    >> g = Graph[{1 <-> 2, 2 <-> 3}]; FindVertexCut[g]
+     = {2}
 
-    >> a <-> (b <-> c)
-     = UndirectedEdge[a, UndirectedEdge[b, c]]
+    >> g = Graph[{1 <-> x, x <-> 2, 1 <-> y, y <-> 2, x <-> y}]; FindVertexCut[g]
+     = {x, y}
+
+    #> FindVertexCut[Graph[{}]]
+     = {}
+    #> FindVertexCut[Graph[{}], 1, 2]
+     : The vertex at position 2 in FindVertexCut[-Graph-, 1, 2] does not belong to the graph at position 1.
+     = FindVertexCut[-Graph-, 1, 2]
     """
 
-    summary_text = "makes undirected graph edge"
+    def eval(self, graph, expression, evaluation, options):
+        "FindVertexCut[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            if graph.empty() or not _is_connected(graph.G):
+                return ListExpression()
+            else:
+                return ListExpression(
+                    *graph.sort_vertices(nx.minimum_node_cut(graph.G))
+                )
 
-    pass
+    def eval_st(self, graph, s, t, expression, evaluation, options):
+        "FindVertexCut[graph_, s_, t_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if not graph:
+            return
+
+        G = graph.G
+        if not G.has_node(s):
+            self._not_a_vertex(expression, 2, evaluation)
+        elif not G.has_node(t):
+            self._not_a_vertex(expression, 3, evaluation)
+        elif graph.empty() or not _is_connected(graph.G):
+            return ListExpression()
+        else:
+            return ListExpression(*graph.sort_vertices(nx.minimum_node_cut(G, s, t)))
 
 
 class GraphAtom(AtomBuiltin):
@@ -996,15 +1439,219 @@ class GraphAtom(AtomBuiltin):
 
     options = DEFAULT_GRAPH_OPTIONS
 
-    def apply(self, graph, evaluation, options):
+    def eval(self, graph, evaluation, options):
         "Graph[graph_List, OptionsPattern[%(name)s]]"
         return _graph_from_list(graph.elements, options)
 
-    def apply_1(self, vertices, edges, evaluation, options):
+    def eval_1(self, vertices, edges, evaluation, options):
         "Graph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
         return _graph_from_list(
             edges.elements, options=options, new_vertices=vertices.elements
         )
+
+
+class GraphBox(GraphicsBox):
+    def _graphics_box(self, elements, options):
+        evaluation = options["evaluation"]
+        graph, form = elements
+        primitives = graph._layout(evaluation)
+        graphics = Expression(SymbolGraphics, primitives)
+        graphics_box = Expression(SymbolMakeBoxes, graphics, form).evaluate(evaluation)
+        return graphics_box
+
+    def boxes_to_text(self, elements, **options):
+        return "-Graph-"
+
+    def boxes_to_xml(self, elements, **options):
+        # Figure out what to do here.
+        return "-Graph-XML-"
+
+    def boxes_to_tex(self, elements, **options):
+        # Figure out what to do here.
+        return "-Graph-TeX-"
+
+
+class HITSCentrality(_Centrality):
+    """
+    >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c}]; HITSCentrality[g]
+     = {{0.292893, 0., 0., 0.707107, 0.}, {0., 1., 0.707107, 0., 0.707107}}
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            G, _ = graph.coalesced_graph(evaluation)  # FIXME warn if weight > 1
+
+            tol = 1.0e-14
+            _, a = nx.hits(G, normalized=True, tol=tol)
+            h, _ = nx.hits(G, normalized=False, tol=tol)
+
+            def _crop(x):
+                return 0 if x < tol else x
+
+            vertices = graph.vertices
+            return ListExpression(
+                ListExpression(*[Real(_crop(a.get(v, 0))) for v in vertices]),
+                ListExpression(*[Real(_crop(h.get(v, 0))) for v in vertices]),
+            )
+
+
+class HighlightGraph(_NetworkXBuiltin):
+    """"""
+
+    def eval(self, graph, what, expression, evaluation, options):
+        "HighlightGraph[graph_, what_List, OptionsPattern[%(name)s]]"
+        default_highlight = [Expression(SymbolRGBColor, Integer1, Integer0, Integer0)]
+
+        def parse(item):
+            if item.get_head_name() == "System`Rule":
+                return Expression(SymbolDirectedEdge, *item.elements)
+            else:
+                return item
+
+        rules = []
+        for element in what.elements:
+            if element.get_head_name() == "System`Style":
+                if len(element.elements) >= 2:
+                    rules.append((parse(element.elements[0]), element.elements[1:]))
+            else:
+                rules.append((parse(element), default_highlight))
+
+        rules.append((Expression(SymbolBlank), Expression(SymbolMissing)))
+
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            rule_exprs = ListExpression(*[Expression(SymbolRule, *r) for r in rules])
+            return graph.with_highlight(rule_exprs)
+
+
+class KatzCentrality(_ComponentwiseCentrality):
+    """
+    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; KatzCentrality[g, 0.2]
+     = {1.25202, 1.2504, 1.5021, 1.30042, 1.26008}
+
+    >> g = Graph[{a <-> b, b <-> c, a <-> c, d <-> e, e <-> f, f <-> d, e <-> d}]; KatzCentrality[g, 0.1]
+     = {1.25, 1.25, 1.25, 1.41026, 1.41026, 1.28205}
+    """
+
+    rules = {
+        "KatzCentrality[g_, alpha_]": "KatzCentrality[g, alpha, 1]",
+    }
+
+    def _centrality(self, g, weight, alpha, beta):
+        return nx.katz_centrality(
+            g, alpha=alpha, beta=beta, normalized=False, weight=weight
+        )
+
+    def eval(self, graph, alpha, beta, expression, evaluation, options):
+        "%(name)s[graph_, alpha_, beta_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            py_alpha = alpha.to_mpmath()
+            py_beta = beta.to_mpmath()
+            if py_alpha is None or py_beta is None:
+                return
+            return self._compute(
+                graph, evaluation, normalized=False, alpha=py_alpha, beta=py_beta
+            )
+
+
+class LoopFreeGraphQ(_NetworkXBuiltin):
+    """
+    >> g = Graph[{1 -> 2, 2 -> 3}]; LoopFreeGraphQ[g]
+     = True
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 1}]; LoopFreeGraphQ[g]
+     = False
+
+    #> g = Graph[{}]; LoopFreeGraphQ[{}]
+     = False
+
+    #> LoopFreeGraphQ["abc"]
+     = False
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
+        if not graph or graph.empty():
+            return SymbolFalse
+
+        return from_python(graph.is_loop_free())
+
+
+class MixedGraphQ(_NetworkXBuiltin):
+    """
+    >> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
+     = False
+
+    >> g = Graph[{1 -> 2, 2 <-> 3}]; MixedGraphQ[g]
+     = True
+
+    #> g = Graph[{}]; MixedGraphQ[g]
+     = False
+
+    #> MixedGraphQ["abc"]
+     = False
+
+    # #> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
+    #  = False
+    # #> g = EdgeAdd[g, a <-> b]; MixedGraphQ[g]
+    #  = True
+    # #> g = EdgeDelete[g, a <-> b]; MixedGraphQ[g]
+    # = False
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
+        if graph:
+            return from_python(graph.is_mixed_graph())
+
+
+class MultigraphQ(_NetworkXBuiltin):
+    """
+    >> g = Graph[{1 -> 2, 2 -> 3}]; MultigraphQ[g]
+     = False
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 2}]; MultigraphQ[g]
+     = True
+
+    #> g = Graph[{}]; MultigraphQ[g]
+     = False
+
+    #> MultigraphQ["abc"]
+     = False
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
+        if graph:
+            return from_python(graph.is_multigraph())
+        else:
+            return SymbolFalse
+
+
+class PageRankCentrality(_Centrality):
+    """
+    >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
+     = {0.184502, 0.207565, 0.170664, 0.266605, 0.170664}
+    """
+
+    def eval_alpha_beta(self, graph, alpha, expression, evaluation, options):
+        "%(name)s[graph_, alpha_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            py_alpha = alpha.to_mpmath()
+            if py_alpha is None:
+                return
+            G, weight = graph.coalesced_graph(evaluation)
+            centrality = nx.pagerank(G, alpha=py_alpha, weight=weight, tol=1.0e-7)
+            return ListExpression(
+                *[Real(centrality.get(v, 0)) for v in graph.vertices],
+            )
 
 
 class PathGraphQ(_NetworkXBuiltin):
@@ -1040,7 +1687,7 @@ class PathGraphQ(_NetworkXBuiltin):
      = False
     """
 
-    def apply(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation, options):
         "PathGraphQ[graph_, OptionsPattern[%(name)s]]"
         if not isinstance(graph, Graph) or graph.empty():
             return SymbolFalse
@@ -1058,213 +1705,6 @@ class PathGraphQ(_NetworkXBuiltin):
             is_path = False
 
         return from_python(is_path)
-
-
-class MixedGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
-     = False
-
-    >> g = Graph[{1 -> 2, 2 <-> 3}]; MixedGraphQ[g]
-     = True
-
-    #> g = Graph[{}]; MixedGraphQ[g]
-     = False
-
-    #> MixedGraphQ["abc"]
-     = False
-
-    # #> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
-    #  = False
-    # #> g = EdgeAdd[g, a <-> b]; MixedGraphQ[g]
-    #  = True
-    # #> g = EdgeDelete[g, a <-> b]; MixedGraphQ[g]
-    # = False
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            return from_python(graph.is_mixed_graph())
-
-
-class MultigraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; MultigraphQ[g]
-     = False
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 2}]; MultigraphQ[g]
-     = True
-
-    #> g = Graph[{}]; MultigraphQ[g]
-     = False
-
-    #> MultigraphQ["abc"]
-     = False
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            return from_python(graph.is_multigraph())
-        else:
-            return SymbolFalse
-
-
-class AcyclicGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; AcyclicGraphQ[g]
-     = True
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 3 -> 5}]; AcyclicGraphQ[g]
-     = False
-
-    #> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 5 -> 3}]; AcyclicGraphQ[g]
-     = True
-
-    #> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 5 <-> 3}]; AcyclicGraphQ[g]
-     = False
-
-    #> g = Graph[{1 <-> 2, 2 <-> 3, 5 <-> 2, 3 <-> 4, 5 <-> 3}]; AcyclicGraphQ[g]
-     = False
-
-    #> g = Graph[{}]; AcyclicGraphQ[{}]
-     = False
-
-    #> AcyclicGraphQ["abc"]
-     = False
-     : Expected a graph at position 1 in AcyclicGraphQ[abc].
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=False)
-        if not graph or graph.empty():
-            return SymbolFalse
-
-        try:
-            cycles = nx.find_cycle(graph.G)
-        except nx.exception.NetworkXNoCycle:
-            return SymbolTrue
-        return from_python(not cycles)
-
-
-class LoopFreeGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; LoopFreeGraphQ[g]
-     = True
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 1}]; LoopFreeGraphQ[g]
-     = False
-
-    #> g = Graph[{}]; LoopFreeGraphQ[{}]
-     = False
-
-    #> LoopFreeGraphQ["abc"]
-     = False
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if not graph or graph.empty():
-            return SymbolFalse
-
-        return from_python(graph.is_loop_free())
-
-
-class DirectedGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; DirectedGraphQ[g]
-     = True
-
-    >> g = Graph[{1 -> 2, 2 <-> 3}]; DirectedGraphQ[g]
-     = False
-
-    #> g = Graph[{}]; DirectedGraphQ[{}]
-     = False
-
-    #> DirectedGraphQ["abc"]
-     = False
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            directed = graph.G.is_directed() and not graph.is_mixed_graph()
-            return from_python(directed)
-        else:
-            return SymbolFalse
-
-
-class ConnectedGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; ConnectedGraphQ[g]
-     = False
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedGraphQ[g]
-     = True
-
-    #> g = Graph[{1 -> 2, 2 -> 3, 2 -> 3, 3 -> 1}]; ConnectedGraphQ[g]
-     = True
-
-    #> g = Graph[{1 -> 2, 2 -> 3}]; ConnectedGraphQ[g]
-     = False
-
-    >> g = Graph[{1 <-> 2, 2 <-> 3}]; ConnectedGraphQ[g]
-     = True
-
-    >> g = Graph[{1 <-> 2, 2 <-> 3, 4 <-> 5}]; ConnectedGraphQ[g]
-     = False
-
-    #> ConnectedGraphQ[Graph[{}]]
-     = True
-
-    #> ConnectedGraphQ["abc"]
-     = False
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            return from_python(_is_connected(graph.G))
-        else:
-            return SymbolFalse
-
-
-class SimpleGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; SimpleGraphQ[g]
-     = True
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 1}]; SimpleGraphQ[g]
-     = False
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 2}]; SimpleGraphQ[g]
-     = False
-
-    #> SimpleGraphQ[Graph[{}]]
-     = True
-
-    #> SimpleGraphQ["abc"]
-     = False
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            if graph.empty():
-                return SymbolTrue
-            else:
-                simple = graph.is_loop_free() and not graph.is_multigraph()
-                return from_python(simple)
-        else:
-            return SymbolFalse
 
 
 class PlanarGraphQ(_NetworkXBuiltin):
@@ -1286,7 +1726,7 @@ class PlanarGraphQ(_NetworkXBuiltin):
 
     requires = _NetworkXBuiltin.requires
 
-    def apply(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if not graph or graph.empty():
@@ -1295,307 +1735,81 @@ class PlanarGraphQ(_NetworkXBuiltin):
         return from_python(nx.is_planar(graph.G))
 
 
-class FindVertexCut(_NetworkXBuiltin):
+class Property(Builtin):
+    pass
+
+
+class PropertyValue(Builtin):
     """
-    <dl>
-    <dt>'FindVertexCut[$g$]'
-        <dd>finds a set of vertices of minimum cardinality that, if removed, renders $g$ disconnected.
-    <dt>'FindVertexCut[$g$, $s$, $t$]'
-        <dd>finds a vertex cut that disconnects all paths from $s$ to $t$.
-    </dl>
-
-    >> g = Graph[{1 -> 2, 2 -> 3}]; FindVertexCut[g]
-     = {}
-
-    >> g = Graph[{1 <-> 2, 2 <-> 3}]; FindVertexCut[g]
-     = {2}
-
-    >> g = Graph[{1 <-> x, x <-> 2, 1 <-> y, y <-> 2, x <-> y}]; FindVertexCut[g]
-     = {x, y}
-
-    #> FindVertexCut[Graph[{}]]
-     = {}
-    #> FindVertexCut[Graph[{}], 1, 2]
-     : The vertex at position 2 in FindVertexCut[-Graph-, 1, 2] does not belong to the graph at position 1.
-     = FindVertexCut[-Graph-, 1, 2]
+    >> g = Graph[{a <-> b, Property[b <-> c, SomeKey -> 123]}];
+    >> PropertyValue[{g, b <-> c}, SomeKey]
+     = 123
+    >> PropertyValue[{g, b <-> c}, SomeUnknownKey]
+     = $Failed
     """
 
-    def apply(self, graph, expression, evaluation, options):
-        "FindVertexCut[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
+    requires = ("networkx",)
+
+    def eval(self, graph, item, name, evaluation):
+        "PropertyValue[{graph_Graph, item_}, name_Symbol]"
+        value = graph.get_property(item, name.get_name())
+        if value is None:
+            return SymbolFailed
+        return value
+
+
+class SimpleGraphQ(_NetworkXBuiltin):
+    """
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; SimpleGraphQ[g]
+     = True
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 1}]; SimpleGraphQ[g]
+     = False
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 2}]; SimpleGraphQ[g]
+     = False
+
+    #> SimpleGraphQ[Graph[{}]]
+     = True
+
+    #> SimpleGraphQ["abc"]
+     = False
+    """
+
+    def eval(self, graph, expression, evaluation, options):
+        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
-            if graph.empty() or not _is_connected(graph.G):
-                return ListExpression()
+            if graph.empty():
+                return SymbolTrue
             else:
-                return ListExpression(
-                    *graph.sort_vertices(nx.minimum_node_cut(graph.G))
-                )
-
-    def apply_st(self, graph, s, t, expression, evaluation, options):
-        "FindVertexCut[graph_, s_, t_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if not graph:
-            return
-
-        G = graph.G
-        if not G.has_node(s):
-            self._not_a_vertex(expression, 2, evaluation)
-        elif not G.has_node(t):
-            self._not_a_vertex(expression, 3, evaluation)
-        elif graph.empty() or not _is_connected(graph.G):
-            return ListExpression()
+                simple = graph.is_loop_free() and not graph.is_multigraph()
+                return from_python(simple)
         else:
-            return ListExpression(*graph.sort_vertices(nx.minimum_node_cut(G, s, t)))
+            return SymbolFalse
 
 
-class HighlightGraph(_NetworkXBuiltin):
-    """"""
-
-    def apply(self, graph, what, expression, evaluation, options):
-        "HighlightGraph[graph_, what_List, OptionsPattern[%(name)s]]"
-        default_highlight = [Expression(SymbolRGBColor, Integer1, Integer0, Integer0)]
-
-        def parse(item):
-            if item.get_head_name() == "System`Rule":
-                return Expression(SymbolDirectedEdge, *item.elements)
-            else:
-                return item
-
-        rules = []
-        for element in what.elements:
-            if element.get_head_name() == "System`Style":
-                if len(element.elements) >= 2:
-                    rules.append((parse(element.elements[0]), element.elements[1:]))
-            else:
-                rules.append((parse(element), default_highlight))
-
-        rules.append((Expression(SymbolBlank), Expression(SymbolMissing)))
-
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            rule_exprs = ListExpression(*[Expression(SymbolRule, *r) for r in rules])
-            return graph.with_highlight(rule_exprs)
-
-
-class _PatternList(_NetworkXBuiltin):
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return ListExpression(*self._items(graph))
-
-    def apply_patt(self, graph, patt, expression, evaluation, options):
-        "%(name)s[graph_, patt_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return Expression(SymbolCases, ListExpression(*self._items(graph)), patt)
-
-
-class _PatternCount(_NetworkXBuiltin):
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return Integer(len(self._items(graph)))
-
-    def apply_patt(self, graph, patt, expression, evaluation, options):
-        "%(name)s[graph_, patt_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return Expression(
-                SymbolLength,
-                Expression(SymbolCases, ListExpression(*self._items(graph)), patt),
-            )
-
-
-class VertexCount(_PatternCount):
+class VertexAdd(_NetworkXBuiltin):
     """
-    >> VertexCount[{1 -> 2, 2 -> 3}]
-     = 3
-
-    >> VertexCount[{1 -> x, x -> 3}, _Integer]
-     = 2
+    >> g1 = Graph[{1 -> 2, 2 -> 3}];
+    >> g2 = VertexAdd[g1, 4]
+     = -Graph-
+    >> g3 = VertexAdd[g2, {5, 10}]
+     = -Graph-
+    >> VertexAdd[{a -> b}, c]
+     = -Graph-
     """
 
-    def _items(self, graph):
-        return graph.vertices.expressions
-
-
-class VertexList(_PatternList):
-    """
-    >> VertexList[{1 -> 2, 2 -> 3}]
-     = {1, 2, 3}
-
-    >> VertexList[{a -> c, c -> b}]
-     = {a, c, b}
-
-    >> VertexList[{a -> c, 5 -> b}, _Integer -> 10]
-     = {10}
-    """
-
-    def _items(self, graph):
-        return graph.vertices
-
-
-class EdgeCount(_PatternCount):
-    """
-    >> EdgeCount[{1 -> 2, 2 -> 3}]
-     = 2
-    """
-
-    def _items(self, graph):
-        return graph.G.edges
-
-
-class EdgeList(_PatternList):
-    """
-    >> EdgeList[{1 -> 2, 2 <-> 3}]
-     = {DirectedEdge[1, 2], UndirectedEdge[2, 3]}
-    """
-
-    def _items(self, graph):
-        return graph.edges
-
-
-class EdgeRules(_NetworkXBuiltin):
-    """
-    >> EdgeRules[{1 <-> 2, 2 -> 3, 3 <-> 4}]
-     = {1 -> 2, 2 -> 3, 3 -> 4}
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-
-            def rules():
-                for expr in graph.edges.expressions:
-                    u, v = expr.elements
-                    yield Expression(SymbolRule, u, v)
-
-            return ListExpression(*list(rules()))
-
-
-class AdjacencyList(_NetworkXBuiltin):
-    """
-    >> AdjacencyList[{1 -> 2, 2 -> 3}, 3]
-     = {2}
-
-    >> AdjacencyList[{1 -> 2, 2 -> 3}, _?EvenQ]
-     = {1, 3}
-
-    >> AdjacencyList[{x -> 2, x -> 3, x -> 4, 2 -> 10, 2 -> 11, 4 -> 20, 4 -> 21, 10 -> 100}, 10, 2]
-     = {2, 11, 100, x}
-    """
-
-    def _retrieve(self, graph, what, neighbors, expression, evaluation):
-        from mathics.builtin import pattern_objects
-
-        if what.get_head_name() in pattern_objects:
-            collected = set()
-            match = Matcher(what).match
-            for v in graph.G.nodes:
-                if match(v, evaluation):
-                    collected.update(neighbors(v))
-            return ListExpression(*sorted(collected))
-        elif graph.G.has_node(what):
-            return ListExpression(*sorted(neighbors(what)))
-        else:
-            self._not_a_vertex(expression, 2, evaluation)
-
-    def apply(self, graph, what, expression, evaluation, options):
+    def eval(self, graph: Expression, what, expression, evaluation, options):
         "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            G = graph.G.to_undirected()  # FIXME inefficient
-            return self._retrieve(
-                graph, what, lambda v: G.neighbors(v), expression, evaluation
-            )
-
-    def apply_d(self, graph, what, d, expression, evaluation, options):
-        "%(name)s[graph_, what_, d_, OptionsPattern[%(name)s]]"
-        py_d = d.to_mpmath()
-        if py_d is None:
-            return
-
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            G = graph.G
-
-            def neighbors(v):
-                return nx.ego_graph(
-                    G, v, radius=py_d, undirected=True, center=False
-                ).nodes()
-
-            return self._retrieve(graph, what, neighbors, expression, evaluation)
-
-
-class VertexIndex(_NetworkXBuiltin):
-    """
-    >> VertexIndex[{c <-> d, d <-> a}, a]
-     = 3
-    """
-
-    def apply(self, graph, v, expression, evaluation, options):
-        "%(name)s[graph_, v_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            i = graph.vertices.get_index().get(v)
-            if i is None:
-                self._not_a_vertex(expression, 2, evaluation)
+        mathics_graph = self._build_graph(graph, evaluation, options, expression)
+        if mathics_graph:
+            if what.get_head_name() == "System`List":
+                return mathics_graph.add_vertices(
+                    *zip(*[_parse_item(x) for x in what.elements])
+                )
             else:
-                return Integer(i + 1)
-
-
-class EdgeIndex(_NetworkXBuiltin):
-    """
-    >> EdgeIndex[{c <-> d, d <-> a, a -> e}, d <-> a]
-     = 2
-    """
-
-    def apply(self, graph, v, expression, evaluation, options):
-        "%(name)s[graph_, v_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            i = graph.edges.get_index().get(v)
-            if i is None:
-                self._not_an_edge(expression, 2, evaluation)
-            else:
-                return Integer(i + 1)
-
-
-class EdgeConnectivity(_NetworkXBuiltin):
-    """
-    >> EdgeConnectivity[{1 <-> 2, 2 <-> 3}]
-     = 1
-
-    >> EdgeConnectivity[{1 -> 2, 2 -> 3}]
-     = 0
-
-    >> EdgeConnectivity[{1 -> 2, 2 -> 3, 3 -> 1}]
-     = 1
-
-    >> EdgeConnectivity[{1 <-> 2, 2 <-> 3, 1 <-> 3}]
-     = 2
-
-    >> EdgeConnectivity[{1 <-> 2, 3 <-> 4}]
-     = 0
-
-    #> EdgeConnectivity[Graph[{}]]
-     = EdgeConnectivity[-Graph-]
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph and not graph.empty():
-            return Integer(nx.edge_connectivity(graph.G))
-
-    def apply_st(self, graph, s, t, expression, evaluation, options):
-        "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph and not graph.empty():
-            return Integer(nx.edge_connectivity(graph.G, s, t))
+                return mathics_graph.add_vertices(*zip(*[_parse_item(what)]))
 
 
 class VertexConnectivity(_NetworkXBuiltin):
@@ -1619,7 +1833,7 @@ class VertexConnectivity(_NetworkXBuiltin):
      = VertexConnectivity[-Graph-]
     """
 
-    def apply(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph and not graph.empty():
@@ -1628,7 +1842,7 @@ class VertexConnectivity(_NetworkXBuiltin):
             else:
                 return Integer(nx.node_connectivity(graph.G))
 
-    def apply_st(self, graph, s, t, expression, evaluation, options):
+    def eval_st(self, graph, s, t, expression, evaluation, options):
         "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph and not graph.empty():
@@ -1636,333 +1850,6 @@ class VertexConnectivity(_NetworkXBuiltin):
                 return Integer(0)
             else:
                 return Integer(nx.node_connectivity(graph.G, s, t))
-
-
-class _Centrality(_NetworkXBuiltin):
-    pass
-
-
-class BetweennessCentrality(_Centrality):
-    """
-    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]; BetweennessCentrality[g]
-     = {0., 1., 0., 0., 0.}
-
-    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; BetweennessCentrality[g]
-     = {3., 3., 6., 6., 6.}
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            weight = graph.update_weights(evaluation)
-            centrality = nx.betweenness_centrality(
-                graph.G, normalized=False, weight=weight
-            )
-            return ListExpression(
-                *[Real(centrality.get(v, 0.0)) for v in graph.vertices],
-            )
-
-
-class ClosenessCentrality(_Centrality):
-    """
-    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]; ClosenessCentrality[g]
-     = {0.666667, 1., 0., 1., 1.}
-
-    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; ClosenessCentrality[g]
-     = {0.4, 0.4, 0.4, 0.5, 0.666667}
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            weight = graph.update_weights(evaluation)
-            G = graph.G
-            if G.is_directed():
-                G = G.reverse()
-            centrality = nx.closeness_centrality(G, distance=weight, wf_improved=False)
-            return ListExpression(
-                *[Real(centrality.get(v, 0.0)) for v in graph.vertices],
-            )
-
-
-class DegreeCentrality(_Centrality):
-    """
-    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; DegreeCentrality[g]
-     = {2, 4, 5, 3, 2}
-
-    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; DegreeCentrality[g, "In"]
-     = {1, 3, 3, 0, 1}
-
-    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]; DegreeCentrality[g, "Out"]
-     = {1, 1, 2, 3, 1}
-    """
-
-    def _from_dict(self, graph, centrality):
-        s = len(graph.G) - 1  # undo networkx's normalization
-        return ListExpression(
-            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices.expressions],
-        )
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return self._from_dict(graph, nx.degree_centrality(graph.G))
-
-    def apply_in(self, graph, expression, evaluation, options):
-        '%(name)s[graph_, "In", OptionsPattern[%(name)s]]'
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return self._from_dict(graph, nx.in_degree_centrality(graph.G))
-
-    def apply_out(self, graph, expression, evaluation, options):
-        '%(name)s[graph_, "Out", OptionsPattern[%(name)s]]'
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return self._from_dict(graph, nx.out_degree_centrality(graph.G))
-
-
-class _ComponentwiseCentrality(_Centrality):
-    def _centrality(self, g, weight):
-        raise NotImplementedError
-
-    def _compute(self, graph, evaluation, reverse=False, normalized=True, **kwargs):
-        vertices = graph.vertices
-        G, weight = graph.coalesced_graph(evaluation)
-        if reverse:
-            G = G.reverse()
-
-        components = list(_components(G))
-        components = [c for c in components if len(c) > 1]
-
-        result = [0] * len(vertices)
-        for bunch in components:
-            g = G.subgraph(bunch)
-            centrality = self._centrality(g, weight, **kwargs)
-            values = [centrality.get(v, 0) for v in vertices]
-            if normalized:
-                s = sum(values) * len(components)
-            else:
-                s = 1
-            if s > 0:
-                for i, x in enumerate(values):
-                    result[i] += x / s
-
-        return ListExpression(*[Real(x) for x in result])
-
-
-class EigenvectorCentrality(_ComponentwiseCentrality):
-    """
-    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; EigenvectorCentrality[g, "In"]
-     = {0.16238, 0.136013, 0.276307, 0.23144, 0.193859}
-
-    >> EigenvectorCentrality[g, "Out"]
-     = {0.136013, 0.16238, 0.193859, 0.23144, 0.276307}
-
-    >> g = Graph[{a <-> b, b <-> c, c <-> d, d <-> e, e <-> c, e <-> a}]; EigenvectorCentrality[g]
-     = {0.162435, 0.162435, 0.240597, 0.193937, 0.240597}
-
-    >> g = Graph[{a <-> b, b <-> c, a <-> c, d <-> e, e <-> f, f <-> d, e <-> d}]; EigenvectorCentrality[g]
-     = {0.166667, 0.166667, 0.166667, 0.183013, 0.183013, 0.133975}
-
-    #> g = Graph[{a -> b, b -> c, c -> d, b -> e, a -> e}]; EigenvectorCentrality[g]
-     = {0., 0., 0., 0., 0.}
-
-    >> g = Graph[{a -> b, b -> c, c -> d, b -> e, a -> e, c -> a}]; EigenvectorCentrality[g]
-     = {0.333333, 0.333333, 0.333333, 0., 0.}
-    """
-
-    def _centrality(self, g, weight):
-        return nx.eigenvector_centrality(g, max_iter=10000, tol=1.0e-7, weight=weight)
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return self._compute(graph, evaluation)
-
-    def apply_in_out(self, graph, dir, expression, evaluation, options):
-        "%(name)s[graph_, dir_String, OptionsPattern[%(name)s]]"
-        py_dir = dir.get_string_value()
-        if py_dir not in ("In", "Out"):
-            return
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return self._compute(graph, evaluation, py_dir == "Out")
-
-
-class KatzCentrality(_ComponentwiseCentrality):
-    """
-    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; KatzCentrality[g, 0.2]
-     = {1.25202, 1.2504, 1.5021, 1.30042, 1.26008}
-
-    >> g = Graph[{a <-> b, b <-> c, a <-> c, d <-> e, e <-> f, f <-> d, e <-> d}]; KatzCentrality[g, 0.1]
-     = {1.25, 1.25, 1.25, 1.41026, 1.41026, 1.28205}
-    """
-
-    rules = {
-        "KatzCentrality[g_, alpha_]": "KatzCentrality[g, alpha, 1]",
-    }
-
-    def _centrality(self, g, weight, alpha, beta):
-        return nx.katz_centrality(
-            g, alpha=alpha, beta=beta, normalized=False, weight=weight
-        )
-
-    def apply(self, graph, alpha, beta, expression, evaluation, options):
-        "%(name)s[graph_, alpha_, beta_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            py_alpha = alpha.to_mpmath()
-            py_beta = beta.to_mpmath()
-            if py_alpha is None or py_beta is None:
-                return
-            return self._compute(
-                graph, evaluation, normalized=False, alpha=py_alpha, beta=py_beta
-            )
-
-
-class PageRankCentrality(_Centrality):
-    """
-    >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
-     = {0.184502, 0.207565, 0.170664, 0.266605, 0.170664}
-    """
-
-    def apply_alpha_beta(self, graph, alpha, expression, evaluation, options):
-        "%(name)s[graph_, alpha_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            py_alpha = alpha.to_mpmath()
-            if py_alpha is None:
-                return
-            G, weight = graph.coalesced_graph(evaluation)
-            centrality = nx.pagerank(G, alpha=py_alpha, weight=weight, tol=1.0e-7)
-            return ListExpression(
-                *[Real(centrality.get(v, 0)) for v in graph.vertices],
-            )
-
-
-class HITSCentrality(_Centrality):
-    """
-    >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c}]; HITSCentrality[g]
-     = {{0.292893, 0., 0., 0.707107, 0.}, {0., 1., 0.707107, 0., 0.707107}}
-    """
-
-    def apply(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            G, _ = graph.coalesced_graph(evaluation)  # FIXME warn if weight > 1
-
-            tol = 1.0e-14
-            _, a = nx.hits(G, normalized=True, tol=tol)
-            h, _ = nx.hits(G, normalized=False, tol=tol)
-
-            def _crop(x):
-                return 0 if x < tol else x
-
-            vertices = graph.vertices
-            return ListExpression(
-                ListExpression(*[Real(_crop(a.get(v, 0))) for v in vertices]),
-                ListExpression(*[Real(_crop(h.get(v, 0))) for v in vertices]),
-            )
-
-
-class VertexDegree(_Centrality):
-    """
-    >> VertexDegree[{1 <-> 2, 2 <-> 3, 2 <-> 4}]
-     = {1, 3, 1, 1}
-    """
-
-    def apply(self, graph, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-
-        def degrees(graph):
-            degrees = dict(list(graph.G.degree(graph.vertices)))
-            return ListExpression(*[Integer(degrees.get(v, 0)) for v in graph.vertices])
-
-        return self._evaluate_atom(graph, options, degrees)
-
-
-class FindShortestPath(_NetworkXBuiltin):
-    """
-    >> FindShortestPath[{1 <-> 2, 2 <-> 3, 3 <-> 4, 2 <-> 4, 4 -> 5}, 1, 5]
-     = {1, 2, 4, 5}
-
-    >> FindShortestPath[{1 <-> 2, 2 <-> 3, 3 <-> 4, 4 -> 2, 4 -> 5}, 1, 5]
-     = {1, 2, 3, 4, 5}
-
-    >> FindShortestPath[{1 <-> 2, 2 <-> 3, 4 -> 3, 4 -> 2, 4 -> 5}, 1, 5]
-     = {}
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 3}, EdgeWeight -> {0.5, a, 3}];
-    >> a = 0.5; FindShortestPath[g, 1, 3]
-     = {1, 2, 3}
-    >> a = 10; FindShortestPath[g, 1, 3]
-     = {1, 3}
-
-    #> FindShortestPath[{}, 1, 2]
-     : The vertex at position 2 in FindShortestPath[{}, 1, 2] does not belong to the graph at position 1.
-     = FindShortestPath[{}, 1, 2]
-
-    #> FindShortestPath[{1 -> 2}, 1, 3]
-     : The vertex at position 3 in FindShortestPath[{1 -> 2}, 1, 3] does not belong to the graph at position 1.
-     = FindShortestPath[{1 -> 2}, 1, 3]
-    """
-
-    def apply_s_t(self, graph, s, t, expression, evaluation, options):
-        "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if not graph:
-            return
-        G = graph.G
-        if not G.has_node(s):
-            self._not_a_vertex(expression, 2, evaluation)
-        elif not G.has_node(t):
-            self._not_a_vertex(expression, 3, evaluation)
-        else:
-            try:
-                weight = graph.update_weights(evaluation)
-                return ListExpression(
-                    *list(nx.shortest_path(G, source=s, target=t, weight=weight)),
-                )
-            except nx.exception.NetworkXNoPath:
-                return ListExpression()
-
-
-def _convert_networkx_graph(G, options):
-    mapping = dict((v, Integer(i)) for i, v in enumerate(G.nodes))
-    G = nx.relabel_nodes(G, mapping)
-    [Expression(SymbolUndirectedEdge, u, v) for u, v in G.edges]
-    return Graph(
-        G,
-        **options,
-    )
-
-
-class VertexAdd(_NetworkXBuiltin):
-    """
-    >> g1 = Graph[{1 -> 2, 2 -> 3}];
-    >> g2 = VertexAdd[g1, 4]
-     = -Graph-
-    >> g3 = VertexAdd[g2, {5, 10}]
-     = -Graph-
-    >> VertexAdd[{a -> b}, c]
-     = -Graph-
-    """
-
-    def apply(self, graph: Expression, what, expression, evaluation, options):
-        "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
-        mathics_graph = self._build_graph(graph, evaluation, options, expression)
-        if mathics_graph:
-            if what.get_head_name() == "System`List":
-                return mathics_graph.add_vertices(
-                    *zip(*[_parse_item(x) for x in what.elements])
-                )
-            else:
-                return mathics_graph.add_vertices(*zip(*[_parse_item(what)]))
 
 
 class VertexDelete(_NetworkXBuiltin):
@@ -1976,7 +1863,7 @@ class VertexDelete(_NetworkXBuiltin):
      = -Graph-
     """
 
-    def apply(self, graph, what, expression, evaluation, options):
+    def eval(self, graph, what, expression, evaluation, options):
         "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
@@ -1995,13 +1882,68 @@ class VertexDelete(_NetworkXBuiltin):
                 return graph.delete_vertices([what])
 
 
+class VertexIndex(_NetworkXBuiltin):
+    """
+    >> VertexIndex[{c <-> d, d <-> a}, a]
+     = 3
+    """
+
+    def eval(self, graph, v, expression, evaluation, options):
+        "%(name)s[graph_, v_, OptionsPattern[%(name)s]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            i = graph.vertices.get_index().get(v)
+            if i is None:
+                self._not_a_vertex(expression, 2, evaluation)
+            else:
+                return Integer(i + 1)
+
+
+class VertexList(_PatternList):
+    """
+    >> VertexList[{1 -> 2, 2 -> 3}]
+     = {1, 2, 3}
+
+    >> VertexList[{a -> c, c -> b}]
+     = {a, c, b}
+
+    >> VertexList[{a -> c, 5 -> b}, _Integer -> 10]
+     = {10}
+    """
+
+    def _items(self, graph):
+        return graph.vertices
+
+
+class UndirectedEdge(Builtin):
+    """
+    <dl>
+      <dt>'UndirectedEdge[$u$, $v$]'
+      <dd>create an undirected edge between $u$ and $v$.
+    </dl>
+
+    >> a <-> b
+     = UndirectedEdge[a, b]
+
+    >> (a <-> b) <-> c
+     = UndirectedEdge[UndirectedEdge[a, b], c]
+
+    >> a <-> (b <-> c)
+     = UndirectedEdge[a, UndirectedEdge[b, c]]
+    """
+
+    summary_text = "makes undirected graph edge"
+
+    pass
+
+
 # class EdgeAdd(_NetworkXBuiltin):
 #     """
 #     >> EdgeAdd[{1->2,2->3},3->1]
 #      = -Graph-
 #     """
 
-#     def apply(self, graph: Expression, what, expression, evaluation, options):
+#     def eval(self, graph: Expression, what, expression, evaluation, options):
 #         "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
 #         mathics_graph = self._build_graph(graph, evaluation, options, expression)
 #         if mathics_graph:
@@ -2032,7 +1974,7 @@ class VertexDelete(_NetworkXBuiltin):
 #      = -Graph-
 #     """
 
-#     def apply(self, graph, what, expression, evaluation, options):
+#     def eval(self, graph, what, expression, evaluation, options):
 #         "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
 #         graph = self._build_graph(graph, evaluation, options, expression)
 #         if graph:
