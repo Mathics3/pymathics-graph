@@ -148,6 +148,7 @@ class FindSpanningTree(_NetworkXBuiltin):
     </dl>
 
     >> FindSpanningTree[CycleGraph[4]]
+     = -Graph-
     """
 
     options = DEFAULT_GRAPH_OPTIONS
@@ -160,7 +161,7 @@ class FindSpanningTree(_NetworkXBuiltin):
             SymbolDirectedEdge if graph.G.is_directed() else SymbolUndirectedEdge
             # FIXME: put in edge to Graph conversion function?
             edges = [
-                Expression("UndirectedEdge", u, v)
+                Expression(SymbolUndirectedEdge, from_python(u), from_python(v))
                 for u, v in nx.minimum_spanning_edges(graph.G, data=False)
             ]
             g = _create_graph(edges, [None] * len(edges), options)

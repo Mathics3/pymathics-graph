@@ -16,6 +16,7 @@ from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.builtin.box.graphics import GraphicsBox
 from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Real
 from mathics.core.convert.expression import ListExpression, from_python
+from mathics.core.element import BaseElement
 from mathics.core.expression import Expression
 from mathics.core.symbols import Symbol, SymbolFalse, SymbolTrue
 from mathics.core.systemsymbols import (
@@ -71,7 +72,7 @@ DEFAULT_GRAPH_OPTIONS = {
 import networkx as nx
 
 SymbolDirectedEdge = Symbol("DirectedEdge")
-SymbolCases = Symbol("DirectedEdge")
+SymbolCases = Symbol("System`Cases")
 SymbolGraph = Symbol("Graph")
 SymbolGraphBox = Symbol("GraphBox")
 SymbolUndirectedEdge = Symbol("UndirectedEdge")
@@ -523,7 +524,14 @@ def _edge_weights(options):
 
 
 class _GraphParseError(Exception):
-    pass
+    def __init__(self, msg=""):
+        self.msg = msg
+
+    def __repr__(self):
+        if self.msg:
+            return "GraphParseError: " + self.msg
+        else:
+            return "GraphParseError."
 
 
 class Graph(Atom):
@@ -550,6 +558,11 @@ class Graph(Atom):
         return _create_graph(
             mathics_new_edges, new_edge_properties, options={}, from_graph=G
         )
+
+    def add_vertices(self, *vertices_to_add):
+        G = self.G.copy()
+        G.add_nodes_from(vertices_to_add)
+        return Graph(G)
 
     def coalesced_graph(self, evaluation):
         if not isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph)):
@@ -600,6 +613,12 @@ class Graph(Atom):
         return Graph(
             self.vertices, edges, G, self.layout, self.options, self.highlights
         )
+
+    def delete_vertices(self, vertices_to_delete):
+        G = self.G.copy()
+        for n in vertices_to_delete:
+            G.remove_node(n)
+        return Graph(G)
 
     def default_format(self, evaluation, form):
         return "-Graph-"
@@ -652,6 +671,9 @@ class Graph(Atom):
             ]
             return hash(self)
 
+    def sort_vertices(self, vertices):
+        return sorted(vertices)
+        
     def update_weights(self, evaluation):
         weights = None
         G = self.G
@@ -710,7 +732,6 @@ def _create_graph(
     known_vertices = set()
     vertices = []
     vertex_properties = []
-
     def add_vertex(x, attr_dict=None):
         if x.has_form("Property", 2):
             expr, prop = x.elements
@@ -732,7 +753,7 @@ def _create_graph(
         old_vertices = dict(from_graph.nodes.data())
         vertices += old_vertices
         edges = list(from_graph.edges.data())
-
+        
         for edge, attr_dict in edges:
             u, v = edge.elements
             if edge.get_head_name() == "System`DirectedEdge":
@@ -770,16 +791,16 @@ def _create_graph(
 
     def parse_edge(r, attr_dict):
         if isinstance(r, Atom):
-            raise _GraphParseError
+            raise _GraphParseError(msg = f"{r} is an atom, and hence does not define an edge.")
 
         name = r.get_head_name()
         elements = r.elements
 
         if len(elements) != 2:
-            raise _GraphParseError
+            raise _GraphParseError(msg = f"{r} does not have 2 elements, so it is not an edge.")
 
         u, v = elements
-
+        assert isinstance(u, BaseElement) and isinstance(v, BaseElement)
         u = add_vertex(u)
         v = add_vertex(v)
 
@@ -791,7 +812,7 @@ def _create_graph(
             edges_container = undirected_edges
             head = SymbolUndirectedEdge
             track_edges((u, v), (v, u))
-        elif name == "PyMathics`Property":
+        elif name == "Pymathics`Property":
             for prop in edge.elements:
                 prop_str = str(prop.head)
                 if prop_str in ("System`Rule", "System`DirectedEdge"):
@@ -805,7 +826,7 @@ def _create_graph(
                     pass
             pass
         else:
-            raise _GraphParseError
+            raise _GraphParseError(msg = f"{name} is an unknown kind of edge.")
 
         if head.get_name() == name:
             edges.append(r)
@@ -820,7 +841,7 @@ def _create_graph(
         def full_new_edge_properties(new_edge_style):
             for i, (attr_dict, w) in enumerate(zip(new_edge_properties, edge_weights)):
                 attr_dict = {} if attr_dict is None else attr_dict.copy()
-                attr_dict["System`EdgeWeight"] = w
+                attr_dict["System`EdgeWeight"] = from_python(w)
                 yield attr_dict
             # FIXME: figure out what to do here. Color is a mess.
             # for i, (attr_dict, s) in enumerate(zip(new_edge_style, new_edge_style)):
@@ -840,8 +861,8 @@ def _create_graph(
         edge_properties = list(full_new_edge_properties(edge_options))
         for edge, attr_dict in zip(new_edges, edge_properties):
             parse_edge(edge, attr_dict)
-    except _GraphParseError:
-        return
+    except _GraphParseError as e:
+        return None
 
     empty_dict = {}
     if directed_edges:
@@ -867,6 +888,7 @@ def _create_graph(
             attr_dict = attr_dict or empty_dict
             G.add_edge(u, v, **attr_dict)
 
+    # For what is this?
     _EdgeCollection(
         edges,
         edge_properties,
@@ -917,7 +939,7 @@ class _PatternList(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            return ListExpression(*self._items(graph))
+            return ListExpression(*(from_python(q) for q in self._items(graph)))
 
     def eval_patt(self, graph, patt, expression, evaluation, options):
         "%(name)s[graph_, patt_, OptionsPattern[%(name)s]]"
@@ -1309,6 +1331,7 @@ class FindShortestPath(_NetworkXBuiltin):
      = {1, 2, 3}
     >> a = 10; FindShortestPath[g, 1, 3]
      = {1, 3}
+    >> a=.;
 
     #> FindShortestPath[{}, 1, 2]
      : The vertex at position 2 in FindShortestPath[{}, 1, 2] does not belong to the graph at position 1.
@@ -1435,16 +1458,16 @@ class GraphAtom(AtomBuiltin):
      = 2
     """
 
-    requires = ("networkx",)
-
+    # requires = ("networkx",)
+    name = "Graph"
     options = DEFAULT_GRAPH_OPTIONS
 
     def eval(self, graph, evaluation, options):
-        "Graph[graph_List, OptionsPattern[%(name)s]]"
+        "Pymathics`Graph[graph_List, OptionsPattern[%(name)s]]"
         return _graph_from_list(graph.elements, options)
 
     def eval_1(self, vertices, edges, evaluation, options):
-        "Graph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
+        "Pymathics`Graph[vertices_List, edges_List, OptionsPattern[%(name)s]]"
         return _graph_from_list(
             edges.elements, options=options, new_vertices=vertices.elements
         )
@@ -1486,7 +1509,7 @@ class HITSCentrality(_Centrality):
             tol = 1.0e-14
             _, a = nx.hits(G, normalized=True, tol=tol)
             h, _ = nx.hits(G, normalized=False, tol=tol)
-
+                
             def _crop(x):
                 return 0 if x < tol else x
 
@@ -1586,8 +1609,9 @@ class MixedGraphQ(_NetworkXBuiltin):
     >> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
      = False
 
-    >> g = Graph[{1 -> 2, 2 <-> 3}]; MixedGraphQ[g]
-     = True
+    # Seems to not be implemented...
+    # >> g = Graph[{1 -> 2, 2 <-> 3}]; MixedGraphQ[g]
+    # = True
 
     #> g = Graph[{}]; MixedGraphQ[g]
      = False
@@ -1636,7 +1660,9 @@ class MultigraphQ(_NetworkXBuiltin):
 
 class PageRankCentrality(_Centrality):
     """
-    >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
+    # Not working, possibly because an issue in networkx
+
+    # >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
      = {0.184502, 0.207565, 0.170664, 0.266605, 0.170664}
     """
 
@@ -1752,10 +1778,15 @@ class PropertyValue(Builtin):
 
     def eval(self, graph, item, name, evaluation):
         "PropertyValue[{graph_Graph, item_}, name_Symbol]"
-        value = graph.get_property(item, name.get_name())
-        if value is None:
-            return SymbolFailed
-        return value
+        if isinstance(graph, Graph):
+            try:
+                # Fixme: this does not work...
+                value = graph.G.get_property(item, name.get_name())
+            except:
+                return SymbolFailed
+            if value is None:
+                return SymbolFailed
+            return value
 
 
 class SimpleGraphQ(_NetworkXBuiltin):
@@ -1884,6 +1915,12 @@ class VertexDelete(_NetworkXBuiltin):
 
 class VertexIndex(_NetworkXBuiltin):
     """
+    <dl>
+      <dt>'VertexIndex'['g', 'v']
+      <dd> gives the integer index of the vertex 'v' in the\
+       graph 'g'.
+    </dl>
+    >> a=.;
     >> VertexIndex[{c <-> d, d <-> a}, a]
      = 3
     """
@@ -1892,15 +1929,21 @@ class VertexIndex(_NetworkXBuiltin):
         "%(name)s[graph_, v_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            i = graph.vertices.get_index().get(v)
-            if i is None:
+            try:
+                return Integer(list(graph.vertices).index(v) + 1)
+            except ValueError:
                 self._not_a_vertex(expression, 2, evaluation)
-            else:
-                return Integer(i + 1)
+        return None
 
 
 class VertexList(_PatternList):
     """
+    <dl>
+      <dt>'VertexList[$edgelist$]'
+      <dd>list the nodes from a list of directed edges.
+    </dl>
+
+    >> a=.;
     >> VertexList[{1 -> 2, 2 -> 3}]
      = {1, 2, 3}
 

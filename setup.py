@@ -31,7 +31,7 @@ setup(
     name="pymathics-graph",
     version=__version__,  # noqa
     packages=find_namespace_packages(include=["pymathics.*"]),
-    install_requires=["Mathics3>5.1.0", "networkx>=2.8.0", "pydot", "matplotlib"],
+    install_requires=["Mathics3>5.1.0", "networkx>=2.8.0", "pydot", "matplotlib", "scipy>=1.10.0"],
     # don't pack Mathics in egg because of media files, etc.
     zip_safe=False,
     maintainer="Mathics Group",

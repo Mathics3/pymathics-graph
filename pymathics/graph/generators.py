@@ -7,6 +7,7 @@ from typing import Callable, Optional
 
 from mathics.builtin.numbers.randomnumbers import RandomEnv
 from mathics.core.atoms import Integer, String
+from mathics.core.list import ListExpression
 from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
 
@@ -669,7 +670,7 @@ class RandomGraph(_NetworkXBuiltin):
         self, n, m, k, expression, evaluation: Evaluation, options: dict
     ) -> Graph:
         "%(name)s[{n_Integer, m_Integer}, k_Integer, OptionsPattern[%(name)s]]"
-        return Expression("List", *self._generate(n, m, k, evaluation, options))
+        return ListExpression(*self._generate(n, m, k, evaluation, options))
 
 
 class RandomTree(_NetworkXBuiltin):
@@ -756,6 +757,7 @@ class GraphData(_NetworkXBuiltin):
     </dl>
 
     >> GraphData["PappusGraph"]
+     = -Graph-
     """
 
     def eval(self, name, expression, evaluation: Evaluation, options: dict) -> Graph:

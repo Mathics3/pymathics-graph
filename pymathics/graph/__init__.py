@@ -29,6 +29,7 @@ from pymathics.graph.base import (
     FindShortestPath,
     FindVertexCut,
     Graph,
+    GraphAtom,
     GraphBox,
     HITSCentrality,
     HighlightGraph,
