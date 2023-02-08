@@ -10,8 +10,6 @@ PIP ?= $(PYTHON) -m pip
 RM  ?= rm
 
 
-
-
 .PHONY: all build \
    check clean \
    develop dist doc doc-data \
