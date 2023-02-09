@@ -10,15 +10,6 @@ PIP ?= $(PYTHON) -m pip
 RM  ?= rm
 
 
-SANDBOX	?=
-ifeq ($(OS),Windows_NT)
-	SANDBOX = t
-else
-	UNAME_S := $(shell uname -s)
-	ifeq ($(UNAME_S),Darwin)
-		SANDBOX = t
-	endif
-endif
 
 
 .PHONY: all build \
@@ -52,7 +43,7 @@ install: pypi-setup
 	$(PYTHON) setup.py install
 
 # Run tests
-test check: pytest
+test check: pytest doctest
 
 #: Remove derived files
 clean: clean-pyc
@@ -72,7 +63,7 @@ pytest:
 
 #: Run tests that appear in docstring in the code.
 doctest:
-	MATHICS_CHARACTER_ENCODING="ASCII" SANDBOX=$(SANDBOX) $(PYTHON) -m mathics.docpipeline -l pymathics.graph -c  'Graphs - Vertices and Edges' $o
+	MATHICS_CHARACTER_ENCODING="ASCII" $(PYTHON) -m mathics.docpipeline -l pymathics.graph -c  'Graphs - Vertices and Edges' $o
 
 # #: Make Mathics PDF manual
 # doc mathics.pdf: mathics/doc/tex/data

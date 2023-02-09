@@ -13,10 +13,11 @@ def setup_module(module):
 
 def test_connected_components():
     for str_expr, str_expected in [
-        ("g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}];", "Null"),
-        ("SortList[ConnectedComponents[g]]", "{{1}, {2}, {3, 4}}"),
-        ("g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}];", "Null"),
-        ("SortList[ConnectedComponents[g]]", "{{1, 2, 3}}"),
+            ("PlanarGraphQ[Graph[{}]]", "False"),
+            ("g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}];", "Null"),
+            ("SortList[ConnectedComponents[g]]", "{{1}, {2}, {3, 4}}"),
+            ("g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}];", "Null"),
+            ("SortList[ConnectedComponents[g]]", "{{1, 2, 3}}"),
     ]:
         check_evaluation(str_expr, str_expected)
 

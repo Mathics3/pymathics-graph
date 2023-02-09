@@ -26,14 +26,19 @@ from pymathics.graph.base import (
 
 class ConnectedComponents(_NetworkXBuiltin):
     """
-    ## >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
-    ##  = {{3, 4}, {2}, {1}}
+    <dl>
+      <dt>'ConnectedComponents'[$g$]
+      <dd> gives the connected components of the graph $g$
+    </dl>
 
-    ## >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
-    ## = {{1, 2, 3}}
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
+     = {{3, 4}, {2}, {1}}
 
-    ## >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}]; ConnectedComponents[g]
-    ##  = {{4, 5}, {1, 2, 3}}
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
+     = {{1, 2, 3}}
+
+    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}]; ConnectedComponents[g]
+     = {{4, 5}, {1, 2, 3}}
     """
 
     def eval(
@@ -73,7 +78,7 @@ class ConnectedComponents(_NetworkXBuiltin):
 class GraphDistance(_NetworkXBuiltin):
     """
     <dl>
-      <dt>'GraphDistance[$g$, $s$, $t$]'
+      <dt>'GraphDistance'[$g$, $s$, $t$]
       <dd>returns the distance from source vertex $s$ to target vertex $t$ in the graph $g$.
     </dl>
 
@@ -144,7 +149,7 @@ class GraphDistance(_NetworkXBuiltin):
 class FindSpanningTree(_NetworkXBuiltin):
     """
     <dl>
-      <dt>'FindSpanningTree[$g$]'
+      <dt>'FindSpanningTree'[$g$]
       <dd>finds a spanning tree of the graph $g$.
     </dl>
 
@@ -179,8 +184,8 @@ class PlanarGraphQ(_NetworkXBuiltin):
     See <url>https://en.wikipedia.org/wiki/Planar_graph</url>
 
     <dl>
-      <dd>PlanarGraphQ[g]
-      <dd>Returns True if g is a planar graph and False otherwise.
+      <dd>'PlanarGraphQ'[$g$]
+      <dd>Returns True if $g$ is a planar graph and False otherwise.
     </dl>
 
     >> PlanarGraphQ[CycleGraph[4]]
@@ -198,7 +203,8 @@ class PlanarGraphQ(_NetworkXBuiltin):
     #> PlanarGraphQ[Graph[{}]]
      = False
 
-    #> PlanarGraphQ["abc"]
+    
+    >> PlanarGraphQ["abc"]
      : Expected a graph at position 1 in PlanarGraphQ[abc].
      = False
     """
@@ -206,7 +212,7 @@ class PlanarGraphQ(_NetworkXBuiltin):
     options = DEFAULT_GRAPH_OPTIONS
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "%(name)s[graph_, OptionsPattern[PlanarGraphQ]]"
+        "Pymathics`PlanarGraphQ[graph_, OptionsPattern[PlanarGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph or graph.empty():
             return SymbolFalse
@@ -216,6 +222,11 @@ class PlanarGraphQ(_NetworkXBuiltin):
 
 class WeaklyConnectedComponents(_NetworkXBuiltin):
     """
+    <dl>
+      <dt>'WeaklyConnectedComponents'[$g$]
+      <dd> gives the weakly connected components of the graph $g$
+    </dl>
+
     >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; WeaklyConnectedComponents[g]
      = {{1, 2, 3, 4}}
 
