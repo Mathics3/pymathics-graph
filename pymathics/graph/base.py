@@ -31,6 +31,8 @@ from mathics.core.systemsymbols import (
 )
 from mathics.eval.makeboxes import _boxed_string
 from mathics.eval.patterns import Matcher
+from pymathics.graph.graphsymbols import SymbolDirectedEdge, SymbolUndirectedEdge
+
 
 WL_MARKER_TO_NETWORKX = {
     "Circle": "o",
@@ -71,11 +73,6 @@ DEFAULT_GRAPH_OPTIONS = {
 }
 
 import networkx as nx
-
-SymbolDirectedEdge = Symbol("DirectedEdge")
-SymbolGraph = Symbol("Graph")
-SymbolGraphBox = Symbol("GraphBox")
-SymbolUndirectedEdge = Symbol("UndirectedEdge")
 
 
 def has_directed_option(options: dict) -> bool:
@@ -627,7 +624,7 @@ class Graph(Atom):
         return self
 
     @property
-    def edges(self)->tuple:
+    def edges(self) -> tuple:
         # TODO: check if this should not return expressions
         return self.G.edges
 
@@ -674,7 +671,7 @@ class Graph(Atom):
 
     def sort_vertices(self, vertices):
         return sorted(vertices)
-        
+
     def update_weights(self, evaluation):
         weights = None
         G = self.G
@@ -733,6 +730,7 @@ def _create_graph(
     known_vertices = set()
     vertices = []
     vertex_properties = []
+
     def add_vertex(x, attr_dict=None):
         if x.has_form("Property", 2):
             expr, prop = x.elements
@@ -754,7 +752,7 @@ def _create_graph(
         old_vertices = dict(from_graph.nodes.data())
         vertices += old_vertices
         edges = list(from_graph.edges.data())
-        
+
         for edge, attr_dict in edges:
             u, v = edge.elements
             if edge.get_head_name() == "System`DirectedEdge":
@@ -792,13 +790,17 @@ def _create_graph(
 
     def parse_edge(r, attr_dict):
         if isinstance(r, Atom):
-            raise _GraphParseError(msg = f"{r} is an atom, and hence does not define an edge.")
+            raise _GraphParseError(
+                msg=f"{r} is an atom, and hence does not define an edge."
+            )
 
         name = r.get_head_name()
         elements = r.elements
 
         if len(elements) != 2:
-            raise _GraphParseError(msg = f"{r} does not have 2 elements, so it is not an edge.")
+            raise _GraphParseError(
+                msg=f"{r} does not have 2 elements, so it is not an edge."
+            )
 
         u, v = elements
         assert isinstance(u, BaseElement) and isinstance(v, BaseElement)
@@ -827,7 +829,7 @@ def _create_graph(
                     pass
             pass
         else:
-            raise _GraphParseError(msg = f"{name} is an unknown kind of edge.")
+            raise _GraphParseError(msg=f"{name} is an unknown kind of edge.")
 
         if head.get_name() == name:
             edges.append(r)
@@ -1514,7 +1516,7 @@ class HITSCentrality(_Centrality):
             tol = 1.0e-14
             _, a = nx.hits(G, normalized=True, tol=tol)
             h, _ = nx.hits(G, normalized=False, tol=tol)
-                
+
             def _crop(x):
                 return 0 if x < tol else x
 
@@ -1736,7 +1738,6 @@ class PathGraphQ(_NetworkXBuiltin):
             is_path = False
 
         return from_python(is_path)
-
 
 
 class Property(Builtin):

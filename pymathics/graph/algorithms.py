@@ -107,6 +107,9 @@ class GraphDistance(_NetworkXBuiltin):
     >> GraphDistance[{1 <-> 2, 3 <-> 4}, 3]
      = {Infinity, Infinity, 0, 1}
 
+    #> GraphDistance[{1 -> 2}, 3, 4]
+     : The vertex at position 2 in GraphDistance[{1 -> 2}, 3, 4] does not belong to the graph at position 1.
+     = GraphDistance[{1 -> 2}, 3, 4]
     """
 
     def eval_s(
