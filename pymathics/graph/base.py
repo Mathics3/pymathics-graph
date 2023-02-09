@@ -21,6 +21,7 @@ from mathics.core.expression import Expression
 from mathics.core.symbols import Symbol, SymbolFalse, SymbolTrue
 from mathics.core.systemsymbols import (
     SymbolBlank,
+    SymbolCases,
     SymbolFailed,
     SymbolGraphics,
     SymbolMakeBoxes,
@@ -72,7 +73,6 @@ DEFAULT_GRAPH_OPTIONS = {
 import networkx as nx
 
 SymbolDirectedEdge = Symbol("DirectedEdge")
-SymbolCases = Symbol("System`Cases")
 SymbolGraph = Symbol("Graph")
 SymbolGraphBox = Symbol("GraphBox")
 SymbolUndirectedEdge = Symbol("UndirectedEdge")
