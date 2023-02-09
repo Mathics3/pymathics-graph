@@ -5,6 +5,7 @@ Algorithms on Graphs
 
 from typing import Optional
 
+from mathics.core.atoms import Integer1, Integer2, Integer3
 from mathics.core.convert.expression import to_mathics_list
 from mathics.core.convert.python import from_python
 from mathics.core.evaluation import Evaluation
@@ -25,14 +26,19 @@ from pymathics.graph.base import (
 
 class ConnectedComponents(_NetworkXBuiltin):
     """
-    ## >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
-    ##  = {{3, 4}, {2}, {1}}
+    <dl>
+      <dt>'ConnectedComponents'[$g$]
+      <dd> gives the connected components of the graph $g$
+    </dl>
 
-    ## >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
-    ## = {{1, 2, 3}}
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
+     = {{3, 4}, {2}, {1}}
 
-    ## >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}]; ConnectedComponents[g]
-    ##  = {{4, 5}, {1, 2, 3}}
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
+     = {{1, 2, 3}}
+
+    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}]; ConnectedComponents[g]
+     = {{4, 5}, {1, 2, 3}}
     """
 
     def eval(
@@ -72,7 +78,7 @@ class ConnectedComponents(_NetworkXBuiltin):
 class GraphDistance(_NetworkXBuiltin):
     """
     <dl>
-      <dt>'GraphDistance[$g$, $s$, $t$]'
+      <dt>'GraphDistance'[$g$, $s$, $t$]
       <dd>returns the distance from source vertex $s$ to target vertex $t$ in the graph $g$.
     </dl>
 
@@ -117,7 +123,7 @@ class GraphDistance(_NetworkXBuiltin):
         if graph:
             weight = graph.update_weights(evaluation)
             d = nx.shortest_path_length(graph.G, source=s, weight=weight)
-            inf = Expression(SymbolDirectedInfinity, 1)
+            inf = Expression(SymbolDirectedInfinity, Integer1)
             return to_mathics_list(*[d.get(v, inf) for v in graph.vertices])
 
     def eval_s_t(self, graph, s, t, expression, evaluation: Evaluation, options: dict):
@@ -127,9 +133,9 @@ class GraphDistance(_NetworkXBuiltin):
             return
         G = graph.G
         if not G.has_node(s):
-            self._not_a_vertex(expression, 2, evaluation)
+            self._not_a_vertex(expression, Integer2, evaluation)
         elif not G.has_node(t):
-            self._not_a_vertex(expression, 3, evaluation)
+            self._not_a_vertex(expression, Integer3, evaluation)
         else:
             try:
                 weight = graph.update_weights(evaluation)
@@ -137,17 +143,18 @@ class GraphDistance(_NetworkXBuiltin):
                     nx.shortest_path_length(graph.G, source=s, target=t, weight=weight)
                 )
             except nx.exception.NetworkXNoPath:
-                return Expression(SymbolDirectedInfinity, 1)
+                return Expression(SymbolDirectedInfinity, Integer1)
 
 
 class FindSpanningTree(_NetworkXBuiltin):
     """
     <dl>
-      <dt>'FindSpanningTree[$g$]'
+      <dt>'FindSpanningTree'[$g$]
       <dd>finds a spanning tree of the graph $g$.
     </dl>
 
     >> FindSpanningTree[CycleGraph[4]]
+     = -Graph-
     """
 
     options = DEFAULT_GRAPH_OPTIONS
@@ -160,7 +167,7 @@ class FindSpanningTree(_NetworkXBuiltin):
             SymbolDirectedEdge if graph.G.is_directed() else SymbolUndirectedEdge
             # FIXME: put in edge to Graph conversion function?
             edges = [
-                Expression("UndirectedEdge", u, v)
+                Expression(SymbolUndirectedEdge, from_python(u), from_python(v))
                 for u, v in nx.minimum_spanning_edges(graph.G, data=False)
             ]
             g = _create_graph(edges, [None] * len(edges), options)
@@ -174,23 +181,40 @@ class FindSpanningTree(_NetworkXBuiltin):
 
 class PlanarGraphQ(_NetworkXBuiltin):
     """
+    See <url>https://en.wikipedia.org/wiki/Planar_graph</url>
+
     <dl>
-      <dd>PlanarGraphQ[g]
-      <dd>Returns True if g is a planar graph and False otherwise.
+      <dd>'PlanarGraphQ'[$g$]
+      <dd>Returns True if $g$ is a planar graph and False otherwise.
     </dl>
 
     >> PlanarGraphQ[CycleGraph[4]]
     = True
+
     >> PlanarGraphQ[CompleteGraph[5]]
     = False
+
+    >> PlanarGraphQ[CompleteGraph[4]]
+     = True
+
+    >> PlanarGraphQ[CompleteGraph[5]]
+     = False
+
+    #> PlanarGraphQ[Graph[{}]]
+     = False
+
+    
+    >> PlanarGraphQ["abc"]
+     : Expected a graph at position 1 in PlanarGraphQ[abc].
+     = False
     """
 
     options = DEFAULT_GRAPH_OPTIONS
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "PlanarGraphQ[graph_, OptionsPattern[PlanarGraphQ]]"
+        "Pymathics`PlanarGraphQ[graph_, OptionsPattern[PlanarGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression)
-        if not graph:
+        if not graph or graph.empty():
             return SymbolFalse
         is_planar, _ = nx.check_planarity(graph.G)
         return from_python(is_planar)
@@ -198,6 +222,11 @@ class PlanarGraphQ(_NetworkXBuiltin):
 
 class WeaklyConnectedComponents(_NetworkXBuiltin):
     """
+    <dl>
+      <dt>'WeaklyConnectedComponents'[$g$]
+      <dd> gives the weakly connected components of the graph $g$
+    </dl>
+
     >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; WeaklyConnectedComponents[g]
      = {{1, 2, 3, 4}}
 

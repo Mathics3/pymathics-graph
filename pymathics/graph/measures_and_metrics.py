@@ -10,7 +10,7 @@ from typing import Optional
 
 from mathics.core.atoms import Integer
 from mathics.core.convert.expression import ListExpression
-from mathics.core.expression import Expression
+from mathics.core.expression import Expression, from_python
 from mathics.core.symbols import Symbol
 from mathics.core.systemsymbols import SymbolLength
 
@@ -46,7 +46,7 @@ class _PatternCount(_NetworkXBuiltin):
         if graph:
             return Expression(
                 SymbolLength,
-                Expression(SymbolCases, ListExpression(*self._items(graph)), patt),
+                Expression(SymbolCases, ListExpression(*(from_python(item) for item in self._items(graph))), patt),
             )
 
 

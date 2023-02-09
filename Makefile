@@ -9,6 +9,9 @@ PYTHON ?= python
 PIP ?= $(PYTHON) -m pip
 RM  ?= rm
 
+
+
+
 .PHONY: all build \
    check clean \
    develop dist doc doc-data \
@@ -40,7 +43,7 @@ install: pypi-setup
 	$(PYTHON) setup.py install
 
 # Run tests
-test check: pytest
+test check: pytest doctest
 
 #: Remove derived files
 clean: clean-pyc
@@ -60,7 +63,7 @@ pytest:
 
 #: Run tests that appear in docstring in the code.
 doctest:
-	$(PYTHON) mathics/test.py $o
+	MATHICS_CHARACTER_ENCODING="ASCII" $(PYTHON) -m mathics.docpipeline -l pymathics.graph -c  'Graphs - Vertices and Edges' $o
 
 # #: Make Mathics PDF manual
 # doc mathics.pdf: mathics/doc/tex/data
