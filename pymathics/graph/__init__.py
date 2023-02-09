@@ -1,7 +1,7 @@
 """
 Graphs - Vertices and Edges
 
-A Pymathics module that provides functions and variables for working with graphs.
+Mathics3 Module that provides functions and variables for working with graphs.
 
 Example:
    In[1]:= LoadModule["pymathics.graph"]
