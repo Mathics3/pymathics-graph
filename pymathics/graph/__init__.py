@@ -14,6 +14,7 @@ Networkx does the heavy lifting here.
 """
 
 from pymathics.graph.base import (
+    AdjacencyList,
     AcyclicGraphQ,
     BetweennessCentrality,
     ClosenessCentrality,
@@ -69,6 +70,7 @@ from pymathics.graph.generators import (
     CycleGraph,
     FullRAryTree,
     GraphAtlas,
+    GraphData,
     HknHararyGraph,
     HmnHararyGraph,
     KaryTree,
@@ -91,6 +93,7 @@ pymathics_version_data = {
 # Thsee are the publicly exported names
 __all__ = [
     "AcyclicGraphQ",
+    "AdjacencyList",
     "BalancedTree",
     "BarbellGraph",
     "BetweennessCentrality",
@@ -118,6 +121,7 @@ __all__ = [
     "GraphAtlas",
     "GraphAtom",
     "GraphBox",
+    "GraphData",
     "GraphDistance",
     "HITSCentrality",
     "HighlightGraph",

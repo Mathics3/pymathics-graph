@@ -423,7 +423,7 @@ class _FullGraphRewrite(Exception):
 
 def _normalize_edges(edges):
     for edge in edges:
-        if edge.has_form("Property", 2):
+        if edge.has_form("Pymathics`Property", 2):
             expr, prop = edge.elements
             yield Expression(edge.get_head(), list(_normalize_edges([expr]))[0], prop)
         elif edge.get_head_name() == "System`Rule":
@@ -726,7 +726,8 @@ def _graph_from_list(rules, options, new_vertices=None):
 def _create_graph(
     new_edges, new_edge_properties, options, from_graph=None, new_vertices=None
 ):
-
+    vertices_dict = {}
+    # Classification of vertex and edges
     known_vertices = set()
     vertices = []
     vertex_properties = []
@@ -744,9 +745,6 @@ def _create_graph(
 
     directed_edges = []
     undirected_edges = []
-
-    if new_vertices is not None:
-        vertices = [add_vertex(v) for v in new_vertices]
 
     if from_graph is not None:
         old_vertices = dict(from_graph.nodes.data())
@@ -766,6 +764,31 @@ def _create_graph(
         edge_properties = []
 
         multigraph = [False]
+
+
+    if new_vertices is not None:
+        for v in new_vertices:
+            add_vertex(v) 
+
+    def add_vertex(x, attr_dict=None):
+        if attr_dict is None:
+            attr_dict = {}
+        if x.has_form("Pymathics`Property", 2):
+            expr, prop = x.elements
+            attr_dict.update(_parse_property(prop, attr_dict))
+            return add_vertex(expr, attr_dict)
+        elif x not in known_vertices:
+            known_vertices.add(x)
+            vertices.append(x)
+            vertex_properties.append(attr_dict)
+            vertices_dict[x] = attr_dict
+        else:
+            vertices_dict[x].update(attr_dict)
+        return x
+
+    if new_vertices is not None:
+        for v in new_vertices:
+            add_vertex(v)
 
     known_edges = set(edges)
     # It is simpler to just recompute this than change the above to work
@@ -788,12 +811,28 @@ def _create_graph(
         SymbolDirectedEdge if use_directed_edges else SymbolUndirectedEdge
     )
 
-    def parse_edge(r, attr_dict):
+    def parse_edge(r, attr_dict=None):
+        if attr_dict is None:
+            attr_dict = {}
+
         if isinstance(r, Atom):
             raise _GraphParseError(
                 msg=f"{r} is an atom, and hence does not define an edge."
             )
 
+        if r.has_form("Pymathics`Property", None):
+            expr, prop = r.elements
+            attr_dict.update(_parse_property(prop, attr_dict))
+            return parse_edge(expr, attr_dict)
+
+
+        if r.head not in (SymbolRule, SymbolDirectedEdge, SymbolUndirectedEdge):
+            raise _GraphParseError(
+                msg=f"{r} is not an edge description."
+            )
+
+
+            
         name = r.get_head_name()
         elements = r.elements
 
@@ -1138,7 +1177,6 @@ class DegreeCentrality(_Centrality):
 
     def _from_dict(self, graph, centrality):
         s = len(graph.G) - 1  # undo networkx's normalization
-        print("_from_dict", (graph, type(graph)))
         return ListExpression(
             *[Integer(s * centrality.get(v, 0)) for v in graph.vertices],
         )
@@ -1274,7 +1312,6 @@ class EdgeRules(_NetworkXBuiltin):
         if graph:
 
             def rules():
-                print("Looking for Edge rules")
                 for edge in graph.edges:
                     u, v = edge
                     yield Expression(SymbolRule, u, v)
@@ -1566,7 +1603,7 @@ class KatzCentrality(_ComponentwiseCentrality):
     """
 
     rules = {
-        "KatzCentrality[g_, alpha_]": "KatzCentrality[g, alpha, 1]",
+        "Pymathics`KatzCentrality[g_, Pymathics`alpha_]": "Pymathics`KatzCentrality[g, Pymathics`alpha, 1]",
     }
 
     def _centrality(self, g, weight, alpha, beta):
@@ -1575,11 +1612,16 @@ class KatzCentrality(_ComponentwiseCentrality):
         )
 
     def eval(self, graph, alpha, beta, expression, evaluation, options):
-        "%(name)s[graph_, alpha_, beta_, OptionsPattern[%(name)s]]"
+        "Pymathics`KatzCentrality[graph_, alpha_, beta_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
+        print("Katz graph", graph)
         if graph:
-            py_alpha = alpha.to_mpmath()
-            py_beta = beta.to_mpmath()
+            print([alpha, beta, type(alpha), type(beta)])
+            try:
+                py_alpha = alpha.to_mpmath()
+                py_beta = beta.to_mpmath()
+            except NotImplementedError:
+                return
             if py_alpha is None or py_beta is None:
                 return
             return self._compute(
@@ -1639,6 +1681,7 @@ class MixedGraphQ(_NetworkXBuiltin):
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             return from_python(graph.is_mixed_graph())
+        return SymbolFalse
 
 
 class MultigraphQ(_NetworkXBuiltin):
@@ -1757,14 +1800,21 @@ class PropertyValue(Builtin):
 
     def eval(self, graph, item, name, evaluation):
         "PropertyValue[{graph_Graph, item_}, name_Symbol]"
+        name_str = name.get_name()
         if isinstance(graph, Graph):
-            try:
-                # Fixme: this does not work...
-                value = graph.G.get_property(item, name.get_name())
-            except:
+            if (
+                item.has_form("Rule", 2)
+                or item.has_form("DirectedEdge", 2)
+                or item.has_form("UndirectedEdge", 2)
+            ):
+                item_g = graph.G.edges().get(item.elements)
+            else:
+                item_g = graph.G.nodes().get(item)
+
+            if item_g is None:
                 return SymbolFailed
-            if value is None:
-                return SymbolFailed
+
+            value = item_g.get(name_str, SymbolFailed)
             return value
 
 

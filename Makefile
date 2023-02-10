@@ -10,8 +10,6 @@ PIP ?= $(PYTHON) -m pip
 RM  ?= rm
 
 
-
-
 .PHONY: all build \
    check clean \
    develop dist doc doc-data \
@@ -54,7 +52,7 @@ clean-pyc:
 
 #: Run py.test tests. Use environment variable "o" for pytest options
 pytest:
-	$(PYTHON) -m pytest test $o
+	MATHICS_CHARACTER_ENCODING="ASCII" $(PYTHON) -m pytest $(PYTEST_WORKERS) test $o
 
 
 # #: Create data that is used to in Django docs and to build TeX PDF
