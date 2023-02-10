@@ -4,12 +4,10 @@ from typing import Optional
 
 from mathics.session import MathicsSession
 
-session = MathicsSession(add_builtin=True, catch_interrupt=False)
-
-# Set up a Mathics3 session with definitions.
+# Set up a Mathics session with definitions.
 # For consistency set the character encoding ASCII which is
 # the lowest common denominator available on all systems.
-session = MathicsSession(character_encoding="ASCII")
+session = MathicsSession(add_builtin=True, catch_interrupt=False, character_encoding="ASCII")
 
 
 def reset_session(add_builtin=True, catch_interrupt=False):
