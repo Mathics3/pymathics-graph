@@ -1602,7 +1602,7 @@ class KatzCentrality(_ComponentwiseCentrality):
     """
 
     rules = {
-        "KatzCentrality[g_, alpha_]": "KatzCentrality[g, alpha, 1]",
+        "Pymathics`KatzCentrality[g_, Pymathics`alpha_]": "Pymathics`KatzCentrality[g, Pymathics`alpha, 1]",
     }
 
     def _centrality(self, g, weight, alpha, beta):
@@ -1611,11 +1611,16 @@ class KatzCentrality(_ComponentwiseCentrality):
         )
 
     def eval(self, graph, alpha, beta, expression, evaluation, options):
-        "%(name)s[graph_, alpha_, beta_, OptionsPattern[%(name)s]]"
+        "Pymathics`KatzCentrality[graph_, alpha_, beta_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
+        print("Katz graph", graph)
         if graph:
-            py_alpha = alpha.to_mpmath()
-            py_beta = beta.to_mpmath()
+            print([alpha, beta, type(alpha), type(beta)])
+            try:
+                py_alpha = alpha.to_mpmath()
+                py_beta = beta.to_mpmath()
+            except NotImplementedError:
+                return
             if py_alpha is None or py_beta is None:
                 return
             return self._compute(
