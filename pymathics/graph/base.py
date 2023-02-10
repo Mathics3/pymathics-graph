@@ -1675,6 +1675,7 @@ class MixedGraphQ(_NetworkXBuiltin):
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             return from_python(graph.is_mixed_graph())
+        return SymbolFalse
 
 
 class MultigraphQ(_NetworkXBuiltin):

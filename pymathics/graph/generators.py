@@ -131,6 +131,17 @@ def graph_helper(
     return g
 
 
+
+WL_TO_NETWORKX_FN = {
+    "DodecahedralGraph": (nx.dodecahedral_graph, None),
+    "DiamondGraph": (nx.diamond_graph, "spring"),
+    "PappusGraph": (nx.pappus_graph, "circular"),
+    "IsohedralGraph": (nx.icosahedral_graph, "spring"),
+    "PetersenGraph": (nx.petersen_graph, None),
+}
+
+
+
 class BalancedTree(_NetworkXBuiltin):
     """
     <dl>
@@ -463,13 +474,47 @@ class GraphAtlas(_NetworkXBuiltin):
         return g
 
 
-class HknHararyGraph(_NetworkXBuiltin):
-    """<dl>
-        <dt>'HmnHararyGraph[$k$, $n$]'
-        <dd>Returns the Harary graph with given node connectivity and node number.
+class GraphData(_NetworkXBuiltin):
+    """
+    <dl>
+      <dt>'GraphData[$name$]'
+      <dd>Returns a graph with the specified name.
+    </dl>
 
-      This second generator gives the Harary graph that minimizes the
-      number of edges in the graph with given node connectivity and
+    >> GraphData["PappusGraph"]
+     = -Graph-
+    """
+    
+    def eval(self, name, expression, evaluation: Evaluation, options: dict) -> Graph:
+        "Pymathics`GraphData[name_String, OptionsPattern[%(name)s]]"
+        py_name = name.get_string_value()
+        fn, layout = WL_TO_NETWORKX_FN.get(py_name, (None, None))
+        if not fn:
+            if not py_name.endswith("_graph"):
+                py_name += "_graph"
+            if py_name in ("LCF_graph", "make_small_graph"):
+                # These graphs require parameters
+                return
+            import inspect
+
+            fn = dict(inspect.getmembers(nx, inspect.isfunction)).get(py_name, None)
+            # parameters = inspect.signature(nx.diamond_graph).parameters.values()
+            # if len([p for p in list(parameters) if p.kind in [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD]]) != 0:
+            #     return
+        if fn:
+            g = graph_helper(fn, options, False, evaluation, layout)
+            g.G.name = py_name
+            return g
+
+    
+class HknHararyGraph(_NetworkXBuiltin):
+    """
+    <dl>
+      <dt>'HmnHararyGraph[$k$, $n$]'
+      <dd>Returns the Harary graph with given node connectivity and node number.
+
+      This second generator gives the Harary graph that minimizes the \
+      number of edges in the graph with given node connectivity and   \
       number of nodes.
 
       Harary, F.  The Maximum Connectivity of a Graph.  Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
@@ -495,8 +540,8 @@ class HmnHararyGraph(_NetworkXBuiltin):
       <dt>'HmnHararyGraph[$m$, $n$]'
       <dd>Returns the Harary graph with given numbers of nodes and edges.
 
-      This generator gives the Harary graph that maximizes the node
-      connectivity with given number of nodes and given number of
+      This generator gives the Harary graph that maximizes the node \
+      connectivity with given number of nodes and given number of \
       edges.
 
       Harary, F.  The Maximum Connectivity of a Graph.  Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
@@ -740,43 +785,3 @@ class StarGraph(_NetworkXBuiltin):
         return g
 
 
-WL_TO_NETWORKX_FN = {
-    "DodecahedralGraph": (nx.dodecahedral_graph, None),
-    "DiamondGraph": (nx.diamond_graph, "spring"),
-    "PappusGraph": (nx.pappus_graph, "circular"),
-    "IsohedralGraph": (nx.icosahedral_graph, "spring"),
-    "PetersenGraph": (nx.petersen_graph, None),
-}
-
-
-class GraphData(_NetworkXBuiltin):
-    """
-    <dl>
-      <dt>'GraphData[$name$]'
-      <dd>Returns a graph with the specified name.
-    </dl>
-
-    >> GraphData["PappusGraph"]
-     = -Graph-
-    """
-
-    def eval(self, name, expression, evaluation: Evaluation, options: dict) -> Graph:
-        "%(name)s[name_String, OptionsPattern[%(name)s]]"
-        py_name = name.get_string_value()
-        fn, layout = WL_TO_NETWORKX_FN.get(py_name, (None, None))
-        if not fn:
-            if not py_name.endswith("_graph"):
-                py_name += "_graph"
-            if py_name in ("LCF_graph", "make_small_graph"):
-                # These graphs require parameters
-                return
-            import inspect
-
-            fn = dict(inspect.getmembers(nx, inspect.isfunction)).get(py_name, None)
-            # parameters = inspect.signature(nx.diamond_graph).parameters.values()
-            # if len([p for p in list(parameters) if p.kind in [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD]]) != 0:
-            #     return
-        if fn:
-            g = graph_helper(fn, options, False, evaluation, layout)
-            g.G.name = py_name
-            return g
