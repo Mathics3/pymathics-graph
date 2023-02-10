@@ -825,6 +825,7 @@ def _create_graph(
             attr_dict.update(_parse_property(prop, attr_dict))
             return parse_edge(expr, attr_dict)
 
+
         if r.head not in (SymbolRule, SymbolDirectedEdge, SymbolUndirectedEdge):
             raise _GraphParseError(
                 msg=f"{r} is not an edge description."
