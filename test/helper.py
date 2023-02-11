@@ -2,7 +2,9 @@
 import time
 from typing import Optional
 
+from mathics.core.symbols import Symbol
 from mathics.session import MathicsSession
+
 
 # Set up a Mathics session with definitions.
 # For consistency set the character encoding ASCII which is
@@ -16,7 +18,10 @@ def reset_session(add_builtin=True, catch_interrupt=False):
 
 
 def evaluate_value(str_expr: str):
-    return session.evaluate(str_expr).value
+    expr = session.evaluate(str_expr)
+    if isinstance(expr, Symbol):
+        return expr.name
+    return expr.value
 
 
 def evaluate(str_expr: str):
@@ -62,6 +67,7 @@ def check_evaluation(
     """
     if str_expr is None:
         reset_session()
+        evaluate('LoadModule["pymathics.graph"]')
         return
 
     if to_string_expr:
