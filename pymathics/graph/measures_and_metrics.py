@@ -5,26 +5,24 @@ Measures include basic measures, such as the number of vertices and edges, \
 connectivity, degree measures, centrality, and so on.
 """
 
-
 from typing import Optional
 
-from mathics.core.atoms import Integer
-from mathics.core.convert.expression import ListExpression
+import networkx as nx
+from mathics.core.atoms import Integer, Integer1, Integer2, Integer3
+from mathics.core.convert.expression import ListExpression, to_mathics_list
+from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression, from_python
-from mathics.core.symbols import Symbol
-from mathics.core.systemsymbols import SymbolLength
+from mathics.core.systemsymbols import SymbolCases, SymbolDirectedInfinity, SymbolLength
 
 from pymathics.graph.base import _NetworkXBuiltin
-
-# FIXME: add context
-SymbolCases = Symbol("Cases")
-
 
 # FIXME put this in its own file/module basic
 # when pymathics doc can handle this.
 # """
 # Basic Graph Measures
 # """
+
+
 class _PatternCount(_NetworkXBuiltin):
     """
     Counts of vertices or edges, allowing rules to specify the graph.
@@ -46,7 +44,11 @@ class _PatternCount(_NetworkXBuiltin):
         if graph:
             return Expression(
                 SymbolLength,
-                Expression(SymbolCases, ListExpression(*(from_python(item) for item in self._items(graph))), patt),
+                Expression(
+                    SymbolCases,
+                    ListExpression(*(from_python(item) for item in self._items(graph))),
+                    patt,
+                ),
             )
 
 
@@ -76,6 +78,78 @@ class EdgeCount(_PatternCount):
 
     def _items(self, graph):
         return graph.G.edges
+
+
+class GraphDistance(_NetworkXBuiltin):
+    """
+    <dl>
+      <dt>'GraphDistance'[$g$, $s$, $t$]
+      <dd>returns the distance from source vertex $s$ to target vertex $t$ in the graph $g$.
+    </dl>
+
+    <dl>
+      <dt>'GraphDistance[$g$, $s$]'
+      <dd>returns the distance from source vertex $s$ to all vertices in the graph $g$.
+    </dl>
+
+    <dl>
+      <dt>'GraphDistance[{$v$->$w$, ...}, ...]'
+      <dd>use rules $v$->$w$ to specify the graph $g$.
+    </dl>
+
+    >> g = Graph[{1 -> 2, 2 <-> 3, 4 -> 3, 2 <-> 4, 4 -> 5}, VertexLabels->True]
+     = -Graph-
+
+    >> GraphDistance[g, 1, 5]
+     = 3
+
+    >> GraphDistance[g, 4, 2]
+     = 1
+
+    >> GraphDistance[g, 5, 4]
+     = Infinity
+
+    >> GraphDistance[g, 5]
+     = {Infinity, Infinity, Infinity, Infinity, 0}
+
+    >> GraphDistance[g, 3]
+     = {Infinity, 1, 2, 0, 3}
+
+    >> GraphDistance[g, 4]
+     = {Infinity, 1, 0, 1, 1}
+    """
+
+    summary_text = "get path distance"
+
+    def eval_s(
+        self, graph, s, expression, evaluation: Evaluation, options: dict
+    ) -> Optional[ListExpression]:
+        "GraphDistance[graph_, s_, OptionsPattern[GraphDistance]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            weight = graph.update_weights(evaluation)
+            d = nx.shortest_path_length(graph.G, source=s, weight=weight)
+            inf = Expression(SymbolDirectedInfinity, Integer1)
+            return to_mathics_list(*[d.get(v, inf) for v in graph.vertices])
+
+    def eval_s_t(self, graph, s, t, expression, evaluation: Evaluation, options: dict):
+        "GraphDistance[graph_, s_, t_, OptionsPattern[GraphDistance]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if not graph:
+            return
+        G = graph.G
+        if not G.has_node(s):
+            self._not_a_vertex(expression, Integer2, evaluation)
+        elif not G.has_node(t):
+            self._not_a_vertex(expression, Integer3, evaluation)
+        else:
+            try:
+                weight = graph.update_weights(evaluation)
+                return from_python(
+                    nx.shortest_path_length(graph.G, source=s, target=t, weight=weight)
+                )
+            except nx.exception.NetworkXNoPath:
+                return Expression(SymbolDirectedInfinity, Integer1)
 
 
 class VertexCount(_PatternCount):

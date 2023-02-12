@@ -1,145 +1,31 @@
 # -*- coding: utf-8 -*-
 """
-Routines for generating classes of Graphs
+Parametric Graphs
 """
 
-from typing import Callable, Optional
+from typing import Optional
 
-from mathics.builtin.numbers.randomnumbers import RandomEnv
-from mathics.core.atoms import Integer, String
-from mathics.core.list import ListExpression
+import networkx as nx
+from mathics.core.atoms import Integer
 from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
 
 from pymathics.graph.base import (
     Graph,
     SymbolUndirectedEdge,
-    _convert_networkx_graph,
     _graph_from_list,
     _NetworkXBuiltin,
-    _process_graph_options,
-    has_directed_option,
-    nx,
+    graph_helper,
+)
+from pymathics.graph.eval.harary import hnm_harary_graph
+from pymathics.graph.eval.parametric import (
+    eval_complete_graph,
+    eval_full_rary_tree,
+    eval_hkn_harary,
 )
 from pymathics.graph.tree import DEFAULT_TREE_OPTIONS
 
 # TODO: Can this code can be DRY'd more?
-
-
-def eval_complete_graph(
-    self, n: Integer, expression, evaluation: Evaluation, options: dict
-) -> Optional[Graph]:
-    py_n = n.value
-
-    if py_n < 1:
-        evaluation.message(self.get_name(), "ilsmp", expression)
-        return
-
-    args = (py_n,)
-    g = graph_helper(
-        nx.complete_graph, options, False, "circular", evaluation, None, *args
-    )
-    if not g:
-        return None
-
-    g.G.n = n
-    return g
-
-
-def eval_full_rary_tree(
-    self, r: Integer, n: Integer, expression, evaluation: Evaluation, options: dict
-) -> Optional[Graph]:
-    """
-    Call networkx to get a full_raray_tree using parameters, ``r`` and ``t``.
-    """
-    py_r = r.value
-
-    if py_r < 0:
-        evaluation.message(self.get_name(), "ilsmp", expression)
-        return
-
-    py_n = n.value
-    if py_n < 0:
-        evaluation.message(self.get_name(), "ilsmp", expression)
-        return
-
-    args = (py_r, py_n)
-    g = graph_helper(nx.full_rary_tree, options, True, "tree", evaluation, 0, *args)
-    if not g:
-        return None
-
-    g.G.r = r
-    g.G.n = n
-    return g
-
-
-def eval_hkn_harary(
-    self, k: Integer, n: Integer, expression, evaluation: Evaluation, options: dict
-) -> Optional[Graph]:
-    py_k = k.value
-
-    if py_k < 0:
-        evaluation.message(self.get_name(), "ilsmp", expression)
-        return
-
-    py_n = n.value
-    if py_n < 0:
-        evaluation.message(self.get_name(), "ilsmp2", expression)
-        return
-
-    from pymathics.graph.harary import hkn_harary_graph
-
-    args = (py_k, py_n)
-    g = graph_helper(
-        hkn_harary_graph, options, False, "circular", evaluation, None, *args
-    )
-    if not g:
-        return None
-    g.k = py_k
-    g.n = py_n
-    return g
-
-
-def graph_helper(
-    graph_generator_func: Callable,
-    options: dict,
-    can_digraph: bool,
-    graph_layout: str,
-    evaluation,
-    root: Optional[int] = None,
-    *args,
-    **kwargs
-) -> Optional[Callable]:
-    should_digraph = can_digraph and has_directed_option(options)
-    try:
-        G = (
-            graph_generator_func(*args, create_using=nx.DiGraph, **kwargs)
-            if should_digraph
-            else graph_generator_func(*args, **kwargs)
-        )
-    except MemoryError:
-        evaluation.message("Graph", "mem", evaluation)
-        return None
-    if graph_layout and not options["System`GraphLayout"].get_string_value():
-        options["System`GraphLayout"] = String(graph_layout)
-
-    g = Graph(G)
-    _process_graph_options(g, options)
-
-    if root is not None:
-        G.root = g.root = root
-    return g
-
-
-
-WL_TO_NETWORKX_FN = {
-    "DodecahedralGraph": (nx.dodecahedral_graph, None),
-    "DiamondGraph": (nx.diamond_graph, "spring"),
-    "PappusGraph": (nx.pappus_graph, "circular"),
-    "IsohedralGraph": (nx.icosahedral_graph, "spring"),
-    "PetersenGraph": (nx.petersen_graph, None),
-}
-
 
 
 class BalancedTree(_NetworkXBuiltin):
@@ -148,8 +34,8 @@ class BalancedTree(_NetworkXBuiltin):
       <dt>'BalancedTree[$r$, $h$]'
       <dd>Returns the perfectly balanced $r$-ary tree of height $h$.
 
-      In this tree produced, all non-leaf nodes will have $r$ children and the height of
-      the path from root $r$ to any leaf will be $h$.
+      In this tree produced, all non-leaf nodes will have $r$ children and \
+      the height of the path from root $r$ to any leaf will be $h$.
     </dl>
 
     >> BalancedTree[2, 3]
@@ -196,8 +82,8 @@ class BarbellGraph(_NetworkXBuiltin):
       <dd>Barbell Graph: two complete graphs connected by a path.
     </dl>
 
-    ## >> BarbellGraph[4, 1]
-    ##  = -Graph-
+    >> BarbellGraph[4, 1]
+     = -Graph-
 
     """
 
@@ -238,45 +124,6 @@ class BarbellGraph(_NetworkXBuiltin):
         return g
 
 
-# This code will be in the 2.6 release of networkx.
-# See https://github.com/networkx/networkx/pull/4461
-def binomial_tree(n, create_using=None) -> Graph:
-    """Returns the Binomial Tree of order n.
-
-    The binomial tree of order 0 consists of a single vertex. A binomial tree of order k
-    is defined recursively by linking two binomial trees of order k-1: the root of one is
-    the leftmost child of the root of the other.
-
-    Parameters
-    ----------
-    n : int
-        Order of the binomial tree.
-
-    Returns
-    -------
-    G : NetworkX graph
-        A binomial tree of $2^n$ vertices and $2^n - 1$ edges.
-
-    create_using : NetworkX graph constructor, optional (default=nx.Graph)
-       Graph type to create. If graph instance, then cleared before populated.
-
-    Returns
-    -------
-    G : NetworkX graph
-        A binomial tree of $2^n$ nodes and $2^n - 1$ edges.
-
-    """
-    G = nx.empty_graph(1, create_using)
-    N = 1
-    for i in range(n):
-        # Use G.edges() to ensure 2-tuples. G.edges is 3-tuple for MultiGraph
-        edges = [(u + N, v + N) for (u, v) in G.edges()]
-        G.add_edges_from(edges)
-        G.add_edge(0, N)
-        N *= 2
-    return G
-
-
 class BinomialTree(_NetworkXBuiltin):
     """
     <dl>
@@ -285,11 +132,14 @@ class BinomialTree(_NetworkXBuiltin):
 
       The binomial tree of order $n$ with root $R$ is defined as:
 
-      If $k$=0,  $B[k]$ = $B[0]$ = {$R$}. i.e., the binomial tree of order zero consists of a single node, $R$.
+      If $k$=0,  $B[k]$ = $B[0]$ = {$R$}. i.e., the binomial tree of order \
+      zero consists of a single node, $R$.
 
-      If $k>0$, B[k] = {$R$, $B[0$], $B[1]$ .. $B[k]$, i.e., the binomial tree of order $k$>0 comprises the root $R$, and $k$ binomial subtrees, $B[0] to $B[k].
+      If $k>0$, B[k] = {$R$, $B[0$], $B[1]$ .. $B[k]$, i.e., the binomial tree \
+      of order $k$>0 comprises the root $R$, and $k$ binomial subtrees, \
+      $B[0] to $B[k].
 
-      Binomial trees the underlying datastructre in Binomial Heaps.
+      Binomial trees are the underlying datastructre in Binomial Heaps.
     </dl>
 
     >> BinomialTree[3]
@@ -313,7 +163,7 @@ class BinomialTree(_NetworkXBuiltin):
             return
 
         args = (py_n,)
-        g = graph_helper(binomial_tree, options, True, "tree", evaluation, 0, *args)
+        g = graph_helper(nx.binomial_tree, options, True, "tree", evaluation, 0, *args)
         if not g:
             return None
         g.G.n = n
@@ -324,15 +174,11 @@ class CompleteGraph(_NetworkXBuiltin):
     """
     <dl>
       <dt>'CompleteGraph[$n$]'
-      <dd>Returns the complete graph with $n$ vertices, $K_n$
+      <dd>Returns the complete graph with $n$ vertices, $K_n$.
     </dl>
 
     >> CompleteGraph[8]
      = -Graph-
-
-    #> CompleteGraph[0]
-     : Expected a positive integer at position 1 in CompleteGraph[0].
-     = CompleteGraph[0]
     """
 
     messages = {
@@ -345,9 +191,9 @@ class CompleteGraph(_NetworkXBuiltin):
 
     def eval_multipartite(self, n, evaluation: Evaluation, options: dict):
         "%(name)s[n_List, OptionsPattern[%(name)s]]"
-        if all(isinstance(i, Integer) for i in n.leaves):
+        if all(isinstance(i, Integer) for i in n.elements):
             return Graph(
-                nx.complete_multipartite_graph(*[i.get_int_value() for i in n.leaves])
+                nx.complete_multipartite_graph(*[i.get_int_value() for i in n.elements])
             )
 
 
@@ -357,7 +203,7 @@ class CompleteKaryTree(_NetworkXBuiltin):
       <dd>Creates a complete $k$-ary tree of $n$ levels.
     </dl>
 
-    In the returned tree, with $n$ nodes, the from root $R$ to any
+    In the returned tree, with $n$ nodes, the from root $R$ to any \
     leaf be $k$.
 
     >> CompleteKaryTree[2, 3]
@@ -373,8 +219,8 @@ class CompleteKaryTree(_NetworkXBuiltin):
     def eval(self, k, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, k_Integer, OptionsPattern[%(name)s]]"
 
-        n_int = n.get_int_value()
-        k_int = k.get_int_value()
+        n_int = n.value
+        k_int = k.value
 
         new_n_int = int(((k_int**n_int) - 1) / (k_int - 1))
         return eval_full_rary_tree(
@@ -399,7 +245,7 @@ class CycleGraph(_NetworkXBuiltin):
         <dd>Returns the cycle graph with $n$ vertices $C_n$.
       </dl>
 
-    >> CycleGraph[3, PlotLabel -> "C_i"]
+    >> CycleGraph[5, PlotLabel -> "C_i"]
      = -Graph-
     """
 
@@ -443,8 +289,8 @@ class FullRAryTree(_NetworkXBuiltin):
 class GraphAtlas(_NetworkXBuiltin):
     """<dl>
       <dt>'GraphAtlas[$n$]'
-      <dd>Returns graph number $i$ from the Networkx's Graph
-      Atlas. There are about 1200 of them and get large as $i$
+      <dd>Returns graph number $i$ from the Networkx's Graph \
+      Atlas. There are about 1200 of them and get large as $i$ \
       increases.
     </dl>
 
@@ -474,50 +320,18 @@ class GraphAtlas(_NetworkXBuiltin):
         return g
 
 
-class GraphData(_NetworkXBuiltin):
-    """
-    <dl>
-      <dt>'GraphData[$name$]'
-      <dd>Returns a graph with the specified name.
-    </dl>
-
-    >> GraphData["PappusGraph"]
-     = -Graph-
-    """
-    
-    def eval(self, name, expression, evaluation: Evaluation, options: dict) -> Graph:
-        "Pymathics`GraphData[name_String, OptionsPattern[%(name)s]]"
-        py_name = name.get_string_value()
-        fn, layout = WL_TO_NETWORKX_FN.get(py_name, (None, None))
-        if not fn:
-            if not py_name.endswith("_graph"):
-                py_name += "_graph"
-            if py_name in ("LCF_graph", "make_small_graph"):
-                # These graphs require parameters
-                return
-            import inspect
-
-            fn = dict(inspect.getmembers(nx, inspect.isfunction)).get(py_name, None)
-            # parameters = inspect.signature(nx.diamond_graph).parameters.values()
-            # if len([p for p in list(parameters) if p.kind in [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD]]) != 0:
-            #     return
-        if fn:
-            g = graph_helper(fn, options, False, evaluation, layout)
-            g.G.name = py_name
-            return g
-
-    
 class HknHararyGraph(_NetworkXBuiltin):
     """
     <dl>
-      <dt>'HmnHararyGraph[$k$, $n$]'
+      <dt>'HknHararyGraph[$k$, $n$]'
       <dd>Returns the Harary graph with given node connectivity and node number.
 
       This second generator gives the Harary graph that minimizes the \
       number of edges in the graph with given node connectivity and   \
       number of nodes.
 
-      Harary, F.  The Maximum Connectivity of a Graph.  Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
+      Harary, F.  The Maximum Connectivity of a Graph.  \
+      Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
     </dl>
 
     >> HknHararyGraph[3, 10]
@@ -536,7 +350,8 @@ class HknHararyGraph(_NetworkXBuiltin):
 
 
 class HmnHararyGraph(_NetworkXBuiltin):
-    """<dl>
+    """
+    <dl>
       <dt>'HmnHararyGraph[$m$, $n$]'
       <dd>Returns the Harary graph with given numbers of nodes and edges.
 
@@ -544,7 +359,8 @@ class HmnHararyGraph(_NetworkXBuiltin):
       connectivity with given number of nodes and given number of \
       edges.
 
-      Harary, F.  The Maximum Connectivity of a Graph.  Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
+      Harary, F.  The Maximum Connectivity of a Graph.\
+      Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
     </dl>
 
     >> HmnHararyGraph[5, 10]
@@ -558,7 +374,7 @@ class HmnHararyGraph(_NetworkXBuiltin):
 
     def eval(self, n, m, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, m_Integer, OptionsPattern[%(name)s]]"
-        py_n = n.get_int_value()
+        py_n = n.value
 
         if py_n < 0:
             evaluation.message(self.get_name(), "ilsmp", expression)
@@ -569,8 +385,6 @@ class HmnHararyGraph(_NetworkXBuiltin):
         if py_m < 0:
             evaluation.message(self.get_name(), "ilsmp2", expression)
             return
-
-        from pymathics.graph.harary import hnm_harary_graph
 
         args = (py_n, py_m)
         g = graph_helper(
@@ -584,7 +398,8 @@ class HmnHararyGraph(_NetworkXBuiltin):
 
 
 class KaryTree(_NetworkXBuiltin):
-    """<dl>
+    """
+    <dl>
       <dt>'KaryTree[$r$, $n$]'
       <dd>Creates binary tree of $n$ vertices.
     </dl>
@@ -609,12 +424,14 @@ class KaryTree(_NetworkXBuiltin):
 
     options = DEFAULT_TREE_OPTIONS
 
-    def eval(self, n, expression, evaluation: Evaluation, options: dict) -> Graph:
+    def eval(
+        self, n: Integer, expression, evaluation: Evaluation, options: dict
+    ) -> Graph:
         "KaryTree[n_Integer, OptionsPattern[KaryTree]]"
         return eval_full_rary_tree(self, Integer(2), n, expression, evaluation, options)
 
     def eval_with_k(
-        self, n, k, expression, evaluation: Evaluation, options: dict
+        self, n: Integer, k: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Graph:
         "KaryTree[n_Integer, k_Integer, OptionsPattern[KaryTree]]"
         return eval_full_rary_tree(self, k, n, expression, evaluation, options)
@@ -659,7 +476,8 @@ class PathGraph(_NetworkXBuiltin):
     """
     <dl>
       <dt>'PathGraph[{$v_1$, $v_2$, ...}]'
-      <dd>Returns a Graph with a path with vertices $v_i$ and edges between $v-i$ and $v_i+1$ .
+      <dd>Returns a Graph with a path with vertices $v_i$ and \
+      edges between $v-i$ and $v_i+1$ .
     </dl>
     >> PathGraph[{1, 2, 3}]
      = -Graph-
@@ -678,44 +496,6 @@ class PathGraph(_NetworkXBuiltin):
             options["System`GraphLayout"].get_string_value() or "spiral_equidistant"
         )
         return g
-
-
-class RandomGraph(_NetworkXBuiltin):
-    """
-    <dl>
-      <dt>'RandomGraph[{$n$, $m$}]'
-      <dd>Returns a pseudorandom graph with $n$ vertices and $m$ edges.
-
-      <dt>'RandomGraph[{$n$, $m$}, $k$]'
-      <dd>Returns list of $k$ RandomGraph[{$n$, $m$}].
-    </dl>
-    """
-
-    def _generate(
-        self, n: Integer, m: Integer, k: Integer, evaluation: Evaluation, options: dict
-    ) -> Graph:
-        py_n = n.value
-        py_m = m.value
-        py_k = k.value
-        is_directed = has_directed_option(options)
-
-        with RandomEnv(evaluation) as _:
-            for _ in range(py_k):
-                # seed = rand.randint(0, 2 ** 63 - 1) # 2**63 is too large
-                G = nx.gnm_random_graph(py_n, py_m, directed=is_directed)
-                yield _convert_networkx_graph(G, options)
-
-    def eval_nm(self, n, m, expression, evaluation: Evaluation, options: dict) -> Graph:
-        "%(name)s[{n_Integer, m_Integer}, OptionsPattern[%(name)s]]"
-        g = list(self._generate(n, m, Integer(1), evaluation, options))[0]
-        _process_graph_options(g, options)
-        return g
-
-    def eval_nmk(
-        self, n, m, k, expression, evaluation: Evaluation, options: dict
-    ) -> Graph:
-        "%(name)s[{n_Integer, m_Integer}, k_Integer, OptionsPattern[%(name)s]]"
-        return ListExpression(*self._generate(n, m, k, evaluation, options))
 
 
 class RandomTree(_NetworkXBuiltin):
@@ -756,7 +536,7 @@ class StarGraph(_NetworkXBuiltin):
     """
     <dl>
       <dt>'StarGraph[$n$]'
-      <dd>Returns a star graph with $n$ vertices
+      <dd>Returns a star graph with $n$ vertices.
     </dl>
 
     >> StarGraph[8]
@@ -783,5 +563,3 @@ class StarGraph(_NetworkXBuiltin):
             return None
         g.G.n = n
         return g
-
-

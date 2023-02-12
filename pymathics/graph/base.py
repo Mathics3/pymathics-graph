@@ -11,14 +11,15 @@ networkx does all the heavy lifting.
 
 from collections import defaultdict
 from inspect import isgenerator
+from typing import Callable, Optional
 
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.builtin.box.graphics import GraphicsBox
-from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, Real
+from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, Real, String
 from mathics.core.convert.expression import ListExpression, from_python
 from mathics.core.element import BaseElement
 from mathics.core.expression import Expression
-from mathics.core.symbols import Symbol, SymbolFalse, SymbolList, SymbolTrue
+from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
 from mathics.core.systemsymbols import (
     SymbolBlank,
     SymbolCases,
@@ -31,13 +32,13 @@ from mathics.core.systemsymbols import (
 )
 from mathics.eval.makeboxes import _boxed_string
 from mathics.eval.patterns import Matcher
+
 from pymathics.graph.graphsymbols import (
     SymbolDirectedEdge,
     SymbolGraph,
-    SymbolUndirectedEdge,
     SymbolTwoWayRule,
+    SymbolUndirectedEdge,
 )
-
 
 WL_MARKER_TO_NETWORKX = {
     "Circle": "o",
@@ -80,6 +81,37 @@ DEFAULT_GRAPH_OPTIONS = {
 import networkx as nx
 
 
+def graph_helper(
+    graph_generator_func: Callable,
+    options: dict,
+    can_digraph: bool,
+    graph_layout: str,
+    evaluation,
+    root: Optional[int] = None,
+    *args,
+    **kwargs,
+) -> Optional[Callable]:
+    should_digraph = can_digraph and has_directed_option(options)
+    try:
+        G = (
+            graph_generator_func(*args, create_using=nx.DiGraph, **kwargs)
+            if should_digraph
+            else graph_generator_func(*args, **kwargs)
+        )
+    except MemoryError:
+        evaluation.message("Graph", "mem", evaluation)
+        return None
+    if graph_layout and not options["System`GraphLayout"].get_string_value():
+        options["System`GraphLayout"] = String(graph_layout)
+
+    g = Graph(G)
+    _process_graph_options(g, options)
+
+    if root is not None:
+        G.root = g.root = root
+    return g
+
+
 def has_directed_option(options: dict) -> bool:
     return options.get("System`DirectedEdges", False).to_python()
 
@@ -92,27 +124,27 @@ def _process_graph_options(g, options: dict) -> None:
     # g is where it is used in format. However we should wrap this as our object.
     # Access in G which might be better, currently isn't used.
     g.G.vertex_labels = g.vertex_labels = (
-        options["Pymathics`VertexLabels"].to_python()
-        if "Pymathics`VertexLabels" in options
+        options["System`VertexLabels"].to_python()
+        if "System`VertexLabels" in options
         else False
     )
     shape = (
-        options["Pymathics`VertexShape"].get_string_value()
-        if "Pymathics`VertexShape" in options
+        options["System`VertexShape"].get_string_value()
+        if "System`VertexShape" in options
         else "Circle"
     )
 
     g.G.node_shape = g.node_shape = WL_MARKER_TO_NETWORKX.get(shape, shape)
 
     color = (
-        options["Pymathics`VertexStyle"].get_string_value()
-        if "Pymathics`VertexStyle" in options
+        options["System`VertexStyle"].get_string_value()
+        if "System`VertexStyle" in options
         else "Blue"
     )
 
     g.graph_layout = (
-        options["Pymathics`GraphLayout"].get_string_value()
-        if "Pymathics`GraphLayout" in options
+        options["System`GraphLayout"].get_string_value()
+        if "System`GraphLayout" in options
         else ""
     )
 
@@ -503,7 +535,7 @@ class _Collection:
         return p.get(name)
 
 
-def _is_connected(G):
+def is_connected(G):
     if len(G) == 0:  # empty graph?
         return True
     elif G.is_directed():
@@ -541,7 +573,6 @@ class Graph(Atom):
         super(Graph, self).__init__()
         self.G = G
         self.mixed = kwargs.get("mixed", False)
-        print("creating", self.G, self.mixed)
 
     def __hash__(self):
         return hash(("Pymathics`Graph", self.G))
@@ -642,11 +673,11 @@ class Graph(Atom):
         if self.G.is_directed():
             return not self.mixed
         return False
-    
+
     def is_loop_free(self):
         return not any(True for _ in nx.nodes_with_selfloops(self.G))
 
-    # networkx graphs can't be for mixed
+    # networkx graphs can't be used for mixed
     def is_mixed_graph(self):
         return self.mixed
         # return self.edges. ... is_mixed()
@@ -816,9 +847,7 @@ def _create_graph(
             multigraph[0] = True
 
     edge_weights = _edge_weights(options)
-    use_directed_edges = (
-        options.get("System`DirectedEdges", SymbolTrue) is SymbolTrue
-    )
+    use_directed_edges = options.get("System`DirectedEdges", SymbolTrue) is SymbolTrue
 
     directed_edge_head = (
         SymbolDirectedEdge if use_directed_edges else SymbolUndirectedEdge
@@ -903,7 +932,7 @@ def _create_graph(
         edge_properties = list(full_new_edge_properties(edge_options))
         for edge, attr_dict in zip(new_edges, edge_properties):
             parse_edge(edge, attr_dict)
-    except _GraphParseError as e:
+    except _GraphParseError:
         return None
 
     empty_dict = {}
@@ -947,7 +976,9 @@ def _create_graph(
 
 
 class _Centrality(_NetworkXBuiltin):
-    options ={"WorkingPrecision": "MachinePrecision",}
+    options = {
+        "WorkingPrecision": "MachinePrecision",
+    }
     pass
 
 
@@ -992,44 +1023,6 @@ class _PatternList(_NetworkXBuiltin):
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             return Expression(SymbolCases, ListExpression(*self._items(graph)), patt)
-
-
-class AcyclicGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; AcyclicGraphQ[g]
-     = True
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 3 -> 5}]; AcyclicGraphQ[g]
-     = False
-
-    #> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 5 -> 3}]; AcyclicGraphQ[g]
-     = True
-
-    #> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 5 <-> 3}]; AcyclicGraphQ[g]
-     = False
-
-    #> g = Graph[{1 <-> 2, 2 <-> 3, 5 <-> 2, 3 <-> 4, 5 <-> 3}]; AcyclicGraphQ[g]
-     = False
-
-    #> g = Graph[{}]; AcyclicGraphQ[{}]
-     = False
-
-    #> AcyclicGraphQ["abc"]
-     = False
-     : Expected a graph at position 1 in AcyclicGraphQ[abc].
-    """
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=False)
-        if not graph or graph.empty():
-            return SymbolFalse
-
-        try:
-            cycles = nx.find_cycle(graph.G)
-        except nx.exception.NetworkXNoCycle:
-            return SymbolTrue
-        return from_python(not cycles)
 
 
 class AdjacencyList(_NetworkXBuiltin):
@@ -1088,7 +1081,10 @@ class AdjacencyList(_NetworkXBuiltin):
 
 class BetweennessCentrality(_Centrality):
     """
-    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]; BetweennessCentrality[g]
+    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]
+     = -Graph-
+
+    >> BetweennessCentrality[g]
      = {0., 1., 0., 0., 0.}
 
     >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; BetweennessCentrality[g]
@@ -1110,11 +1106,17 @@ class BetweennessCentrality(_Centrality):
 
 class ClosenessCentrality(_Centrality):
     """
-    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]; ClosenessCentrality[g]
-     = {0.666667, 1., 0., 1., 1.}
+     >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]
+      = -Graph-
 
-    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; ClosenessCentrality[g]
-     = {0.4, 0.4, 0.4, 0.5, 0.666667}
+     >> ClosenessCentrality[g]
+      = {0.666667, 1., 0., 1., 1.}
+
+     >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]
+      = -Graph-
+
+    >> ClosenessCentrality[g]
+      = {0.4, 0.4, 0.4, 0.5, 0.666667}
     """
 
     def eval(self, graph, expression, evaluation, options):
@@ -1131,45 +1133,11 @@ class ClosenessCentrality(_Centrality):
             )
 
 
-class ConnectedGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; ConnectedGraphQ[g]
-     = False
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedGraphQ[g]
-     = True
-
-    #> g = Graph[{1 -> 2, 2 -> 3, 2 -> 3, 3 -> 1}]; ConnectedGraphQ[g]
-     = True
-
-    #> g = Graph[{1 -> 2, 2 -> 3}]; ConnectedGraphQ[g]
-     = False
-
-    >> g = Graph[{1 <-> 2, 2 <-> 3}]; ConnectedGraphQ[g]
-     = True
-
-    >> g = Graph[{1 <-> 2, 2 <-> 3, 4 <-> 5}]; ConnectedGraphQ[g]
-     = False
-
-    #> ConnectedGraphQ[Graph[{}]]
-     = True
-
-    #> ConnectedGraphQ["abc"]
-     = False
-    """
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            return from_python(_is_connected(graph.G))
-        else:
-            return SymbolFalse
-
-
 class DegreeCentrality(_Centrality):
     """
-    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}];
+    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]
+     = -Graph-
+
     >> DegreeCentrality[g]
      = ...
 
@@ -1215,34 +1183,6 @@ class DirectedEdge(Builtin):
 
     summary_text = "make a directed graph edge"
     pass
-
-
-class DirectedGraphQ(_NetworkXBuiltin):
-    """
-    <dl>
-      <dt>'DirectedGraphQ'[$graph$]
-      <dd>True if $graph$ is a 'Graph' and all the edges are directed.
-    </dl>
-    >> g = Graph[{1 -> 2, 2 -> 3}]; DirectedGraphQ[g]
-     = True
-
-    >> g = Graph[{1 -> 2, 2 <-> 3}]; DirectedGraphQ[g]
-     = False
-
-    #> g = Graph[{}]; DirectedGraphQ[{}]
-     = False
-
-    #> DirectedGraphQ["abc"]
-     = False
-    """
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            return from_python(graph.is_directed())
-        else:
-            return SymbolFalse
 
 
 class EdgeConnectivity(_NetworkXBuiltin):
@@ -1295,7 +1235,7 @@ class EdgeIndex(_NetworkXBuiltin):
             # FIXME: check if directionality must be considered or not.
             try:
                 i = list(graph.edges).index(v.elements)
-            except:
+            except Exception:
                 self._not_an_edge(expression, Integer2, evaluation)
                 return
             return Integer(i + 1)
@@ -1320,12 +1260,14 @@ class EdgeRules(_NetworkXBuiltin):
       <dd> gives the list of edge rules for the graph $g$.
     </dl>
     """
+
     summary_text = "list the edge rules"
-    
+
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
+
             def rules():
                 for edge in graph.edges:
                     u, v = edge
@@ -1341,7 +1283,7 @@ class EigenvectorCentrality(_ComponentwiseCentrality):
     https://en.wikipedia.org/wiki/Eigenvector_centrality</url> (<url>
     :Networkx:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
-/generated/networkx.algorithms.centrality.eigenvector_centrality.html</url>, 
+/generated/networkx.algorithms.centrality.eigenvector_centrality.html</url>,
 <url>
     :WMA:
     https://reference.wolfram.com/language/ref/EgenvectorCentrality.html</url>)
@@ -1378,7 +1320,7 @@ class EigenvectorCentrality(_ComponentwiseCentrality):
     """
 
     summary_text = "compute the eigenvector centralities"
-    
+
     def _centrality(self, g, weight):
         return nx.eigenvector_centrality(g, max_iter=10000, tol=1.0e-7, weight=weight)
 
@@ -1466,12 +1408,12 @@ class FindVertexCut(_NetworkXBuiltin):
     """
 
     summary_text = "find the vertex cuts"
-    
+
     def eval(self, graph, expression, evaluation, options):
         "FindVertexCut[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            if graph.empty() or not _is_connected(graph.G):
+            if graph.empty() or not is_connected(graph.G):
                 return ListExpression()
             else:
                 return ListExpression(
@@ -1489,7 +1431,7 @@ class FindVertexCut(_NetworkXBuiltin):
             self._not_a_vertex(expression, 2, evaluation)
         elif not G.has_node(t):
             self._not_a_vertex(expression, 3, evaluation)
-        elif graph.empty() or not _is_connected(graph.G):
+        elif graph.empty() or not is_connected(graph.G):
             return ListExpression()
         else:
             return ListExpression(*graph.sort_vertices(nx.minimum_node_cut(G, s, t)))
@@ -1573,7 +1515,7 @@ class HITSCentrality(_Centrality):
     https://en.wikipedia.org/wiki/HITS_centrality</url> (<url>
     :Networkx:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
-generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>, 
+generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>,
     <url>
     :WMA:
     https://reference.wolfram.com/language/ref/HITSCentrality.html</url>)
@@ -1652,7 +1594,7 @@ class KatzCentrality(_ComponentwiseCentrality):
     <dl>
       <dt>'KatzCentrality'[$g$, $alpha$]
       <dd>gives a list of Katz centralities for the \
-          vertices in the graph $g$ and weight $alpha$.       
+          vertices in the graph $g$ and weight $alpha$.
       <dt>'KatzCentrality'[$g$, $alpha$, $beta$]
       <dd>gives a list of Katz centralities for the \
           vertices in the graph $g$ and weight $alpha$ and initial centralities $beta$.
@@ -1673,7 +1615,7 @@ class KatzCentrality(_ComponentwiseCentrality):
     """
 
     summary_text = "Katz centrality"
-    
+
     rules = {
         "Pymathics`KatzCentrality[Pymathics`g_, Pymathics`alpha_]": "Pymathics`KatzCentrality[Pymathics`g, Pymathics`alpha, 1]",
     }
@@ -1699,85 +1641,6 @@ class KatzCentrality(_ComponentwiseCentrality):
             )
 
 
-class LoopFreeGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; LoopFreeGraphQ[g]
-     = True
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 1}]; LoopFreeGraphQ[g]
-     = False
-
-    #> g = Graph[{}]; LoopFreeGraphQ[{}]
-     = False
-
-    #> LoopFreeGraphQ["abc"]
-     = False
-    """
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if not graph or graph.empty():
-            return SymbolFalse
-
-        return from_python(graph.is_loop_free())
-
-
-class MixedGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
-     = False
-
-    # Seems to not be implemented...
-    # >> g = Graph[{1 -> 2, 2 <-> 3}]; MixedGraphQ[g]
-    # = True
-
-    #> g = Graph[{}]; MixedGraphQ[g]
-     = False
-
-    #> MixedGraphQ["abc"]
-     = False
-
-    # #> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
-    #  = False
-    # #> g = EdgeAdd[g, a <-> b]; MixedGraphQ[g]
-    #  = True
-    # #> g = EdgeDelete[g, a <-> b]; MixedGraphQ[g]
-    # = False
-    """
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            return from_python(graph.is_mixed_graph())
-        return SymbolFalse
-
-
-class MultigraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3}]; MultigraphQ[g]
-     = False
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 2}]; MultigraphQ[g]
-     = True
-
-    #> g = Graph[{}]; MultigraphQ[g]
-     = False
-
-    #> MultigraphQ["abc"]
-     = False
-    """
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            return from_python(graph.is_multigraph())
-        else:
-            return SymbolFalse
-
-
 class PageRankCentrality(_Centrality):
     """
     # Not working, possibly because an issue in networkx
@@ -1798,59 +1661,6 @@ class PageRankCentrality(_Centrality):
             return ListExpression(
                 *[Real(centrality.get(v, 0)) for v in graph.vertices],
             )
-
-
-class PathGraphQ(_NetworkXBuiltin):
-    """
-    >> PathGraphQ[Graph[{1 -> 2, 2 -> 3}]]
-     = True
-    #> PathGraphQ[Graph[{1 -> 2, 2 -> 3, 3 -> 1}]]
-     = True
-    #> PathGraphQ[Graph[{1 <-> 2, 2 <-> 3}]]
-     = True
-    >> PathGraphQ[Graph[{1 -> 2, 2 <-> 3}]]
-     = False
-    >> PathGraphQ[Graph[{1 -> 2, 3 -> 2}]]
-     = False
-    >> PathGraphQ[Graph[{1 -> 2, 2 -> 3, 2 -> 4}]]
-     = False
-    >> PathGraphQ[Graph[{1 -> 2, 3 -> 2, 2 -> 4}]]
-     = False
-
-    #> PathGraphQ[Graph[{}]]
-     = False
-    #> PathGraphQ[Graph[{1 -> 2, 3 -> 4}]]
-     = False
-    #> PathGraphQ[Graph[{1 -> 2, 2 -> 1}]]
-     = True
-    >> PathGraphQ[Graph[{1 -> 2, 2 -> 3, 2 -> 3}]]
-     = False
-    #> PathGraphQ[Graph[{}]]
-     = False
-    #> PathGraphQ["abc"]
-     = False
-    #> PathGraphQ[{1 -> 2, 2 -> 3}]
-     = False
-    """
-
-    def eval(self, graph, expression, evaluation, options):
-        "PathGraphQ[graph_, OptionsPattern[%(name)s]]"
-        if not isinstance(graph, Graph) or graph.empty():
-            return SymbolFalse
-
-        G = graph.G
-
-        if G.is_directed():
-            connected = nx.is_semiconnected(G)
-        else:
-            connected = nx.is_connected(G)
-
-        if connected:
-            is_path = all(d <= 2 for _, d in G.degree(graph.vertices))
-        else:
-            is_path = False
-
-        return from_python(is_path)
 
 
 class Property(Builtin):
@@ -1886,37 +1696,6 @@ class PropertyValue(Builtin):
 
             value = item_g.get(name_str, SymbolFailed)
             return value
-
-
-class SimpleGraphQ(_NetworkXBuiltin):
-    """
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; SimpleGraphQ[g]
-     = True
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 1}]; SimpleGraphQ[g]
-     = False
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 2}]; SimpleGraphQ[g]
-     = False
-
-    #> SimpleGraphQ[Graph[{}]]
-     = True
-
-    #> SimpleGraphQ["abc"]
-     = False
-    """
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
-        if graph:
-            if graph.empty():
-                return SymbolTrue
-            else:
-                simple = graph.is_loop_free() and not graph.is_multigraph()
-                return from_python(simple)
-        else:
-            return SymbolFalse
 
 
 class VertexAdd(_NetworkXBuiltin):
@@ -1967,7 +1746,7 @@ class VertexConnectivity(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph and not graph.empty():
-            if not _is_connected(graph.G):
+            if not is_connected(graph.G):
                 return Integer(0)
             else:
                 return Integer(nx.node_connectivity(graph.G))
@@ -1976,7 +1755,7 @@ class VertexConnectivity(_NetworkXBuiltin):
         "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph and not graph.empty():
-            if not _is_connected(graph.G):
+            if not is_connected(graph.G):
                 return Integer(0)
             else:
                 return Integer(nx.node_connectivity(graph.G, s, t))
@@ -2073,7 +1852,7 @@ class UndirectedEdge(Builtin):
     >> a <-> (b <-> c)
      = UndirectedEdge[a, UndirectedEdge[b, c]]
     """
-    
+
     summary_text = "makes undirected graph edge"
     pass
 

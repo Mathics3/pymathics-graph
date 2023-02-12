@@ -5,11 +5,12 @@ from typing import Optional
 from mathics.core.symbols import Symbol
 from mathics.session import MathicsSession
 
-
 # Set up a Mathics session with definitions.
 # For consistency set the character encoding ASCII which is
 # the lowest common denominator available on all systems.
-session = MathicsSession(add_builtin=True, catch_interrupt=False, character_encoding="ASCII")
+session = MathicsSession(
+    add_builtin=True, catch_interrupt=False, character_encoding="ASCII"
+)
 
 
 def reset_session(add_builtin=True, catch_interrupt=False):
