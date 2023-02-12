@@ -2,11 +2,12 @@
 evaluation methods for Parametric Graphs
 """
 
-import networkx as nx
 from typing import Optional
 
+import networkx as nx
 from mathics.core.atoms import Integer
 from mathics.core.evaluation import Evaluation
+
 from pymathics.graph.base import Graph, graph_helper
 from pymathics.graph.eval.harary import hkn_harary_graph
 

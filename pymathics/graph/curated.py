@@ -3,14 +3,9 @@ Curated Graphs
 """
 
 import networkx as nx
-
 from mathics.core.evaluation import Evaluation
 
-from pymathics.graph.base import (
-    Graph,
-    _NetworkXBuiltin,
-    graph_helper,
-)
+from pymathics.graph.base import Graph, _NetworkXBuiltin, graph_helper
 
 
 class GraphData(_NetworkXBuiltin):

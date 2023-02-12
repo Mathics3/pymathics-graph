@@ -3,10 +3,9 @@ Random Graphs
 """
 
 import networkx as nx
-
+from mathics.builtin.numbers.randomnumbers import RandomEnv
 from mathics.core.atoms import Integer, Integer1
 from mathics.core.evaluation import Evaluation
-from mathics.builtin.numbers.randomnumbers import RandomEnv
 from mathics.core.list import ListExpression
 
 from pymathics.graph.base import (

@@ -3,7 +3,9 @@
 Unit tests for pymathics.graph.algorithms
 """
 from test.helper import check_evaluation, evaluate, evaluate_value
+
 import pytest
+
 
 def setup_module(module):
     """Load pymathics.graph"""
@@ -21,21 +23,26 @@ def test_connected_components():
     ]:
         check_evaluation(str_expr, str_expected)
 
+
 @pytest.mark.parametrize(
-    ("str_expr", "str_expected","msg"),
+    ("str_expr", "str_expected", "msg"),
     [
         (None, None, None),
-        ('g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}];', "Null", "Intialize graph"),
+        (
+            "g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}];",
+            "Null",
+            "Intialize graph",
+        ),
         ("Sort[DegreeCentrality[g]]", "{2, 2, 3, 4, 5}", None),
         ('Sort[DegreeCentrality[g, "In"]]', "{0, 1, 1, 3, 3}", None),
-        ('Sort[DegreeCentrality[g, "Out"]]','{1, 1, 1, 2, 3}', None),
+        ('Sort[DegreeCentrality[g, "Out"]]', "{1, 1, 1, 2, 3}", None),
         (None, None, None),
-    ]
+    ],
 )
 def test_degree_centrality(str_expr, str_expected, msg):
     check_evaluation(str_expr, str_expected, failure_message=msg)
-    
-        
+
+
 def test_graph_distance():
     for str_expr, str_expected, mess in [
         (

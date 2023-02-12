@@ -15,13 +15,10 @@ Networkx does the heavy lifting here.
 
 from pymathics.graph.base import (
     AdjacencyList,
-    AcyclicGraphQ,
     BetweennessCentrality,
     ClosenessCentrality,
-    ConnectedGraphQ,
     DegreeCentrality,
     DirectedEdge,
-    DirectedGraphQ,
     EdgeConnectivity,
     EdgeIndex,
     EdgeList,
@@ -32,17 +29,12 @@ from pymathics.graph.base import (
     Graph,
     GraphAtom,
     GraphBox,
-    HITSCentrality,
     HighlightGraph,
+    HITSCentrality,
     KatzCentrality,
-    LoopFreeGraphQ,
-    MixedGraphQ,
-    MultigraphQ,
     PageRankCentrality,
-    PathGraphQ,
     Property,
     PropertyValue,
-    SimpleGraphQ,
     UndirectedEdge,
     VertexAdd,
     VertexConnectivity,
@@ -50,19 +42,15 @@ from pymathics.graph.base import (
     VertexIndex,
     VertexList,
 )
-
-from pymathics.graph.measures_and_metrics import EdgeCount, VertexCount, VertexDegree
-
-from pymathics.graph.algorithms import (
-    ConnectedComponents,
-    GraphDistance,
-    FindSpanningTree,
-    PlanarGraphQ,
-    WeaklyConnectedComponents,
-)
-
+from pymathics.graph.components import ConnectedComponents, WeaklyConnectedComponents
 from pymathics.graph.curated import GraphData
-
+from pymathics.graph.measures_and_metrics import (
+    EdgeCount,
+    GraphDistance,
+    VertexCount,
+    VertexDegree,
+)
+from pymathics.graph.operations import FindSpanningTree
 from pymathics.graph.parametric import (
     BalancedTree,
     BarbellGraph,
@@ -79,9 +67,18 @@ from pymathics.graph.parametric import (
     RandomTree,
     StarGraph,
 )
-
+from pymathics.graph.properties import (
+    AcyclicGraphQ,
+    ConnectedGraphQ,
+    DirectedGraphQ,
+    LoopFreeGraphQ,
+    MixedGraphQ,
+    MultigraphQ,
+    PathGraphQ,
+    PlanarGraphQ,
+    SimpleGraphQ,
+)
 from pymathics.graph.random import RandomGraph
-
 from pymathics.graph.structured import PathGraph, TreeGraph
 from pymathics.graph.tree import TreeGraphAtom, TreeGraphQ
 from pymathics.graph.version import __version__
