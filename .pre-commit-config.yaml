@@ -9,11 +9,11 @@ repos:
       stages: [commit]
     - id: end-of-file-fixer
       stages: [commit]
-# -   repo: https://github.com/pycqa/isort
-#     rev: 5.10.1
-#     hooks:
-#       - id: isort
-#         stages: [commit]
+-   repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        stages: [commit]
 -   repo: https://github.com/psf/black
     rev: 22.3.0
     hooks:
@@ -21,8 +21,8 @@ repos:
       language_version: python3
       exclude: 'pymathics/graph/version.py'
       stages: [commit]
-# -   repo: https://github.com/pycqa/flake8
-#     rev: 3.9.2
-#     hooks:
-#       - id: flake8
-#         stages: [commit]
+-   repo: https://github.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+        stages: [commit]
