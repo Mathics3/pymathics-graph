@@ -3,9 +3,9 @@
 Parametric Graphs
 """
 
-import networkx as nx
 from typing import Optional
 
+import networkx as nx
 from mathics.core.atoms import Integer
 from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
@@ -17,13 +17,12 @@ from pymathics.graph.base import (
     _NetworkXBuiltin,
     graph_helper,
 )
+from pymathics.graph.eval.harary import hnm_harary_graph
 from pymathics.graph.eval.parametric import (
     eval_complete_graph,
-    eval_hkn_harary,
     eval_full_rary_tree,
+    eval_hkn_harary,
 )
-from pymathics.graph.eval.harary import hnm_harary_graph
-
 from pymathics.graph.tree import DEFAULT_TREE_OPTIONS
 
 # TODO: Can this code can be DRY'd more?

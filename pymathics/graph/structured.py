@@ -1,14 +1,13 @@
 import networkx as nx
-
 from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
+
 from pymathics.graph.base import (
-    SymbolUndirectedEdge,
     Graph,
+    SymbolUndirectedEdge,
     _graph_from_list,
     _NetworkXBuiltin,
 )
-
 from pymathics.graph.tree import DEFAULT_TREE_OPTIONS
 
 

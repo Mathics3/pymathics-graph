@@ -1,6 +1,6 @@
+import networkx as nx
 from mathics.core.symbols import SymbolConstant, SymbolFalse, SymbolTrue
 
-import networkx as nx
 from pymathics.graph.base import Graph
 
 
