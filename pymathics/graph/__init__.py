@@ -61,7 +61,9 @@ from pymathics.graph.algorithms import (
     WeaklyConnectedComponents,
 )
 
-from pymathics.graph.generators import (
+from pymathics.graph.curated import GraphData
+
+from pymathics.graph.parametric import (
     BalancedTree,
     BarbellGraph,
     BinomialTree,
@@ -70,17 +72,18 @@ from pymathics.graph.generators import (
     CycleGraph,
     FullRAryTree,
     GraphAtlas,
-    GraphData,
     HknHararyGraph,
     HmnHararyGraph,
     KaryTree,
     LadderGraph,
-    PathGraph,
-    RandomGraph,
     RandomTree,
     StarGraph,
 )
-from pymathics.graph.tree import TreeGraphAtom, TreeGraph, TreeGraphQ
+
+from pymathics.graph.random import RandomGraph
+
+from pymathics.graph.structured import PathGraph, TreeGraph
+from pymathics.graph.tree import TreeGraphAtom, TreeGraphQ
 from pymathics.graph.version import __version__
 
 pymathics_version_data = {

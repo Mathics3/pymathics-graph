@@ -19,8 +19,6 @@ References
 import networkx as nx
 from networkx.exception import NetworkXError
 
-__all__ = ["hnm_harary_graph", "hkn_harary_graph"]
-
 
 def hnm_harary_graph(n, m, create_using=None):
     """Returns the Harary graph with given numbers of nodes and edges.

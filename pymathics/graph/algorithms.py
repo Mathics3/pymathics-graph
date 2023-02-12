@@ -3,6 +3,8 @@
 Algorithms on Graphs
 """
 
+import networkx as nx
+
 from typing import Optional
 
 from mathics.core.atoms import Integer1, Integer2, Integer3
@@ -20,7 +22,6 @@ from pymathics.graph.base import (
     SymbolUndirectedEdge,
     _create_graph,
     _NetworkXBuiltin,
-    nx,
 )
 
 
@@ -89,7 +90,7 @@ class GraphDistance(_NetworkXBuiltin):
 
     <dl>
       <dt>'GraphDistance[{$v$->$w$, ...}, ...]'
-      <dd>use rules $v$->$w$ to specify the graph $g$
+      <dd>use rules $v$->$w$ to specify the graph $g$.
     </dl>
 
     >> GraphDistance[{1 <-> 2, 2 <-> 3, 3 <-> 4, 2 <-> 4, 4 -> 5}, 1, 5]

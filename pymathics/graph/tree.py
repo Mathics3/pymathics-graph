@@ -64,26 +64,6 @@ class TreeGraphAtom(AtomBuiltin):
         return g
 
 
-class TreeGraph(Graph):
-    """
-    >> TreeGraph[{1->2, 2->3, 2->4}]
-     = -Graph-
-
-    """
-
-    options = DEFAULT_TREE_OPTIONS
-
-    messages = {
-        "notree": "Graph is not a tree.",
-    }
-
-    def __init__(self, G, **kwargs):
-        super(Graph, self).__init__()
-        if not nx.is_tree(G):
-            raise ValueError
-        self.G = G
-
-
 class TreeGraphQ(_NetworkXBuiltin):
     """
     <dl>

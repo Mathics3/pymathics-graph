@@ -11,10 +11,11 @@ networkx does all the heavy lifting.
 
 from collections import defaultdict
 from inspect import isgenerator
+from typing import Callable, Optional
 
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.builtin.box.graphics import GraphicsBox
-from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, Real
+from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, Real, String
 from mathics.core.convert.expression import ListExpression, from_python
 from mathics.core.element import BaseElement
 from mathics.core.expression import Expression
@@ -78,6 +79,37 @@ DEFAULT_GRAPH_OPTIONS = {
 }
 
 import networkx as nx
+
+
+def graph_helper(
+    graph_generator_func: Callable,
+    options: dict,
+    can_digraph: bool,
+    graph_layout: str,
+    evaluation,
+    root: Optional[int] = None,
+    *args,
+    **kwargs,
+) -> Optional[Callable]:
+    should_digraph = can_digraph and has_directed_option(options)
+    try:
+        G = (
+            graph_generator_func(*args, create_using=nx.DiGraph, **kwargs)
+            if should_digraph
+            else graph_generator_func(*args, **kwargs)
+        )
+    except MemoryError:
+        evaluation.message("Graph", "mem", evaluation)
+        return None
+    if graph_layout and not options["System`GraphLayout"].get_string_value():
+        options["System`GraphLayout"] = String(graph_layout)
+
+    g = Graph(G)
+    _process_graph_options(g, options)
+
+    if root is not None:
+        G.root = g.root = root
+    return g
 
 
 def has_directed_option(options: dict) -> bool:
@@ -816,9 +848,7 @@ def _create_graph(
             multigraph[0] = True
 
     edge_weights = _edge_weights(options)
-    use_directed_edges = (
-        options.get("System`DirectedEdges", SymbolTrue) is SymbolTrue
-    )
+    use_directed_edges = options.get("System`DirectedEdges", SymbolTrue) is SymbolTrue
 
     directed_edge_head = (
         SymbolDirectedEdge if use_directed_edges else SymbolUndirectedEdge
@@ -903,7 +933,7 @@ def _create_graph(
         edge_properties = list(full_new_edge_properties(edge_options))
         for edge, attr_dict in zip(new_edges, edge_properties):
             parse_edge(edge, attr_dict)
-    except _GraphParseError as e:
+    except _GraphParseError:
         return None
 
     empty_dict = {}
@@ -947,7 +977,9 @@ def _create_graph(
 
 
 class _Centrality(_NetworkXBuiltin):
-    options ={"WorkingPrecision": "MachinePrecision",}
+    options = {
+        "WorkingPrecision": "MachinePrecision",
+    }
     pass
 
 
@@ -1320,8 +1352,9 @@ class EdgeRules(_NetworkXBuiltin):
       <dd> gives the list of edge rules for the graph $g$.
     </dl>
     """
+
     summary_text = "list the edge rules"
-    
+
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
@@ -1341,7 +1374,7 @@ class EigenvectorCentrality(_ComponentwiseCentrality):
     https://en.wikipedia.org/wiki/Eigenvector_centrality</url> (<url>
     :Networkx:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
-/generated/networkx.algorithms.centrality.eigenvector_centrality.html</url>, 
+/generated/networkx.algorithms.centrality.eigenvector_centrality.html</url>,
 <url>
     :WMA:
     https://reference.wolfram.com/language/ref/EgenvectorCentrality.html</url>)
@@ -1378,7 +1411,7 @@ class EigenvectorCentrality(_ComponentwiseCentrality):
     """
 
     summary_text = "compute the eigenvector centralities"
-    
+
     def _centrality(self, g, weight):
         return nx.eigenvector_centrality(g, max_iter=10000, tol=1.0e-7, weight=weight)
 
@@ -1466,7 +1499,7 @@ class FindVertexCut(_NetworkXBuiltin):
     """
 
     summary_text = "find the vertex cuts"
-    
+
     def eval(self, graph, expression, evaluation, options):
         "FindVertexCut[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
@@ -1573,7 +1606,7 @@ class HITSCentrality(_Centrality):
     https://en.wikipedia.org/wiki/HITS_centrality</url> (<url>
     :Networkx:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
-generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>, 
+generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>,
     <url>
     :WMA:
     https://reference.wolfram.com/language/ref/HITSCentrality.html</url>)
@@ -1652,7 +1685,7 @@ class KatzCentrality(_ComponentwiseCentrality):
     <dl>
       <dt>'KatzCentrality'[$g$, $alpha$]
       <dd>gives a list of Katz centralities for the \
-          vertices in the graph $g$ and weight $alpha$.       
+          vertices in the graph $g$ and weight $alpha$.
       <dt>'KatzCentrality'[$g$, $alpha$, $beta$]
       <dd>gives a list of Katz centralities for the \
           vertices in the graph $g$ and weight $alpha$ and initial centralities $beta$.
@@ -1673,7 +1706,7 @@ class KatzCentrality(_ComponentwiseCentrality):
     """
 
     summary_text = "Katz centrality"
-    
+
     rules = {
         "Pymathics`KatzCentrality[Pymathics`g_, Pymathics`alpha_]": "Pymathics`KatzCentrality[Pymathics`g, Pymathics`alpha, 1]",
     }
@@ -2073,7 +2106,7 @@ class UndirectedEdge(Builtin):
     >> a <-> (b <-> c)
      = UndirectedEdge[a, UndirectedEdge[b, c]]
     """
-    
+
     summary_text = "makes undirected graph edge"
     pass
 
