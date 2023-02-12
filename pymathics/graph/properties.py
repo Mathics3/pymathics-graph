@@ -91,6 +91,11 @@ class ConnectedGraphQ(_NetworkXBuiltin):
 
 class DirectedGraphQ(_NetworkXBuiltin):
     """
+    <dl>
+      <dt>'DirectedGraphQ'[$graph$]
+      <dd>True if $graph$ is a 'Graph' and all the edges are directed.
+    </dl>
+
     >> g = Graph[{1 -> 2, 2 -> 3}]; DirectedGraphQ[g]
      = True
 
@@ -108,8 +113,7 @@ class DirectedGraphQ(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
-            directed = graph.G.is_directed() and not graph.is_mixed_graph()
-            return from_python(directed)
+            return from_python(graph.is_directed())
         else:
             return SymbolFalse
 
