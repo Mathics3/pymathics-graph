@@ -1,14 +1,17 @@
+"""
+Trees
+"""
 import networkx as nx
 from mathics.core.atoms import Atom
 from mathics.core.evaluation import Evaluation
-from mathics.core.symbols import SymbolConstant, SymbolFalse, SymbolTrue
+from mathics.core.symbols import SymbolConstant
 
 from pymathics.graph.base import (
     DEFAULT_GRAPH_OPTIONS,
-    Graph,
     _graph_from_list,
     _NetworkXBuiltin,
 )
+from pymathics.graph.eval.tree import eval_TreeGraphQ
 
 DEFAULT_TREE_OPTIONS = {
     **DEFAULT_GRAPH_OPTIONS,
@@ -16,16 +19,6 @@ DEFAULT_TREE_OPTIONS = {
 }
 
 from mathics.builtin.base import AtomBuiltin
-
-
-def eval_TreeGraphQ(g: Graph) -> SymbolConstant:
-    """
-    Returns SymbolTrue if g is a (networkx) tree and SymbolFalse
-    otherwise.
-    """
-    if not isinstance(g, Graph):
-        return SymbolFalse
-    return SymbolTrue if nx.is_tree(g.G) else SymbolFalse
 
 
 # FIXME: do we need to have TreeGraphAtom and TreeGraph?
@@ -62,26 +55,6 @@ class TreeGraphAtom(AtomBuiltin):
         g.G.graph_layout = "tree"
         # Compute/check/set for root?
         return g
-
-
-class TreeGraph(Graph):
-    """
-    >> TreeGraph[{1->2, 2->3, 2->4}]
-     = -Graph-
-
-    """
-
-    options = DEFAULT_TREE_OPTIONS
-
-    messages = {
-        "notree": "Graph is not a tree.",
-    }
-
-    def __init__(self, G, **kwargs):
-        super(Graph, self).__init__()
-        if not nx.is_tree(G):
-            raise ValueError
-        self.G = G
 
 
 class TreeGraphQ(_NetworkXBuiltin):

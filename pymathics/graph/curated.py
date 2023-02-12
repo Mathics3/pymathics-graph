@@ -1,0 +1,52 @@
+"""
+Curated Graphs
+"""
+
+import networkx as nx
+from mathics.core.evaluation import Evaluation
+
+from pymathics.graph.base import Graph, _NetworkXBuiltin, graph_helper
+
+
+class GraphData(_NetworkXBuiltin):
+    """
+    <dl>
+      <dt>'GraphData[$name$]'
+      <dd>Returns a graph with the specified name.
+    </dl>
+
+    >> GraphData["PappusGraph"]
+     = -Graph-
+    """
+
+    def eval(self, name, expression, evaluation: Evaluation, options: dict) -> Graph:
+        "Pymathics`GraphData[name_String, OptionsPattern[%(name)s]]"
+        py_name = name.get_string_value()
+        fn, layout = WL_TO_NETWORKX_FN.get(py_name, (None, None))
+        if not fn:
+            if not py_name.endswith("_graph"):
+                py_name += "_graph"
+            if py_name in ("LCF_graph", "make_small_graph"):
+                # These graphs require parameters
+                return
+            import inspect
+
+            fn = dict(inspect.getmembers(nx, inspect.isfunction)).get(py_name, None)
+            # parameters = inspect.signature(nx.diamond_graph).parameters.values()
+            # if len([p for p in list(parameters) if p.kind in [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD]]) != 0:
+            #     return
+        if fn:
+            g = graph_helper(fn, options, False, evaluation, layout)
+            g.G.name = py_name
+            return g
+
+
+WL_TO_NETWORKX_FN = {
+    "DodecahedralGraph": (nx.dodecahedral_graph, None),
+    "DiamondGraph": (nx.diamond_graph, "spring"),
+    "PappusGraph": (nx.pappus_graph, "circular"),
+    "IsohedralGraph": (nx.icosahedral_graph, "spring"),
+    "PetersenGraph": (nx.petersen_graph, None),
+}
+
+# TODO: ExampleData
