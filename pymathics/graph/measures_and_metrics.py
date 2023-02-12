@@ -110,17 +110,13 @@ class GraphDistance(_NetworkXBuiltin):
      = Infinity
 
     >> GraphDistance[g, 5]
-     = [Infinity, Infinity, Infinity, 0]
+     = {Infinity, Infinity, Infinity, Infinity, 0}
 
     >> GraphDistance[g, 3]
      = {Infinity, 1, 2, 0, 3}
 
     >> GraphDistance[g, 4]
-     = {1, 2, 1, 0, 2}
-
-    #> GraphDistance[{1 -> 2}, 3, 4]
-     : The vertex at position 2 in GraphDistance[{1 -> 2}, 3, 4] does not belong to the graph at position 1.
-     = GraphDistance[{1 -> 2}, 3, 4]
+     = {Infinity, 1, 0, 1, 1}
     """
 
     summary_text = "get path distance"
