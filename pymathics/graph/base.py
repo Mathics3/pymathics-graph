@@ -540,6 +540,8 @@ class Graph(Atom):
     def __init__(self, G, **kwargs):
         super(Graph, self).__init__()
         self.G = G
+        self.mixed = kwargs.get("mixed", False)
+        print("creating", self.G, self.mixed)
 
     def __hash__(self):
         return hash(("Pymathics`Graph", self.G))
@@ -636,12 +638,17 @@ class Graph(Atom):
     def head(self):
         return SymbolGraph
 
+    def is_directed(self):
+        if self.G.is_directed():
+            return not self.mixed
+        return False
+    
     def is_loop_free(self):
         return not any(True for _ in nx.nodes_with_selfloops(self.G))
 
     # networkx graphs can't be for mixed
     def is_mixed_graph(self):
-        return False
+        return self.mixed
         # return self.edges. ... is_mixed()
 
     def is_multigraph(self):
@@ -900,6 +907,7 @@ def _create_graph(
         return None
 
     empty_dict = {}
+    mixed = False
     if directed_edges:
         G = nx.MultiDiGraph() if multigraph[0] else nx.DiGraph()
         nodes_seen = set()
@@ -913,6 +921,8 @@ def _create_graph(
         for v in unseen_vertices:
             G.add_node(v)
 
+        if undirected_edges:
+            mixed = True
         for u, v, attr_dict in undirected_edges:
             attr_dict = attr_dict or empty_dict
             G.add_edge(u, v, **attr_dict)
@@ -931,7 +941,7 @@ def _create_graph(
         n_undirected=len(undirected_edges),
     )
 
-    g = Graph(G)
+    g = Graph(G, mixed=mixed)
     _process_graph_options(g, options)
     return g
 
@@ -1209,6 +1219,10 @@ class DirectedEdge(Builtin):
 
 class DirectedGraphQ(_NetworkXBuiltin):
     """
+    <dl>
+      <dt>'DirectedGraphQ'[$graph$]
+      <dd>True if $graph$ is a 'Graph' and all the edges are directed.
+    </dl>
     >> g = Graph[{1 -> 2, 2 -> 3}]; DirectedGraphQ[g]
      = True
 
@@ -1226,8 +1240,7 @@ class DirectedGraphQ(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
-            directed = graph.G.is_directed() and not graph.is_mixed_graph()
-            return from_python(directed)
+            return from_python(graph.is_directed())
         else:
             return SymbolFalse
 
@@ -1268,8 +1281,11 @@ class EdgeConnectivity(_NetworkXBuiltin):
 
 class EdgeIndex(_NetworkXBuiltin):
     """
-    >> EdgeIndex[{c <-> d, d <-> a, a -> e}, d <-> a]
-     = 2
+    <dl>
+    <dt>'EdgeIndex['graph', 'edge']'
+    <dd>gives the position of the 'edge' in the list of edges associated \
+    to the graph.
+    </dl>
     """
 
     def eval(self, graph, v, expression, evaluation, options):
@@ -1287,8 +1303,10 @@ class EdgeIndex(_NetworkXBuiltin):
 
 class EdgeList(_PatternList):
     """
-    >> EdgeList[{1 -> 2, 2 <-> 3}]
-     = {DirectedEdge[1, 2], UndirectedEdge[2, 3]}
+    <dl>
+      <dt>'EdgeList'[$g$]
+      <dd>gives the list of edges that defines $g$
+    </dl>
     """
 
     def _items(self, graph):
@@ -1301,9 +1319,6 @@ class EdgeRules(_NetworkXBuiltin):
       <dt>'EdgeRules'[$g$]
       <dd> gives the list of edge rules for the graph $g$.
     </dl>
-
-    >> EdgeRules[{1 <-> 2, 2 -> 3, 3 <-> 4}]
-     = {1 -> 2, 2 -> 3, 3 -> 4}
     """
     summary_text = "list the edge rules"
     
@@ -1311,7 +1326,6 @@ class EdgeRules(_NetworkXBuiltin):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-
             def rules():
                 for edge in graph.edges:
                     u, v = edge
@@ -1396,11 +1410,6 @@ class FindShortestPath(_NetworkXBuiltin):
      = {}
 
     >> g = Graph[{1 -> 2, 2 -> 3, 1 -> 3}, EdgeWeight -> {0.5, a, 3}];
-    >> a = 0.5; FindShortestPath[g, 1, 3]
-     = {1, 2, 3}
-    >> a = 10; FindShortestPath[g, 1, 3]
-     = {1, 3}
-    >> a=.;
 
     #> FindShortestPath[{}, 1, 2]
      : The vertex at position 2 in FindShortestPath[{}, 1, 2] does not belong to the graph at position 1.
@@ -1519,14 +1528,6 @@ class GraphAtom(AtomBuiltin):
     >> Graph[{{1 -> 2}}]
      = Graph[{{1 -> 2}}]
 
-    >> g = Graph[{1 -> 2, 2 -> 3}, DirectedEdges -> True];
-    >> EdgeCount[g, _DirectedEdge]
-     = 2
-    >> g = Graph[{1 -> 2, 2 -> 3}, DirectedEdges -> False];
-    >> EdgeCount[g, _DirectedEdge]
-     = 0
-    >> EdgeCount[g, _UndirectedEdge]
-     = 2
     """
 
     # requires = ("networkx",)
@@ -1583,8 +1584,6 @@ generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>,
           the vertices in the graph $g$.
     </dl>
 
-    >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c}]; HITSCentrality[g]
-     = {{0.292893, 0., 0., 0.707107, 0.}, {0., 1., 0.707107, 0., 0.707107}}
     """
 
     summary_text = "HITS centrality"

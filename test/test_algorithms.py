@@ -10,7 +10,7 @@ def setup_module(module):
     assert evaluate_value('LoadModule["pymathics.graph"]') == "pymathics.graph"
     evaluate("SortList[list_] := Sort[Map[Sort, list]]")
 
-
+     
 def test_connected_components():
     for str_expr, str_expected in [
         ("PlanarGraphQ[Graph[{}]]", "False"),
