@@ -2,9 +2,6 @@
 
 """
 Core routines for working with Graphs.
-A Graph is a tuple of a set of Nodes and Edges.
-
-networkx does all the heavy lifting.
 """
 
 # uses networkx
@@ -1647,14 +1644,11 @@ class GraphBox(GraphicsBox):
 class HITSCentrality(_Centrality):
     """
     <url>
-    :https://en.wikipedia.org/wiki/HITS_algorithm:
-    https://en.wikipedia.org/wiki/HITS_centrality</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
-generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>,
-    <url>
+generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>, <url>
     :WMA:
-    https://reference.wolfram.com/language/ref/HITSCentrality.html</url>)
+    https://reference.wolfram.com/language/ref/HITSCentrality.html</url>
 
     <dl>
       <dt>'HITSCentrality'[$g$]

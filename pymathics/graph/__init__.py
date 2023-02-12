@@ -1,16 +1,40 @@
 """
 Graphs - Vertices and Edges
 
+
+A Graph is a tuple of a set of Nodes and Edges.
+
 Mathics3 Module that provides functions and variables for working with graphs.
 
-Example:
-   In[1]:= LoadModule["pymathics.graph"]
-   Out[1]= pymathics.graph
-   In[2]:= BinomialTree[3]
-   In[3]:= BinomialTree[6]
-   In[4]:= CompleteKaryTree[3, VertexLabels->True]
+Examples:
 
-Networkx does the heavy lifting here.
+   >> LoadModule["pymathics.graph"]
+    = pymathics.graph
+
+   >> BinomialTree[3, DirectedEdges->True]
+     = -Graph-
+
+   >> BalencedTree[3, 3]
+     = -Graph-
+
+   >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}, VertexLabels->True]
+    = -Graph-
+
+   >> ConnectedComponents[g]
+    = {{3, 4}, {2}, {1}}
+
+   >> WeaklyConnectedComponents[g]
+    = {{1, 2, 3, 4}}
+
+   >> GraphDistance[g, 1, 4]
+    = 3
+
+   >> GraphDistance[g, 3, 2]
+    = Infinity
+
+<url>
+:NetworkX:
+https://networkx.org</url> does the heavy lifting here.
 """
 
 from pymathics.graph.base import (
