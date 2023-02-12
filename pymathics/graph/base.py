@@ -124,27 +124,27 @@ def _process_graph_options(g, options: dict) -> None:
     # g is where it is used in format. However we should wrap this as our object.
     # Access in G which might be better, currently isn't used.
     g.G.vertex_labels = g.vertex_labels = (
-        options["Pymathics`VertexLabels"].to_python()
-        if "Pymathics`VertexLabels" in options
+        options["System`VertexLabels"].to_python()
+        if "System`VertexLabels" in options
         else False
     )
     shape = (
-        options["Pymathics`VertexShape"].get_string_value()
-        if "Pymathics`VertexShape" in options
+        options["System`VertexShape"].get_string_value()
+        if "System`VertexShape" in options
         else "Circle"
     )
 
     g.G.node_shape = g.node_shape = WL_MARKER_TO_NETWORKX.get(shape, shape)
 
     color = (
-        options["Pymathics`VertexStyle"].get_string_value()
-        if "Pymathics`VertexStyle" in options
+        options["System`VertexStyle"].get_string_value()
+        if "System`VertexStyle" in options
         else "Blue"
     )
 
     g.graph_layout = (
-        options["Pymathics`GraphLayout"].get_string_value()
-        if "Pymathics`GraphLayout" in options
+        options["System`GraphLayout"].get_string_value()
+        if "System`GraphLayout" in options
         else ""
     )
 
@@ -573,7 +573,6 @@ class Graph(Atom):
         super(Graph, self).__init__()
         self.G = G
         self.mixed = kwargs.get("mixed", False)
-        print("creating", self.G, self.mixed)
 
     def __hash__(self):
         return hash(("Pymathics`Graph", self.G))
@@ -1082,7 +1081,10 @@ class AdjacencyList(_NetworkXBuiltin):
 
 class BetweennessCentrality(_Centrality):
     """
-    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]; BetweennessCentrality[g]
+    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]
+     = -Graph-
+
+    >> BetweennessCentrality[g]
      = {0., 1., 0., 0., 0.}
 
     >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; BetweennessCentrality[g]
@@ -1104,11 +1106,17 @@ class BetweennessCentrality(_Centrality):
 
 class ClosenessCentrality(_Centrality):
     """
-    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]; ClosenessCentrality[g]
-     = {0.666667, 1., 0., 1., 1.}
+     >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]
+      = -Graph-
 
-    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; ClosenessCentrality[g]
-     = {0.4, 0.4, 0.4, 0.5, 0.666667}
+     >> ClosenessCentrality[g]
+      = {0.666667, 1., 0., 1., 1.}
+
+     >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]
+      = -Graph-
+
+    >> ClosenessCentrality[g]
+      = {0.4, 0.4, 0.4, 0.5, 0.666667}
     """
 
     def eval(self, graph, expression, evaluation, options):
@@ -1127,7 +1135,9 @@ class ClosenessCentrality(_Centrality):
 
 class DegreeCentrality(_Centrality):
     """
-    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}];
+    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]
+     = -Graph-
+
     >> DegreeCentrality[g]
      = ...
 

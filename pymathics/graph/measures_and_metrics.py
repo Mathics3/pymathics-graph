@@ -97,25 +97,33 @@ class GraphDistance(_NetworkXBuiltin):
       <dd>use rules $v$->$w$ to specify the graph $g$.
     </dl>
 
-    >> GraphDistance[{1 <-> 2, 2 <-> 3, 3 <-> 4, 2 <-> 4, 4 -> 5}, 1, 5]
+    >> g = Graph[{1 -> 2, 2 <-> 3, 4 -> 3, 2 <-> 4, 4 -> 5}, VertexLabels->True]
+     = -Graph-
+
+    >> GraphDistance[g, 1, 5]
      = 3
 
-    >> GraphDistance[{1 <-> 2, 2 <-> 3, 3 <-> 4, 4 -> 2, 4 -> 5}, 1, 5]
-     = 4
+    >> GraphDistance[g, 4, 2]
+     = 1
 
-    >> GraphDistance[{1 <-> 2, 2 <-> 3, 4 -> 3, 4 -> 2, 4 -> 5}, 1, 5]
+    >> GraphDistance[g, 5, 4]
      = Infinity
 
-    >> GraphDistance[{1 <-> 2, 2 <-> 3, 3 <-> 4, 2 <-> 4, 4 -> 5}, 3]
-     = ...
+    >> GraphDistance[g, 5]
+     = [Infinity, Infinity, Infinity, 0]
 
-    >> GraphDistance[{1 <-> 2, 3 <-> 4}, 3]
-     = {Infinity, Infinity, 0, 1}
+    >> GraphDistance[g, 3]
+     = {Infinity, 1, 2, 0, 3}
+
+    >> GraphDistance[g, 4]
+     = {1, 2, 1, 0, 2}
 
     #> GraphDistance[{1 -> 2}, 3, 4]
      : The vertex at position 2 in GraphDistance[{1 -> 2}, 3, 4] does not belong to the graph at position 1.
      = GraphDistance[{1 -> 2}, 3, 4]
     """
+
+    summary_text = "get path distance"
 
     def eval_s(
         self, graph, s, expression, evaluation: Evaluation, options: dict

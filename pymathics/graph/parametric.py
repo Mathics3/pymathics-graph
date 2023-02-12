@@ -34,8 +34,8 @@ class BalancedTree(_NetworkXBuiltin):
       <dt>'BalancedTree[$r$, $h$]'
       <dd>Returns the perfectly balanced $r$-ary tree of height $h$.
 
-      In this tree produced, all non-leaf nodes will have $r$ children and the height of
-      the path from root $r$ to any leaf will be $h$.
+      In this tree produced, all non-leaf nodes will have $r$ children and \
+      the height of the path from root $r$ to any leaf will be $h$.
     </dl>
 
     >> BalancedTree[2, 3]
@@ -82,8 +82,8 @@ class BarbellGraph(_NetworkXBuiltin):
       <dd>Barbell Graph: two complete graphs connected by a path.
     </dl>
 
-    ## >> BarbellGraph[4, 1]
-    ##  = -Graph-
+    >> BarbellGraph[4, 1]
+     = -Graph-
 
     """
 
@@ -132,11 +132,14 @@ class BinomialTree(_NetworkXBuiltin):
 
       The binomial tree of order $n$ with root $R$ is defined as:
 
-      If $k$=0,  $B[k]$ = $B[0]$ = {$R$}. i.e., the binomial tree of order zero consists of a single node, $R$.
+      If $k$=0,  $B[k]$ = $B[0]$ = {$R$}. i.e., the binomial tree of order \
+      zero consists of a single node, $R$.
 
-      If $k>0$, B[k] = {$R$, $B[0$], $B[1]$ .. $B[k]$, i.e., the binomial tree of order $k$>0 comprises the root $R$, and $k$ binomial subtrees, $B[0] to $B[k].
+      If $k>0$, B[k] = {$R$, $B[0$], $B[1]$ .. $B[k]$, i.e., the binomial tree \
+      of order $k$>0 comprises the root $R$, and $k$ binomial subtrees, \
+      $B[0] to $B[k].
 
-      Binomial trees the underlying datastructre in Binomial Heaps.
+      Binomial trees are the underlying datastructre in Binomial Heaps.
     </dl>
 
     >> BinomialTree[3]
@@ -171,15 +174,11 @@ class CompleteGraph(_NetworkXBuiltin):
     """
     <dl>
       <dt>'CompleteGraph[$n$]'
-      <dd>Returns the complete graph with $n$ vertices, $K_n$
+      <dd>Returns the complete graph with $n$ vertices, $K_n$.
     </dl>
 
     >> CompleteGraph[8]
      = -Graph-
-
-    #> CompleteGraph[0]
-     : Expected a positive integer at position 1 in CompleteGraph[0].
-     = CompleteGraph[0]
     """
 
     messages = {
@@ -192,9 +191,9 @@ class CompleteGraph(_NetworkXBuiltin):
 
     def eval_multipartite(self, n, evaluation: Evaluation, options: dict):
         "%(name)s[n_List, OptionsPattern[%(name)s]]"
-        if all(isinstance(i, Integer) for i in n.leaves):
+        if all(isinstance(i, Integer) for i in n.elements):
             return Graph(
-                nx.complete_multipartite_graph(*[i.get_int_value() for i in n.leaves])
+                nx.complete_multipartite_graph(*[i.get_int_value() for i in n.elements])
             )
 
 
@@ -204,7 +203,7 @@ class CompleteKaryTree(_NetworkXBuiltin):
       <dd>Creates a complete $k$-ary tree of $n$ levels.
     </dl>
 
-    In the returned tree, with $n$ nodes, the from root $R$ to any
+    In the returned tree, with $n$ nodes, the from root $R$ to any \
     leaf be $k$.
 
     >> CompleteKaryTree[2, 3]
@@ -246,7 +245,7 @@ class CycleGraph(_NetworkXBuiltin):
         <dd>Returns the cycle graph with $n$ vertices $C_n$.
       </dl>
 
-    >> CycleGraph[3, PlotLabel -> "C_i"]
+    >> CycleGraph[5, PlotLabel -> "C_i"]
      = -Graph-
     """
 
@@ -290,8 +289,8 @@ class FullRAryTree(_NetworkXBuiltin):
 class GraphAtlas(_NetworkXBuiltin):
     """<dl>
       <dt>'GraphAtlas[$n$]'
-      <dd>Returns graph number $i$ from the Networkx's Graph
-      Atlas. There are about 1200 of them and get large as $i$
+      <dd>Returns graph number $i$ from the Networkx's Graph \
+      Atlas. There are about 1200 of them and get large as $i$ \
       increases.
     </dl>
 
@@ -331,7 +330,8 @@ class HknHararyGraph(_NetworkXBuiltin):
       number of edges in the graph with given node connectivity and   \
       number of nodes.
 
-      Harary, F.  The Maximum Connectivity of a Graph.  Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
+      Harary, F.  The Maximum Connectivity of a Graph.  \
+      Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
     </dl>
 
     >> HknHararyGraph[3, 10]
@@ -359,7 +359,8 @@ class HmnHararyGraph(_NetworkXBuiltin):
       connectivity with given number of nodes and given number of \
       edges.
 
-      Harary, F.  The Maximum Connectivity of a Graph.  Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
+      Harary, F.  The Maximum Connectivity of a Graph.\
+      Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.
     </dl>
 
     >> HmnHararyGraph[5, 10]
@@ -475,7 +476,8 @@ class PathGraph(_NetworkXBuiltin):
     """
     <dl>
       <dt>'PathGraph[{$v_1$, $v_2$, ...}]'
-      <dd>Returns a Graph with a path with vertices $v_i$ and edges between $v-i$ and $v_i+1$ .
+      <dd>Returns a Graph with a path with vertices $v_i$ and \
+      edges between $v-i$ and $v_i+1$ .
     </dl>
     >> PathGraph[{1, 2, 3}]
      = -Graph-
@@ -534,7 +536,7 @@ class StarGraph(_NetworkXBuiltin):
     """
     <dl>
       <dt>'StarGraph[$n$]'
-      <dd>Returns a star graph with $n$ vertices
+      <dd>Returns a star graph with $n$ vertices.
     </dl>
 
     >> StarGraph[8]

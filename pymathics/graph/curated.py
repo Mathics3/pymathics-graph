@@ -16,6 +16,7 @@ class GraphData(_NetworkXBuiltin):
     </dl>
 
     >> GraphData["PappusGraph"]
+     = -Graph-
     """
 
     def eval(self, name, expression, evaluation: Evaluation, options: dict) -> Graph:

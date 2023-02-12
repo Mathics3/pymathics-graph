@@ -17,16 +17,25 @@ class ConnectedComponents(_NetworkXBuiltin):
     """
     <dl>
       <dt>'ConnectedComponents'[$g$]
-      <dd> gives the connected components of the graph $g$
+      <dd> gives the connected components of the graph $g$.
     </dl>
 
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; ConnectedComponents[g]
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}, VertexLabels->True]
+     = -Graph-
+
+    >> ConnectedComponents[g]
      = ...
 
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; ConnectedComponents[g]
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}, VertexLabels->True]
+     = -Graph-
+
+    >> ConnectedComponents[g]
      = ...
 
-    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}]; ConnectedComponents[g]
+    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5}, VertexLabels->True]
+     = -Graph-
+
+    >> ConnectedComponents[g]
      = ...
     """
 
@@ -69,16 +78,25 @@ class WeaklyConnectedComponents(_NetworkXBuiltin):
     """
     <dl>
       <dt>'WeaklyConnectedComponents'[$g$]
-      <dd> gives the weakly connected components of the graph $g$
+      <dd> gives the weakly connected components of the graph $g$.
     </dl>
 
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; WeaklyConnectedComponents[g]
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}, VertexLabels->True]
+     = -Graph-
+
+    >> WeaklyConnectedComponents[g]
      = {{1, 2, 3, 4}}
 
-    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}]; WeaklyConnectedComponents[g]
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}, VertexLabels->True]
+     = -Graph-
+
+    >> WeaklyConnectedComponents[g]
      = {{1, 2, 3}}
 
-    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5, 6 <-> 7, 7 <-> 8}]; WeaklyConnectedComponents[g]
+    >> g = Graph[{1 <-> 2, 2 <-> 3, 3 -> 4, 4 <-> 5, 6 <-> 7, 7 <-> 8}, VertexLabels->True]
+     = -Graph-
+
+    >> WeaklyConnectedComponents[g]
      = {{1, 2, 3, 4, 5}, {6, 7, 8}}
     """
 
