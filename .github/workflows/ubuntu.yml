@@ -1,0 +1,36 @@
+name: Pymathics.graph (ubuntu)
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10']
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install pytest
+        # Can comment out when next Mathics core and Mathics-scanner are released
+        python -m pip install -e git+https://github.com/Mathics3/mathics-scanner#egg=Mathics-Scanner[full]
+        python -m pip install -e git+https://github.com/Mathics3/mathics-core#egg=Mathics3[full]
+        (cd src/mathics3 && bash ./admin-tools/make-op-tables.sh)
+        # python -m pip install Mathics3[full]
+        python -m pip install -e .	
+    - name: install pymathics graph
+      run: |
+        make develop
+    - name: Test Mathics
+      run: |
+        make -j3 check

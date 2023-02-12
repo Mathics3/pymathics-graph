@@ -74,3 +74,8 @@ rmChangeLog:
 #: Create a ChangeLog from git via git log and git2cl
 ChangeLog: rmChangeLog
 	git log --pretty --numstat --summary | $(GIT2CL) >$@
+
+
+#: Run pytest consistency and style checks
+check-consistency-and-style:
+	MATHICS_LINT=t $(PYTHON) -m pytest test/consistency-and-style
