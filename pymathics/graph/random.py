@@ -19,6 +19,10 @@ from pymathics.graph.base import (
 
 class RandomGraph(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:https://reference.wolfram.com/language/ref/RandomGraph.html
+    </url>
+
     <dl>
       <dt>'RandomGraph[{$n$, $m$}]'
       <dd>Returns a pseudorandom graph with $n$ vertices and $m$ edges.
@@ -27,6 +31,8 @@ class RandomGraph(_NetworkXBuiltin):
       <dd>Returns list of $k$ RandomGraph[{$n$, $m$}].
     </dl>
     """
+
+    summary_text = "build a random graph"
 
     def _generate(
         self, n: Integer, m: Integer, k: Integer, evaluation: Evaluation, options: dict

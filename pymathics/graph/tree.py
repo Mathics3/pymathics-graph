@@ -72,6 +72,8 @@ class TreeGraphQ(_NetworkXBuiltin):
      = False
     """
 
+    summary_text = "test for a tree-like graph"
+
     def eval(
         self, g, expression, evaluation: Evaluation, options: dict
     ) -> SymbolConstant:
