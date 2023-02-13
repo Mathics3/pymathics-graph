@@ -15,6 +15,10 @@ from pymathics.graph.base import _NetworkXBuiltin
 
 class ConnectedComponents(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:https://reference.wolfram.com/language/ref/ConnectedComponents.html
+    </url>
+
     <dl>
       <dt>'ConnectedComponents'[$g$]
       <dd> gives the connected components of the graph $g$.
@@ -38,6 +42,8 @@ class ConnectedComponents(_NetworkXBuiltin):
     >> ConnectedComponents[g]
      = ...
     """
+
+    summary_text = "list the connected components"
 
     def eval(
         self, graph, expression, evaluation: Evaluation, options: dict
@@ -76,6 +82,10 @@ class ConnectedComponents(_NetworkXBuiltin):
 
 class WeaklyConnectedComponents(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:https://reference.wolfram.com/language/ref/WeaklyConnectedComponents.html
+    </url>
+
     <dl>
       <dt>'WeaklyConnectedComponents'[$g$]
       <dd> gives the weakly connected components of the graph $g$.
@@ -99,6 +109,8 @@ class WeaklyConnectedComponents(_NetworkXBuiltin):
     >> WeaklyConnectedComponents[g]
      = {{1, 2, 3, 4, 5}, {6, 7, 8}}
     """
+
+    summary_text = "list the weakly connected components"
 
     def eval(self, graph, expression, evaluation: Evaluation, options):
         "WeaklyConnectedComponents[graph_, OptionsPattern[WeaklyConnectedComponents]]"

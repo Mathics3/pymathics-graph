@@ -30,6 +30,10 @@ from pymathics.graph.tree import DEFAULT_TREE_OPTIONS
 
 class BalancedTree(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:https://reference.wolfram.com/language/ref/BalancedTree.html
+    </url>
+
     <dl>
       <dt>'BalancedTree[$r$, $h$]'
       <dd>Returns the perfectly balanced $r$-ary tree of height $h$.
@@ -50,6 +54,7 @@ class BalancedTree(_NetworkXBuiltin):
     }
 
     options = DEFAULT_TREE_OPTIONS
+    summary_text = "build a balanced tree graph"
 
     def eval(
         self, r: Integer, h: Integer, expression, evaluation: Evaluation, options: dict
@@ -77,6 +82,14 @@ class BalancedTree(_NetworkXBuiltin):
 
 class BarbellGraph(_NetworkXBuiltin):
     """
+    <url>
+    :Barbell graph:https://en.wikipedia.org/wiki/Barbell_graph
+    </url> (
+    <url>
+    :NetworkX:https://networkx.org/documentation/stable/reference/\
+generated/networkx.generators.classic.barbell_graph.html</url>
+)
+
     <dl>
       <dt>'BarbellGraph[$m1$, $m2$]'
       <dd>Barbell Graph: two complete graphs connected by a path.
@@ -91,6 +104,7 @@ class BarbellGraph(_NetworkXBuiltin):
         "ilsmp": "Expected a non-negative integer at position 1 in ``.",
         "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
     }
+    summary_text = "build a n-m Barbell graph"
 
     def eval(
         self,
@@ -126,6 +140,17 @@ class BarbellGraph(_NetworkXBuiltin):
 
 class BinomialTree(_NetworkXBuiltin):
     """
+    <url>
+    :Binomial tree:https://en.wikipedia.org/wiki/Binomial_tree
+    </url> (
+    <url>
+    :NetworkX:https://networkx.org/documentation/stable/reference/\
+generated/networkx.generators.classic.binomial_tree.html</url>,
+    <url>
+    :WMA:https://reference.wolfram.com/language/ref/BinomialTree.html
+    </url>
+    )
+
     <dl>
       <dt>'BinomialTree[$n$]'
       <dd>Returns the Binomial Tree of order $n$.
@@ -151,6 +176,7 @@ class BinomialTree(_NetworkXBuiltin):
         "ilsmp": "Expected a non-negative integer at position 1 in ``.",
         "mem": "Out of memory",
     }
+    summary_text = "build a binomial tree"
 
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
@@ -185,6 +211,8 @@ class CompleteGraph(_NetworkXBuiltin):
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
 
+    summary_text = "build a completely connected graph"
+
     def eval(self, n: Integer, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
         return eval_complete_graph(self, n, expression, evaluation, options)
@@ -215,6 +243,7 @@ class CompleteKaryTree(_NetworkXBuiltin):
     """
 
     options = DEFAULT_TREE_OPTIONS
+    summary_text = "build a complete k-ary tree"
 
     def eval(self, k, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, k_Integer, OptionsPattern[%(name)s]]"
@@ -249,6 +278,8 @@ class CycleGraph(_NetworkXBuiltin):
      = -Graph-
     """
 
+    summary_text = "build a cycle graph"
+
     def eval(self, n: Integer, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
         n_int = n.get_int_value()
@@ -259,7 +290,8 @@ class CycleGraph(_NetworkXBuiltin):
 
 
 class FullRAryTree(_NetworkXBuiltin):
-    """<dl>
+    """
+    <dl>
       <dt>'FullRAryTree[$r$, $n$]'
       <dd>Creates a full $r$-ary tree of $n$ vertices.
     </dl>
@@ -280,6 +312,7 @@ class FullRAryTree(_NetworkXBuiltin):
     }
 
     options = DEFAULT_TREE_OPTIONS
+    summary_text = "build a full r-ary tree"
 
     def eval(self, r, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[r_Integer, n_Integer, OptionsPattern[%(name)s]]"
@@ -301,6 +334,7 @@ class GraphAtlas(_NetworkXBuiltin):
     messages = {
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
+    summary_text = "build the i-esim graph from the Networkx atlas"
 
     def eval(self, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
@@ -343,6 +377,7 @@ class HknHararyGraph(_NetworkXBuiltin):
         "ilsmp": "Expected a non-negative integer at position 1 in ``.",
         "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
     }
+    summary_text = "build a Hkn Harary graph"
 
     def eval(self, k, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[k_Integer, n_Integer, OptionsPattern[%(name)s]]"
@@ -371,6 +406,8 @@ class HmnHararyGraph(_NetworkXBuiltin):
         "ilsmp": "Expected a non-negative integer at position 1 in ``.",
         "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
     }
+
+    summary_text = "build a Hmn Harary graph"
 
     def eval(self, n, m, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, m_Integer, OptionsPattern[%(name)s]]"
@@ -423,6 +460,7 @@ class KaryTree(_NetworkXBuiltin):
     }
 
     options = DEFAULT_TREE_OPTIONS
+    summary_text = "build a Kary tree"
 
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
@@ -451,6 +489,7 @@ class LadderGraph(_NetworkXBuiltin):
     messages = {
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
+    summary_text = "build a ladder tree"
 
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
@@ -483,6 +522,8 @@ class PathGraph(_NetworkXBuiltin):
      = -Graph-
     """
 
+    summary_text = "build a path graph"
+
     def eval(self, e, evaluation: Evaluation, options: dict) -> Graph:
         "PathGraph[e_List, OptionsPattern[PathGraph]]"
         elements = e.elements
@@ -513,6 +554,8 @@ class RandomTree(_NetworkXBuiltin):
     messages = {
         "ilsmp": "Expected a non-negative integer at position 1 in ``.",
     }
+
+    summary_text = "build a random tree"
 
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
@@ -546,6 +589,7 @@ class StarGraph(_NetworkXBuiltin):
     messages = {
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
+    summary_text = "build a star graph"
 
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict

@@ -1027,6 +1027,24 @@ class _PatternList(_NetworkXBuiltin):
 
 class AdjacencyList(_NetworkXBuiltin):
     """
+    <url>
+    :Adjacenty list:
+    https://en.wikipedia.org/wiki/Adjacency_list</url> (<url>
+    :Networkx:
+    https://networkx.org/documentation/networkx-2.8.8/reference/readwrite/adjlist.html</url>,
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/AdjacencyList.html</url>)
+
+    <dl>
+      <dt>'AdjacencyList'[$graph$, $v$]
+      <dd>gives a list of vertices adjacent to $v$ in a 'Graph' \
+          or a list of edges $g$..
+      <dt>'AdjacencyList'[$graph$, $pattern$]
+      <dd>gives a list of vertices adjacent to vertices \.
+          matching $pattern$.
+    </dl>
+
     >> AdjacencyList[{1 -> 2, 2 -> 3}, 3]
      = {2}
 
@@ -1081,6 +1099,23 @@ class AdjacencyList(_NetworkXBuiltin):
 
 class BetweennessCentrality(_Centrality):
     """
+    <url>
+    :Betweenness centrality:
+    https://en.wikipedia.org/wiki/Betweenness_centrality</url> (<url>
+    :Networkx:
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
+    networkx.algorithms.centrality.betweenness_centrality.html</url>,
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/BetweennessCentrality.html</url>)
+
+
+    <dl>
+      <dt>'BetweennessCentrality'[$g$]
+      <dd>gives a list of betweenness centralities for the vertices \
+          in a 'Graph' or a list of edges $g$.
+    </dl>
+
     >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]
      = -Graph-
 
@@ -1090,6 +1125,8 @@ class BetweennessCentrality(_Centrality):
     >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; BetweennessCentrality[g]
      = {3., 3., 6., 6., 6.}
     """
+
+    summary_text = "get the betweenness centrality"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -1106,6 +1143,23 @@ class BetweennessCentrality(_Centrality):
 
 class ClosenessCentrality(_Centrality):
     """
+    <url>
+    :Betweenness centrality:
+    https://en.wikipedia.org/wiki/Closeness_centrality</url> (<url>
+    :Networkx:
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
+    networkx.algorithms.centrality.closeness_centrality.html</url>,
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/ClosenessCentrality.html</url>)
+
+
+    <dl>
+      <dt>'ClosenessCentrality'[$g$]
+      <dd>gives a list of closeness centralities for the vertices \
+          in a 'Graph' or a list of edges $g$.
+    </dl>
+
      >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]
       = -Graph-
 
@@ -1118,6 +1172,8 @@ class ClosenessCentrality(_Centrality):
     >> ClosenessCentrality[g]
       = {0.4, 0.4, 0.4, 0.5, 0.666667}
     """
+
+    summary_text = "get the closeness centrality"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -1135,6 +1191,22 @@ class ClosenessCentrality(_Centrality):
 
 class DegreeCentrality(_Centrality):
     """
+    <url>
+    :Degree centrality:
+    https://en.wikipedia.org/wiki/Degree_centrality</url> (<url>
+    :Networkx:
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
+    networkx.algorithms.centrality.degree_centrality.html</url>,
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/DegreeCentrality.html</url>)
+
+    <dl>
+      <dt>'DegreeCentrality'[$g$]
+      <dd>gives a list of degree centralities for the vertices \
+          in a 'Graph' or a list of edges $g$.
+    </dl>
+
     >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]
      = -Graph-
 
@@ -1147,6 +1219,8 @@ class DegreeCentrality(_Centrality):
     >> DegreeCentrality[g, "Out"]
      = ...
     """
+
+    summary_text = "get the degree centrality"
 
     def _from_dict(self, graph, centrality):
         s = len(graph.G) - 1  # undo networkx's normalization
@@ -1175,6 +1249,16 @@ class DegreeCentrality(_Centrality):
 
 class DirectedEdge(Builtin):
     """
+    <url>
+    :Directed edge:
+    https://en.wikipedia.org/wiki/Directed_graph</url> (<url>
+    :Networkx:
+    https://networkx.org/documentation/stable/reference/classes/digraph.html</url>,
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/DirectedEdge.html</url>)
+
+
     <dl>
       <dt>'DirectedEdge[$u$, $v$]'
       <dd>create a directed edge from $u$ to $v$.
@@ -1182,11 +1266,25 @@ class DirectedEdge(Builtin):
     """
 
     summary_text = "make a directed graph edge"
-    pass
 
 
 class EdgeConnectivity(_NetworkXBuiltin):
     """
+    <url>
+    :Edge connectivity:
+    https://en.wikipedia.org/wiki/Directed_graph</url> (<url>
+    :Networkx:
+    https://networkx.org/documentation/stable/reference/algorithms/\
+    generated/networkx.algorithms.connectivity.connectivity.edge_connectivity.html</url>,
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/EdgeConnectivity.html</url>)
+
+    <dl>
+      <dt>'EdgeConnectivity[$g$]'
+      <dd>gives the edge connectivity of the graph $g$.
+    </dl>
+
     >> EdgeConnectivity[{1 <-> 2, 2 <-> 3}]
      = 1
 
@@ -1206,6 +1304,8 @@ class EdgeConnectivity(_NetworkXBuiltin):
      = EdgeConnectivity[-Graph-]
     """
 
+    summary_text = "edge connectivity of a graph"
+
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
@@ -1221,12 +1321,18 @@ class EdgeConnectivity(_NetworkXBuiltin):
 
 class EdgeIndex(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/EdgeIndex.html</url>
+
     <dl>
     <dt>'EdgeIndex['graph', 'edge']'
     <dd>gives the position of the 'edge' in the list of edges associated \
     to the graph.
     </dl>
     """
+
+    summary_text = "find the position of an edge"
 
     def eval(self, graph, v, expression, evaluation, options):
         "%(name)s[graph_, v_, OptionsPattern[%(name)s]]"
@@ -1243,11 +1349,17 @@ class EdgeIndex(_NetworkXBuiltin):
 
 class EdgeList(_PatternList):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/EdgeList.html</url>
+
     <dl>
       <dt>'EdgeList'[$g$]
       <dd>gives the list of edges that defines $g$
     </dl>
     """
+
+    summary_text = "list the edges of a graph"
 
     def _items(self, graph):
         return graph.edges
@@ -1255,13 +1367,17 @@ class EdgeList(_PatternList):
 
 class EdgeRules(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/EdgeRules.html</url>
+
     <dl>
       <dt>'EdgeRules'[$g$]
       <dd> gives the list of edge rules for the graph $g$.
     </dl>
     """
 
-    summary_text = "list the edge rules"
+    summary_text = "list the edge as rules"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -1342,6 +1458,24 @@ class EigenvectorCentrality(_ComponentwiseCentrality):
 
 class FindShortestPath(_NetworkXBuiltin):
     """
+
+    <url>
+    :Shortest path problem:
+    https://en.wikipedia.org/wiki/Shortest_path_problem</url> (<url>
+    :Networkx:
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
+    /generated/networkx.algorithms.shortest_paths.generic.shortest_path.html</url>,
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/FindShortestPath.html</url>)
+
+    <dl>
+      <dt>'FindShortestPath'[$g$, $src$, $tgt$]
+      <dd>List the nodes in the shortest path connecting the source $src$ with the target $tgt$ \
+          in the graph $g$.
+    </dl>
+
+
     >> FindShortestPath[{1 <-> 2, 2 <-> 3, 3 <-> 4, 2 <-> 4, 4 -> 5}, 1, 5]
      = {1, 2, 4, 5}
 
@@ -1361,6 +1495,8 @@ class FindShortestPath(_NetworkXBuiltin):
      : The vertex at position 3 in FindShortestPath[{1 -> 2}, 1, 3] does not belong to the graph at position 1.
      = FindShortestPath[{1 -> 2}, 1, 3]
     """
+
+    summary_text = "find the shortest path between two nodes"
 
     def eval_s_t(self, graph, s, t, expression, evaluation, options):
         "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
@@ -1528,7 +1664,7 @@ generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>,
 
     """
 
-    summary_text = "HITS centrality"
+    summary_text = "get the HITS centrality"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -1551,7 +1687,18 @@ generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>,
 
 
 class HighlightGraph(_NetworkXBuiltin):
-    """"""
+    """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/HighlightGraph.html</url>
+
+    <dl>
+    <dt>'HighlightGraph'[$graph$, $what$]
+    <dd>highlight in $graph$ the elements enumerated in $what$ by adding style marks.
+    </dl>
+    """
+
+    summary_text = "highlight elements in a graph"
 
     def eval(self, graph, what, expression, evaluation, options):
         "HighlightGraph[graph_, what_List, OptionsPattern[%(name)s]]"
@@ -1614,7 +1761,7 @@ class KatzCentrality(_ComponentwiseCentrality):
      = {1.25, 1.25, 1.25, 1.41026, 1.41026, 1.28205}
     """
 
-    summary_text = "Katz centrality"
+    summary_text = "get the Katz centrality"
 
     rules = {
         "Pymathics`KatzCentrality[Pymathics`g_, Pymathics`alpha_]": "Pymathics`KatzCentrality[Pymathics`g, Pymathics`alpha, 1]",
@@ -1643,11 +1790,31 @@ class KatzCentrality(_ComponentwiseCentrality):
 
 class PageRankCentrality(_Centrality):
     """
+    <url>
+    :Pagerank Centrality:
+    https://en.wikipedia.org/wiki/Pagerank</url> (<url>
+    :Networkx:
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
+    /generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html</url>,
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/PageRankCentrality.html</url>)
+
+    <dl>
+      <dt>'PageRankCentrality'[$g$, $alpha$]
+      <dd>gives a list of page rank centralities for the \
+          vertices in the graph $g$ and weight $alpha$.
+      <dt>'PageRankCentrality'[$g$, $alpha$, $beta$]
+      <dd>gives a list of page rank centralities for the \
+          vertices in the graph $g$ and weight $alpha$ and initial centralities $beta$.
+    </dl>
+
     # Not working, possibly because an issue in networkx
 
     # >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
      = {0.184502, 0.207565, 0.170664, 0.266605, 0.170664}
     """
+    summary_text = "get the page rank centralities"
 
     def eval_alpha_beta(self, graph, alpha, expression, evaluation, options):
         "%(name)s[graph_, alpha_, OptionsPattern[%(name)s]]"
@@ -1669,6 +1836,17 @@ class Property(Builtin):
 
 class PropertyValue(Builtin):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/PropertyValue.html</url>
+
+    <dl>
+      <dt>'PropertyValue'[{$obj$, $item$}, $name$]
+      <dd>gives the value of a property associated with the name  $name$
+          for $item$ in the object $obj$.
+    </dl>
+
+
     >> g = Graph[{a <-> b, Property[b <-> c, SomeKey -> 123]}];
     >> PropertyValue[{g, b <-> c}, SomeKey]
      = 123
@@ -1677,6 +1855,7 @@ class PropertyValue(Builtin):
     """
 
     requires = ("networkx",)
+    summary_text = "retrieve the value of a property"
 
     def eval(self, graph, item, name, evaluation):
         "PropertyValue[{graph_Graph, item_}, name_Symbol]"
@@ -1700,6 +1879,15 @@ class PropertyValue(Builtin):
 
 class VertexAdd(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/VertexAdd.html</url>
+
+    <dl>
+      <dt>'VertexAdd'[$g$, $node$]
+      <dd>create a new graph from $g$, by adding the node $node$.
+    </dl>
+
     >> g1 = Graph[{1 -> 2, 2 -> 3}];
     >> g2 = VertexAdd[g1, 4]
      = -Graph-
@@ -1708,6 +1896,8 @@ class VertexAdd(_NetworkXBuiltin):
     >> VertexAdd[{a -> b}, c]
      = -Graph-
     """
+
+    summary_text = "add a vertex"
 
     def eval(self, graph: Expression, what, expression, evaluation, options):
         "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
@@ -1723,6 +1913,15 @@ class VertexAdd(_NetworkXBuiltin):
 
 class VertexConnectivity(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/VertexConnectivity.html</url>
+
+    <dl>
+      <dt>'VertexConnectivity'[$g$]
+      <dd>gives the vertex connectivity of the graph $g$.
+    </dl>
+
     >> VertexConnectivity[{1 <-> 2, 2 <-> 3}]
      = 1
 
@@ -1741,6 +1940,8 @@ class VertexConnectivity(_NetworkXBuiltin):
     #> VertexConnectivity[Graph[{}]]
      = VertexConnectivity[-Graph-]
     """
+
+    summary_text = "vertex connectivity"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -1763,6 +1964,15 @@ class VertexConnectivity(_NetworkXBuiltin):
 
 class VertexDelete(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/VertexDelete.html</url>
+
+    <dl>
+      <dt>'VertexDelete'[$g$, $vert$]
+      <dd>remove the vertex $vert$ and their associated edges.
+    </dl>
+
     >> g1 = Graph[{1 -> 2, 2 -> 3, 3 -> 4}];
     >> VertexDelete[g1, 3]
      = -Graph-
@@ -1771,6 +1981,8 @@ class VertexDelete(_NetworkXBuiltin):
     >> VertexDelete[{1 -> 2, 2 -> 3, 3 -> 4, 4 -> 6, 6 -> 8, 8 -> 2}, _?OddQ]
      = -Graph-
     """
+
+    summary_text = "remove a vertex"
 
     def eval(self, graph, what, expression, evaluation, options):
         "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
@@ -1803,6 +2015,8 @@ class VertexIndex(_NetworkXBuiltin):
      = 3
     """
 
+    summary_text = "find the position of a vertex"
+
     def eval(self, graph, v, expression, evaluation, options):
         "%(name)s[graph_, v_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
@@ -1832,12 +2046,18 @@ class VertexList(_PatternList):
      = {10}
     """
 
+    summary_text = "list the vertex"
+
     def _items(self, graph):
         return graph.vertices
 
 
 class UndirectedEdge(Builtin):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/UndirectedEdge.html</url>
+
     <dl>
       <dt>'UndirectedEdge[$u$, $v$]'
       <dd>create an undirected edge between $u$ and $v$.
@@ -1853,7 +2073,7 @@ class UndirectedEdge(Builtin):
      = UndirectedEdge[a, UndirectedEdge[b, c]]
     """
 
-    summary_text = "makes undirected graph edge"
+    summary_text = "undirected graph edge"
     pass
 
 

@@ -10,6 +10,10 @@ from pymathics.graph.base import Graph, _NetworkXBuiltin, graph_helper
 
 class GraphData(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:https://reference.wolfram.com/language/ref/GraphData.html
+    </url>
+
     <dl>
       <dt>'GraphData[$name$]'
       <dd>Returns a graph with the specified name.
@@ -18,6 +22,8 @@ class GraphData(_NetworkXBuiltin):
     >> GraphData["PappusGraph"]
      = -Graph-
     """
+
+    summary_text = "create a graph by name"
 
     def eval(self, name, expression, evaluation: Evaluation, options: dict) -> Graph:
         "GraphData[name_String, OptionsPattern[GraphData]]"
