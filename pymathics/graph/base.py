@@ -1025,9 +1025,9 @@ class _PatternList(_NetworkXBuiltin):
 class AdjacencyList(_NetworkXBuiltin):
     """
     <url>
-    :Adjacenty list:
+    :Adjacency list:
     https://en.wikipedia.org/wiki/Adjacency_list</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/readwrite/adjlist.html</url>,
     <url>
     :WMA:
@@ -1036,9 +1036,10 @@ class AdjacencyList(_NetworkXBuiltin):
     <dl>
       <dt>'AdjacencyList'[$graph$, $v$]
       <dd>gives a list of vertices adjacent to $v$ in a 'Graph' \
-          or a list of edges $g$..
+          or a list of edges $g$.
+
       <dt>'AdjacencyList'[$graph$, $pattern$]
-      <dd>gives a list of vertices adjacent to vertices \.
+      <dd>gives a list of vertices adjacent to vertices \
           matching $pattern$.
     </dl>
 
@@ -1099,7 +1100,7 @@ class BetweennessCentrality(_Centrality):
     <url>
     :Betweenness centrality:
     https://en.wikipedia.org/wiki/Betweenness_centrality</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
     networkx.algorithms.centrality.betweenness_centrality.html</url>,
     <url>
@@ -1143,7 +1144,7 @@ class ClosenessCentrality(_Centrality):
     <url>
     :Betweenness centrality:
     https://en.wikipedia.org/wiki/Closeness_centrality</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
     networkx.algorithms.centrality.closeness_centrality.html</url>,
     <url>
@@ -1191,7 +1192,7 @@ class DegreeCentrality(_Centrality):
     <url>
     :Degree centrality:
     https://en.wikipedia.org/wiki/Degree_centrality</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
     networkx.algorithms.centrality.degree_centrality.html</url>,
     <url>
@@ -1249,7 +1250,7 @@ class DirectedEdge(Builtin):
     <url>
     :Directed edge:
     https://en.wikipedia.org/wiki/Directed_graph</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/stable/reference/classes/digraph.html</url>,
     <url>
     :WMA:
@@ -1270,7 +1271,7 @@ class EdgeConnectivity(_NetworkXBuiltin):
     <url>
     :Edge connectivity:
     https://en.wikipedia.org/wiki/Directed_graph</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/stable/reference/algorithms/\
     generated/networkx.algorithms.connectivity.connectivity.edge_connectivity.html</url>,
     <url>
@@ -1394,7 +1395,7 @@ class EigenvectorCentrality(_ComponentwiseCentrality):
     <url>
     :Eigenvector Centrality:
     https://en.wikipedia.org/wiki/Eigenvector_centrality</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
 /generated/networkx.algorithms.centrality.eigenvector_centrality.html</url>,
 <url>
@@ -1459,7 +1460,7 @@ class FindShortestPath(_NetworkXBuiltin):
     <url>
     :Shortest path problem:
     https://en.wikipedia.org/wiki/Shortest_path_problem</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
     /generated/networkx.algorithms.shortest_paths.generic.shortest_path.html</url>,
     <url>
@@ -1725,7 +1726,7 @@ class KatzCentrality(_ComponentwiseCentrality):
     <url>
     :Katz Centrality:
     https://en.wikipedia.org/wiki/Katz_centrality</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
 /generated/networkx.algorithms.centrality.katz_centrality.html\
 #networkx.algorithms.centrality.katz_centrality</url>, <url>
@@ -1787,7 +1788,7 @@ class PageRankCentrality(_Centrality):
     <url>
     :Pagerank Centrality:
     https://en.wikipedia.org/wiki/Pagerank</url> (<url>
-    :Networkx:
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
     /generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html</url>,
     <url>
@@ -1808,6 +1809,7 @@ class PageRankCentrality(_Centrality):
     # >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
      = {0.184502, 0.207565, 0.170664, 0.266605, 0.170664}
     """
+
     summary_text = "get the page rank centralities"
 
     def eval_alpha_beta(self, graph, alpha, expression, evaluation, options):

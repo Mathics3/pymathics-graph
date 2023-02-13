@@ -320,9 +320,10 @@ class FullRAryTree(_NetworkXBuiltin):
 
 
 class GraphAtlas(_NetworkXBuiltin):
-    """<dl>
+    """
+    <dl>
       <dt>'GraphAtlas[$n$]'
-      <dd>Returns graph number $i$ from the Networkx's Graph \
+      <dd>Returns graph number $i$ from the NetworkX's Graph \
       Atlas. There are about 1200 of them and get large as $i$ \
       increases.
     </dl>
@@ -334,7 +335,7 @@ class GraphAtlas(_NetworkXBuiltin):
     messages = {
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
-    summary_text = "build the i-esim graph from the Networkx atlas"
+    summary_text = "build the i-esim graph from the NetworkX atlas"
 
     def eval(self, n, expression, evaluation: Evaluation, options: dict):
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"

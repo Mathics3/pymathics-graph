@@ -14,7 +14,7 @@ Examples:
    >> BinomialTree[3, DirectedEdges->True]
      = -Graph-
 
-   >> BalencedTree[3, 3]
+   >> BalancedTree[3, 3]
      = -Graph-
 
    >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}, VertexLabels->True]
