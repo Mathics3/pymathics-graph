@@ -1126,7 +1126,7 @@ class BetweennessCentrality(_Centrality):
      = {3., 3., 6., 6., 6.}
     """
 
-    summary_text = "betweenness centrality"
+    summary_text = "get the betweenness centrality"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -1173,7 +1173,7 @@ class ClosenessCentrality(_Centrality):
       = {0.4, 0.4, 0.4, 0.5, 0.666667}
     """
 
-    summary_text = "closeness centrality"
+    summary_text = "get the closeness centrality"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -1220,7 +1220,7 @@ class DegreeCentrality(_Centrality):
      = ...
     """
 
-    summary_text = "degree centrality"
+    summary_text = "get the degree centrality"
 
     def _from_dict(self, graph, centrality):
         s = len(graph.G) - 1  # undo networkx's normalization
@@ -1664,7 +1664,7 @@ generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>,
 
     """
 
-    summary_text = "HITS centrality"
+    summary_text = "get the HITS centrality"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -1761,7 +1761,7 @@ class KatzCentrality(_ComponentwiseCentrality):
      = {1.25, 1.25, 1.25, 1.41026, 1.41026, 1.28205}
     """
 
-    summary_text = "Katz centrality"
+    summary_text = "get the Katz centrality"
 
     rules = {
         "Pymathics`KatzCentrality[Pymathics`g_, Pymathics`alpha_]": "Pymathics`KatzCentrality[Pymathics`g, Pymathics`alpha, 1]",
@@ -1814,6 +1814,7 @@ class PageRankCentrality(_Centrality):
     # >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
      = {0.184502, 0.207565, 0.170664, 0.266605, 0.170664}
     """
+    summary_text = "get the page rank centralities"
 
     def eval_alpha_beta(self, graph, alpha, expression, evaluation, options):
         "%(name)s[graph_, alpha_, OptionsPattern[%(name)s]]"
