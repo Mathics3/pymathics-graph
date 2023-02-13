@@ -6,9 +6,12 @@ Core routines for working with Graphs.
 
 # uses networkx
 
+import base64
+import tempfile
+
 from collections import defaultdict
 from inspect import isgenerator
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, Real, String
@@ -26,7 +29,7 @@ from mathics.core.systemsymbols import (
 )
 from mathics.eval.patterns import Matcher
 
-from pymathics.graph.format import svg_format_graph, latex_format_graph
+from pymathics.graph.format import png_format_graph, svg_format_graph
 from pymathics.graph.graphsymbols import (
     SymbolDirectedEdge,
     SymbolGraph,
@@ -1624,12 +1627,54 @@ class GraphBox(BoxElementMixin):
         self.G = G
         self.options = options
 
+    def boxes_to_b64text(
+        self, elements: Tuple[BaseElement] = None, **options
+    ) -> Tuple[bytes, Tuple[int, int]]:
+        """
+        Produces a base64 png representation and a tuple with the size of the pillow image
+        associated to the object.
+        """
+        contents = self.boxes_to_png(elements, **options)
+        encoded = base64.b64encode(contents)
+        encoded = b"data:image/png;base64," + encoded
+        return encoded
+
+    def boxes_to_png(self, elements=None, **options) -> Tuple[bytes, Tuple[int, int]]:
+        """
+        returns a tuple with the set of bytes with a png representation of the image
+        and the scaled size.
+        """
+        return png_format_graph(self.G, **self.options)
+
     def boxes_to_svg(self, elements=None, **options):
         return svg_format_graph(self.G, **self.options)
 
-    def boxes_to_tex(self, elements=None, **options):
-        # Figure out what to do here.
-        return latex_format_graph(self.G, **self.options)
+    def boxes_to_tex(self, elements=None, **options) -> str:
+        """
+        Store the associated image as a png file and return
+        a LaTeX command for including it.
+        """
+
+        data = self.boxes_to_png(elements, **options)
+        size = (
+            800,
+            800,
+        )
+        res = 100  # pixels/cm
+        width_str, height_str = (str(n / res).strip() for n in size)
+        head = rf"\includegraphics[width={width_str}cm,height={height_str}cm]"
+
+        # This produces a random name, where the png file is going to be stored.
+        # LaTeX does not have a native way to store an figure embeded in
+        # the source.
+        fp = tempfile.NamedTemporaryFile(delete=True, suffix=".png")
+        path = fp.name
+        fp.close()
+
+        with open(path, "wb") as imgfile:
+            imgfile.write(data)
+
+        return head + "{" + format(path) + "}"
 
     def boxes_to_text(self, elements=None, **options):
         return "-Graph-"

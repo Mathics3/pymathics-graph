@@ -78,22 +78,6 @@ def format_graph(G, **options) -> str:
         nx.draw_shell(G, **draw_options)
 
 
-def get_latex_graph() -> str:
-    """
-    Retrieves latex from what has already been stored the matplotlib buffer
-    pyplot. Return the asymptote string.
-    """
-    print("this is not implemented yet")
-    return "-Graph-"
-    buffer = BytesIO()
-    pyplot.savefig(buffer, format="latex")
-    buffer.seek(0)
-    graph_latex = buffer.getvalue()
-    buffer.close()
-
-    return graph_latex
-
-
 def get_svg_graph() -> str:
     """
     Retrieves SVG XML from what has already been stored the matplotlib buffer
@@ -109,6 +93,23 @@ def get_svg_graph() -> str:
     # TODO: In the future if probably want to base64 encode.
     # Use: base64.b64encode(some peice of image_svg)
     return graph_svg.decode("utf-8")
+
+
+def get_png_graph() -> BytesIO:
+    """
+    Retrieves SVG XML from what has already been stored the matplotlib buffer
+    pyplot. Return the XML SVG string.
+    """
+
+    buffer = BytesIO()
+    pyplot.savefig(buffer, format="png")
+    buffer.seek(0)
+    graph_png = buffer.getvalue()
+    buffer.close()
+
+    # TODO: In the future if probably want to base64 encode.
+    # Use: base64.b64encode(some peice of image_svg)
+    return graph_png
 
 
 def hierarchy_pos(
@@ -364,10 +365,10 @@ def svg_format_graph(G, **options):
     return svg_str
 
 
-def latex_format_graph(G, **options):
+def png_format_graph(G, **options):
     format_graph(G, **options)
     # pyplot.tight_layout()
-    return get_latex_graph()
+    return get_png_graph()
 
 
 def spiral_equidistant_layout(G, *args, **kwargs):
