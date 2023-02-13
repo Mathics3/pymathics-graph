@@ -55,7 +55,9 @@ class _PatternCount(_NetworkXBuiltin):
 class EdgeCount(_PatternCount):
     """
     <url>
-    :WMA link:
+    :NetworkX:
+    https://networkx.org/documentation/latest/reference/generated/networkx.classes.function.edges.html#edges</url>, <url>
+    :WMA:
     https://reference.wolfram.com/language/ref/EdgeCount.html</url>
 
     <dl>
@@ -82,6 +84,12 @@ class EdgeCount(_PatternCount):
 
 class GraphDistance(_NetworkXBuiltin):
     """
+    <url>
+    :NetworkX:
+    https://networkx.org/documentation/latest/reference/algorithms/generated/networkx.algorithms.shortest_paths.generic.shortest_path_length.html</url>, <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/GraphDistance.html</url>
+
     <dl>
       <dt>'GraphDistance'[$g$, $s$, $t$]
       <dd>returns the distance from source vertex $s$ to target vertex $t$ in the graph $g$.
@@ -155,7 +163,9 @@ class GraphDistance(_NetworkXBuiltin):
 class VertexCount(_PatternCount):
     """
     <url>
-    :WMA link:
+    :NetworkX:
+    https://networkx.org/documentation/latest/reference/generated/networkx.classes.function.nodes.html</url>, <url>
+    :WMA:
     https://reference.wolfram.com/language/ref/VertexCount.html</url>
 
     <dl>
@@ -193,8 +203,10 @@ class VertexCount(_PatternCount):
 class VertexDegree(_NetworkXBuiltin):
     """
     <url>
-    :WMA link:
-    https://reference.wolfram.com/language/ref/EdgeCount.html</url>
+    :NetworkX:
+    https://networkx.org/documentation/latest/reference/classes/generated/networkx.Graph.degree.html</url>, <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/VertexDegree.html</url>
 
     <dl>
        <dt>'VertexDegree[$g$]'
