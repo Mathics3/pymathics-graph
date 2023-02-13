@@ -198,6 +198,9 @@ generated/networkx.generators.classic.binomial_tree.html</url>,
 
 class CompleteGraph(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:https://reference.wolfram.com/language/ref/CompleteGraph.html
+    </url>
     <dl>
       <dt>'CompleteGraph[$n$]'
       <dd>Returns the complete graph with $n$ vertices, $K_n$.
@@ -226,7 +229,12 @@ class CompleteGraph(_NetworkXBuiltin):
 
 
 class CompleteKaryTree(_NetworkXBuiltin):
-    """<dl>
+    """
+    <url>
+    :K-ary Tree:https://en.wikipedia.org/wiki/M-ary_tree
+    </url>
+
+    <dl>
       <dt>'CompleteKaryTree[$n$, $k$]'
       <dd>Creates a complete $k$-ary tree of $n$ levels.
     </dl>
@@ -269,10 +277,14 @@ class CompleteKaryTree(_NetworkXBuiltin):
 
 
 class CycleGraph(_NetworkXBuiltin):
-    """<dl>
-        <dt>'CycleGraph[$n$]'
-        <dd>Returns the cycle graph with $n$ vertices $C_n$.
-      </dl>
+    """
+    <url>:Cycle Graph:
+    https://en.wikipedia.org/wiki/Cycle_graph</url>
+
+    <dl>
+      <dt>'CycleGraph[$n$]'
+      <dd>Returns the cycle graph with $n$ vertices $C_n$.
+    </dl>
 
     >> CycleGraph[5, PlotLabel -> "C_i"]
      = -Graph-
@@ -289,8 +301,13 @@ class CycleGraph(_NetworkXBuiltin):
             return eval_hkn_harary(self, Integer(2), n, expression, evaluation, options)
 
 
+# It seems that this makes the same than CompleteKaryTree
 class FullRAryTree(_NetworkXBuiltin):
     """
+    <url>
+    :K-ary Tree:https://en.wikipedia.org/wiki/M-ary_tree
+    </url>
+
     <dl>
       <dt>'FullRAryTree[$r$, $n$]'
       <dd>Creates a full $r$-ary tree of $n$ vertices.
