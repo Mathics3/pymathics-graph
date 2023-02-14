@@ -72,7 +72,7 @@ class BetweennessCentrality(_Centrality):
     https://en.wikipedia.org/wiki/Betweenness_centrality</url> (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
-    networkx.algorithms.centrality.betweenness_centrality.html</url>,
+    networkx.algorithms.centrality.betweenness_centrality.html</url>,\
     <url>
     :WMA:
     https://reference.wolfram.com/language/ref/BetweennessCentrality.html</url>)
@@ -116,7 +116,7 @@ class ClosenessCentrality(_Centrality):
     https://en.wikipedia.org/wiki/Closeness_centrality</url> (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
-    networkx.algorithms.centrality.closeness_centrality.html</url>,
+    networkx.algorithms.centrality.closeness_centrality.html</url>,\
     <url>
     :WMA:
     https://reference.wolfram.com/language/ref/ClosenessCentrality.html</url>)
@@ -164,7 +164,7 @@ class DegreeCentrality(_Centrality):
     https://en.wikipedia.org/wiki/Degree_centrality</url> (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
-    networkx.algorithms.centrality.degree_centrality.html</url>,
+    networkx.algorithms.centrality.degree_centrality.html</url>,\
     <url>
     :WMA:
     https://reference.wolfram.com/language/ref/DegreeCentrality.html</url>)
@@ -222,7 +222,7 @@ class EigenvectorCentrality(_ComponentwiseCentrality):
     https://en.wikipedia.org/wiki/Eigenvector_centrality</url> (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
-/generated/networkx.algorithms.centrality.eigenvector_centrality.html</url>,
+/generated/networkx.algorithms.centrality.eigenvector_centrality.html</url>,\
 <url>
     :WMA:
     https://reference.wolfram.com/language/ref/EgenvectorCentrality.html</url>)
@@ -284,7 +284,8 @@ class HITSCentrality(_Centrality):
     <url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
-generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>, <url>
+generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>, \
+    <url>
     :WMA:
     https://reference.wolfram.com/language/ref/HITSCentrality.html</url>
 
@@ -326,7 +327,8 @@ class KatzCentrality(_ComponentwiseCentrality):
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
 /generated/networkx.algorithms.centrality.katz_centrality.html\
-#networkx.algorithms.centrality.katz_centrality</url>, <url>
+#networkx.algorithms.centrality.katz_centrality</url>, \
+    <url>
     :WMA:
     https://reference.wolfram.com/language/ref/KatzCentrality.html</url>)
 
@@ -340,8 +342,6 @@ class KatzCentrality(_ComponentwiseCentrality):
     </dl>
 
     >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]
-     = -Graph-
-    >> g
      = -Graph-
     >> KatzCentrality[g, 0.2]
      = {1.25202, 1.2504, 1.5021, 1.30042, 1.26008}
@@ -387,7 +387,7 @@ class PageRankCentrality(_Centrality):
     https://en.wikipedia.org/wiki/Pagerank</url> (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
-    /generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html</url>,
+    /generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html</url>,\
     <url>
     :WMA:
     https://reference.wolfram.com/language/ref/PageRankCentrality.html</url>)
@@ -401,9 +401,9 @@ class PageRankCentrality(_Centrality):
           vertices in the graph $g$ and weight $alpha$ and initial centralities $beta$.
     </dl>
 
-    # Not working, possibly because an issue in networkx
+    ## Not working, possibly because an issue in networkx
 
-    # >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
+    ## >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
      = {0.184502, 0.207565, 0.170664, 0.266605, 0.170664}
     """
 

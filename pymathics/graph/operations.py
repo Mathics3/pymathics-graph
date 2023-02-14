@@ -18,8 +18,12 @@ from pymathics.graph.base import (
 
 class FindSpanningTree(_NetworkXBuiltin):
     """
-    <url>:Spanning Tree:https://en.wikipedia.org/wiki/Spanning_tree</url>
-    (<url>:WMA:
+    <url>:Spanning Tree:https://en.wikipedia.org/wiki/Spanning_tree</url> \
+    (<url>:NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
+generated/networkx.algorithms.tree.mst.minimum_spanning_edges.html
+    </url>,\
+    <url>:WMA:
     https://reference.wolfram.com/language/ref/FindSpanningTree.html
     </url>)
 

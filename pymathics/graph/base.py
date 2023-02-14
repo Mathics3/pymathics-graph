@@ -6,17 +6,14 @@ Core routines for working with Graphs.
 
 # uses networkx
 
-import base64
-import tempfile
-
 from collections import defaultdict
 from inspect import isgenerator
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, String
 from mathics.core.convert.expression import ListExpression, from_python
-from mathics.core.element import BaseElement, BoxElementMixin
+from mathics.core.element import BaseElement
 from mathics.core.expression import Expression
 from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
 from mathics.core.systemsymbols import (
@@ -879,7 +876,7 @@ class DirectedEdge(Builtin):
     :Directed edge:
     https://en.wikipedia.org/wiki/Directed_graph</url> (<url>
     :NetworkX:
-    https://networkx.org/documentation/stable/reference/classes/digraph.html</url>,
+    https://networkx.org/documentation/networkx-2.8.8/reference/classes/digraph.html</url>,
     <url>
     :WMA:
     https://reference.wolfram.com/language/ref/DirectedEdge.html</url>)
@@ -900,7 +897,7 @@ class EdgeConnectivity(_NetworkXBuiltin):
     :Edge connectivity:
     https://en.wikipedia.org/wiki/Directed_graph</url> (<url>
     :NetworkX:
-    https://networkx.org/documentation/stable/reference/algorithms/\
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
     generated/networkx.algorithms.connectivity.connectivity.edge_connectivity.html</url>,
     <url>
     :WMA:
@@ -1082,9 +1079,15 @@ class FindShortestPath(_NetworkXBuiltin):
 
 class FindVertexCut(_NetworkXBuiltin):
     """
+    <url>:Minimum cut:https://en.wikipedia.org/wiki/Minimum_cut</url>\
+    (<url>
+    :NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
+generated/networkx.algorithms.connectivity.cuts.minimum_node_cut.html
+    </url>, \
     <url>
     :WMA:
-    https://reference.wolfram.com/language/ref/FindVertexCut.html</url>
+    https://reference.wolfram.com/language/ref/FindVertexCut.html</url>)
 
     <dl>
     <dt>'FindVertexCut[$g$]'

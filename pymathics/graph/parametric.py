@@ -198,9 +198,17 @@ generated/networkx.generators.classic.binomial_tree.html</url>,
 
 class CompleteGraph(_NetworkXBuiltin):
     """
+    <url>Complete Multipartite Graph:
+    https://en.wikipedia.org/wiki/Multipartite_graph
+    </url>\
+    (<url>
+    :NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference/\
+generated/networkx.generators.classic.complete_multipartite_graph.html
+    </url>, \
     <url>
     :WMA:https://reference.wolfram.com/language/ref/CompleteGraph.html
-    </url>
+    </url>)
     <dl>
       <dt>'CompleteGraph[$n$]'
       <dd>Returns the complete graph with $n$ vertices, $K_n$.
