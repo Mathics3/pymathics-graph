@@ -39,24 +39,17 @@ https://networkx.org</url> does the heavy lifting here.
 
 from pymathics.graph.base import (
     AdjacencyList,
-    BetweennessCentrality,
-    ClosenessCentrality,
-    DegreeCentrality,
     DirectedEdge,
     EdgeConnectivity,
     EdgeIndex,
     EdgeList,
     EdgeRules,
-    EigenvectorCentrality,
     FindShortestPath,
     FindVertexCut,
     Graph,
     GraphAtom,
     GraphBox,
     HighlightGraph,
-    HITSCentrality,
-    KatzCentrality,
-    PageRankCentrality,
     Property,
     PropertyValue,
     UndirectedEdge,
@@ -66,6 +59,17 @@ from pymathics.graph.base import (
     VertexIndex,
     VertexList,
 )
+
+from pymathics.graph.centralities import(
+    BetweennessCentrality,
+    ClosenessCentrality,
+    DegreeCentrality,
+    EigenvectorCentrality,
+    HITSCentrality,
+    KatzCentrality,
+    PageRankCentrality,
+)
+
 from pymathics.graph.components import ConnectedComponents, WeaklyConnectedComponents
 from pymathics.graph.curated import GraphData
 from pymathics.graph.measures_and_metrics import (

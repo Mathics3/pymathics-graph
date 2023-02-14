@@ -6,17 +6,14 @@ Core routines for working with Graphs.
 
 # uses networkx
 
-import base64
-import tempfile
-
 from collections import defaultdict
 from inspect import isgenerator
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 from mathics.builtin.base import AtomBuiltin, Builtin
-from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, Real, String
+from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, String
 from mathics.core.convert.expression import ListExpression, from_python
-from mathics.core.element import BaseElement, BoxElementMixin
+from mathics.core.element import BaseElement
 from mathics.core.expression import Expression
 from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
 from mathics.core.systemsymbols import (
@@ -29,7 +26,8 @@ from mathics.core.systemsymbols import (
 )
 from mathics.eval.patterns import Matcher
 
-from pymathics.graph.format import png_format_graph, svg_format_graph
+from pymathics.graph.boxes import GraphBox
+from pymathics.graph.collections import _EdgeCollection
 from pymathics.graph.graphsymbols import (
     SymbolDirectedEdge,
     SymbolGraph,
@@ -231,13 +229,6 @@ def _auto_layout(G, warn):
         return _generic_layout(G, warn)
 
 
-def _components(G):
-    if G.is_directed():
-        return nx.strongly_connected_components(G)
-    else:
-        return nx.connected_components(G)
-
-
 def _convert_networkx_graph(G, options):
     mapping = dict((v, Integer(i)) for i, v in enumerate(G.nodes))
     G = nx.relabel_nodes(G, mapping)
@@ -335,119 +326,6 @@ class _NetworkXBuiltin(Builtin):
             return hash(self)
 
 
-class _Collection:
-    def __init__(self, expressions, properties=None, index=None):
-        self.expressions = expressions
-        self.properties = properties if properties else None
-        self.index = index
-
-    def clone(self):
-        properties = self.properties
-        return _Collection(
-            self.expressions[:], properties[:] if properties else None, None
-        )
-
-    def filter(self, expressions):
-        index = self.get_index()
-        return [expr for expr in expressions if expr in index]
-
-    def extend(self, expressions, properties):
-        if properties:
-            if self.properties is None:
-                self.properties = [None] * len(self.expressions)
-            self.properties.extend(properties)
-        self.expressions.extend(expressions)
-        self.index = None
-        return expressions
-
-    def delete(self, expressions):
-        index = self.get_index()
-        trash = set(index[x] for x in expressions)
-        deleted = [self.expressions[i] for i in trash]
-        self.expressions = [x for i, x in enumerate(self.expressions) if i not in trash]
-        self.properties = [x for i, x in enumerate(self.properties) if i not in trash]
-        self.index = None
-        return deleted
-
-    def data(self):
-        return self.expressions, list(self.get_properties())
-
-    def get_index(self):
-        index = self.index
-        if index is None:
-            index = dict((v, i) for i, v in enumerate(self.expressions))
-            self.index = index
-        return index
-
-    def get_properties(self):
-        if self.properties:
-            for p in self.properties:
-                yield p
-        else:
-            for _ in range(len(self.expressions)):
-                yield None
-
-    def get_sorted(self):
-        index = self.get_index()
-        return lambda c: sorted(c, key=lambda v: index[v])
-
-    def get_property(self, element, name):
-        properties = self.properties
-        if properties is None:
-            return None
-        index = self.get_index()
-        i = index.get(element)
-        if i is None:
-            return None
-        p = properties[i]
-        if p is None:
-            return None
-        return p.get(name)
-
-
-def _count_edges(counts, edges, sign):
-    n_directed, n_undirected = counts
-    for edge in edges:
-        if edge.head is SymbolDirectedEdge:
-            n_directed += sign
-        else:
-            n_undirected += sign
-    return n_directed, n_undirected
-
-
-class _EdgeCollection(_Collection):
-    def __init__(
-        self, expressions, properties=None, index=None, n_directed=0, n_undirected=0
-    ):
-        super(_EdgeCollection, self).__init__(expressions, properties, index)
-        self.counts = (n_directed, n_undirected)
-
-    def is_mixed(self):
-        n_directed, n_undirected = self.counts
-        return n_directed > 0 and n_undirected > 0
-
-    def clone(self):
-        properties = self.properties
-        n_directed, n_undirected = self.counts
-        return _EdgeCollection(
-            self.expressions[:],
-            properties[:] if properties else None,
-            None,  # index
-            n_directed,
-            n_undirected,
-        )
-
-    def extend(self, expressions, properties):
-        added = super(_EdgeCollection, self).extend(expressions, properties)
-        self.counts = _count_edges(self.counts, added, 1)
-        return added
-
-    def delete(self, expressions):
-        deleted = super(_EdgeCollection, self).delete(expressions)
-        self.counts = _count_edges(self.counts, deleted, -1)
-        return deleted
-
-
 class _FullGraphRewrite(Exception):
     pass
 
@@ -461,76 +339,6 @@ def _normalize_edges(edges):
             yield Expression(SymbolDirectedEdge, *edge.elements)
         else:
             yield edge
-
-
-class _Collection:
-    def __init__(self, expressions, properties=None, index=None):
-        self.expressions = expressions
-        self.properties = properties if properties else None
-        self.index = index
-
-    def clone(self):
-        properties = self.properties
-        return _Collection(
-            self.expressions[:], properties[:] if properties else None, None
-        )
-
-    def filter(self, expressions):
-        index = self.get_index()
-        return [expr for expr in expressions if expr in index]
-
-    def extend(self, expressions, properties):
-        if properties:
-            if self.properties is None:
-                self.properties = [None] * len(self.expressions)
-            self.properties.extend(properties)
-        self.expressions.extend(expressions)
-        self.index = None
-        return expressions
-
-    def delete(self, expressions):
-        index = self.get_index()
-        trash = set(index[x] for x in expressions)
-        deleted = [self.expressions[i] for i in trash]
-        self.expressions = [x for i, x in enumerate(self.expressions) if i not in trash]
-        self.properties = [x for i, x in enumerate(self.properties) if i not in trash]
-        self.index = None
-        return deleted
-
-    def data(self):
-        return self.expressions, list(self.get_properties())
-
-    def get_index(self):
-        index = self.index
-        if index is None:
-            index = dict((v, i) for i, v in enumerate(self.expressions))
-            self.index = index
-        return index
-
-    def get_properties(self):
-        if self.properties:
-            for p in self.properties:
-                yield p
-        else:
-            for _ in range(len(self.expressions)):
-                yield None
-
-    def get_sorted(self):
-        index = self.get_index()
-        return lambda c: sorted(c, key=lambda v: index[v])
-
-    def get_property(self, element, name):
-        properties = self.properties
-        if properties is None:
-            return None
-        index = self.get_index()
-        i = index.get(element)
-        if i is None:
-            return None
-        p = properties[i]
-        if p is None:
-            return None
-        return p.get(name)
 
 
 def is_connected(G):
@@ -973,42 +781,6 @@ def _create_graph(
     return g
 
 
-class _Centrality(_NetworkXBuiltin):
-    options = {
-        "WorkingPrecision": "MachinePrecision",
-    }
-    pass
-
-
-class _ComponentwiseCentrality(_Centrality):
-    def _centrality(self, g, weight):
-        raise NotImplementedError
-
-    def _compute(self, graph, evaluation, reverse=False, normalized=True, **kwargs):
-        vertices = graph.vertices
-        G, weight = graph.coalesced_graph(evaluation)
-        if reverse:
-            G = G.reverse()
-
-        components = list(_components(G))
-        components = [c for c in components if len(c) > 1]
-
-        result = [0] * len(vertices)
-        for bunch in components:
-            g = G.subgraph(bunch)
-            centrality = self._centrality(g, weight, **kwargs)
-            values = [centrality.get(v, 0) for v in vertices]
-            if normalized:
-                s = sum(values) * len(components)
-            else:
-                s = 1
-            if s > 0:
-                for i, x in enumerate(values):
-                    result[i] += x / s
-
-        return ListExpression(*[Real(x) for x in result])
-
-
 class _PatternList(_NetworkXBuiltin):
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -1094,156 +866,6 @@ class AdjacencyList(_NetworkXBuiltin):
                 ).nodes()
 
             return self._retrieve(graph, what, neighbors, expression, evaluation)
-
-
-class BetweennessCentrality(_Centrality):
-    """
-    <url>
-    :Betweenness centrality:
-    https://en.wikipedia.org/wiki/Betweenness_centrality</url> (<url>
-    :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
-    networkx.algorithms.centrality.betweenness_centrality.html</url>,
-    <url>
-    :WMA:
-    https://reference.wolfram.com/language/ref/BetweennessCentrality.html</url>)
-
-
-    <dl>
-      <dt>'BetweennessCentrality'[$g$]
-      <dd>gives a list of betweenness centralities for the vertices \
-          in a 'Graph' or a list of edges $g$.
-    </dl>
-
-    >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]
-     = -Graph-
-
-    >> BetweennessCentrality[g]
-     = {0., 1., 0., 0., 0.}
-
-    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; BetweennessCentrality[g]
-     = {3., 3., 6., 6., 6.}
-    """
-
-    summary_text = "get the betweenness centrality"
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            weight = graph.update_weights(evaluation)
-            centrality = nx.betweenness_centrality(
-                graph.G, normalized=False, weight=weight
-            )
-            return ListExpression(
-                *[Real(centrality.get(v, 0.0)) for v in graph.vertices],
-            )
-
-
-class ClosenessCentrality(_Centrality):
-    """
-    <url>
-    :Betweenness centrality:
-    https://en.wikipedia.org/wiki/Closeness_centrality</url> (<url>
-    :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
-    networkx.algorithms.centrality.closeness_centrality.html</url>,
-    <url>
-    :WMA:
-    https://reference.wolfram.com/language/ref/ClosenessCentrality.html</url>)
-
-
-    <dl>
-      <dt>'ClosenessCentrality'[$g$]
-      <dd>gives a list of closeness centralities for the vertices \
-          in a 'Graph' or a list of edges $g$.
-    </dl>
-
-     >> g = Graph[{a -> b, b -> c, d -> c, d -> a, e -> c, d -> b}]
-      = -Graph-
-
-     >> ClosenessCentrality[g]
-      = {0.666667, 1., 0., 1., 1.}
-
-     >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]
-      = -Graph-
-
-    >> ClosenessCentrality[g]
-      = {0.4, 0.4, 0.4, 0.5, 0.666667}
-    """
-
-    summary_text = "get the closeness centrality"
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            weight = graph.update_weights(evaluation)
-            G = graph.G
-            if G.is_directed():
-                G = G.reverse()
-            centrality = nx.closeness_centrality(G, distance=weight, wf_improved=False)
-            return ListExpression(
-                *[Real(centrality.get(v, 0.0)) for v in graph.vertices],
-            )
-
-
-class DegreeCentrality(_Centrality):
-    """
-    <url>
-    :Degree centrality:
-    https://en.wikipedia.org/wiki/Degree_centrality</url> (<url>
-    :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
-    networkx.algorithms.centrality.degree_centrality.html</url>,
-    <url>
-    :WMA:
-    https://reference.wolfram.com/language/ref/DegreeCentrality.html</url>)
-
-    <dl>
-      <dt>'DegreeCentrality'[$g$]
-      <dd>gives a list of degree centralities for the vertices \
-          in a 'Graph' or a list of edges $g$.
-    </dl>
-
-    >> g = Graph[{a -> b, b <-> c, d -> c, d -> a, e <-> c, d -> b}]
-     = -Graph-
-
-    >> DegreeCentrality[g]
-     = ...
-
-    >> DegreeCentrality[g, "In"]
-     = ...
-
-    >> DegreeCentrality[g, "Out"]
-     = ...
-    """
-
-    summary_text = "get the degree centrality"
-
-    def _from_dict(self, graph, centrality):
-        s = len(graph.G) - 1  # undo networkx's normalization
-        return ListExpression(
-            *[Integer(s * centrality.get(v, 0)) for v in graph.vertices],
-        )
-
-    def eval(self, graph, expression, evaluation, options):
-        "Pymathics`DegreeCentrality[graph_, OptionsPattern[]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return self._from_dict(graph, nx.degree_centrality(graph.G))
-
-    def eval_in(self, graph, expression, evaluation, options):
-        '%(name)s[graph_, "In", OptionsPattern[]]'
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return self._from_dict(graph, nx.in_degree_centrality(graph.G))
-
-    def eval_out(self, graph, expression, evaluation, options):
-        '%(name)s[graph_, "Out", OptionsPattern[]]'
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return self._from_dict(graph, nx.out_degree_centrality(graph.G))
 
 
 class DirectedEdge(Builtin):
@@ -1391,70 +1013,6 @@ class EdgeRules(_NetworkXBuiltin):
             return ListExpression(*list(rules()))
 
 
-class EigenvectorCentrality(_ComponentwiseCentrality):
-    """
-    <url>
-    :Eigenvector Centrality:
-    https://en.wikipedia.org/wiki/Eigenvector_centrality</url> (<url>
-    :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
-/generated/networkx.algorithms.centrality.eigenvector_centrality.html</url>,
-<url>
-    :WMA:
-    https://reference.wolfram.com/language/ref/EgenvectorCentrality.html</url>)
-
-    <dl>
-      <dt>'EigenvectorCentrality'[$g$]
-      <dd>gives a list of eigenvector centralities for\
-          the vertices in the graph $g$.
-      <dt>'EigenvectorCentrality'[$g$, "In"]
-      <dd>gives a list of eigenvector in-centralities for\
-          the vertices in the graph $g$.
-      <dt>'EigenvectorCentrality'[$g$, "Out"]
-      <dd>gives a list of eigenvector out-centralities for\
-          the vertices in the graph $g$.
-    </dl>
-
-    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; EigenvectorCentrality[g, "In"]
-     = {0.16238, 0.136013, 0.276307, 0.23144, 0.193859}
-
-    >> EigenvectorCentrality[g, "Out"]
-     = {0.136013, 0.16238, 0.193859, 0.23144, 0.276307}
-
-    >> g = Graph[{a <-> b, b <-> c, c <-> d, d <-> e, e <-> c, e <-> a}]; EigenvectorCentrality[g]
-     = {0.162435, 0.162435, 0.240597, 0.193937, 0.240597}
-
-    >> g = Graph[{a <-> b, b <-> c, a <-> c, d <-> e, e <-> f, f <-> d, e <-> d}]; EigenvectorCentrality[g]
-     = {0.166667, 0.166667, 0.166667, 0.183013, 0.183013, 0.133975}
-
-    #> g = Graph[{a -> b, b -> c, c -> d, b -> e, a -> e}]; EigenvectorCentrality[g]
-     = {0., 0., 0., 0., 0.}
-
-    >> g = Graph[{a -> b, b -> c, c -> d, b -> e, a -> e, c -> a}]; EigenvectorCentrality[g]
-     = {0.333333, 0.333333, 0.333333, 0., 0.}
-    """
-
-    summary_text = "compute the eigenvector centralities"
-
-    def _centrality(self, g, weight):
-        return nx.eigenvector_centrality(g, max_iter=10000, tol=1.0e-7, weight=weight)
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return self._compute(graph, evaluation)
-
-    def eval_in_out(self, graph, dir, expression, evaluation, options):
-        "%(name)s[graph_, dir_String, OptionsPattern[%(name)s]]"
-        py_dir = dir.get_string_value()
-        if py_dir not in ("In", "Out"):
-            return
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            return self._compute(graph, evaluation, py_dir == "Out")
-
-
 class FindShortestPath(_NetworkXBuiltin):
     """
 
@@ -1470,7 +1028,7 @@ class FindShortestPath(_NetworkXBuiltin):
 
     <dl>
       <dt>'FindShortestPath'[$g$, $src$, $tgt$]
-      <dd>List the nodes in the shortest path connecting the source $src$ with the target $tgt$ \
+      <dd>List the vertices in the shortest path connecting the source $src$ with the target $tgt$ \
           in the graph $g$.
     </dl>
 
@@ -1495,7 +1053,7 @@ class FindShortestPath(_NetworkXBuiltin):
      = FindShortestPath[{1 -> 2}, 1, 3]
     """
 
-    summary_text = "find the shortest path between two nodes"
+    summary_text = "find the shortest path between two vertices"
 
     def eval_s_t(self, graph, s, t, expression, evaluation, options):
         "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
@@ -1593,8 +1151,8 @@ class GraphAtom(AtomBuiltin):
     >> Graph[{1->2, Property[2->3, EdgeStyle -> Thick], 3->1}]
      = -Graph-
 
-    #>> Graph[{1->2, 2->3, 3->1}, VertexStyle -> {1 -> Green, 3 -> Blue}]
-    #= -Graph-
+    # >> Graph[{1->2, 2->3, 3->1}, VertexStyle -> {1 -> Green, 3 -> Blue}]
+    # = -Graph-
 
     >> Graph[x]
      = Graph[x]
@@ -1620,105 +1178,6 @@ class GraphAtom(AtomBuiltin):
         return _graph_from_list(
             edges.elements, options=options, new_vertices=vertices.elements
         )
-
-
-class GraphBox(BoxElementMixin):
-    def __init__(self, G, **options):
-        self.G = G
-        self.options = options
-
-    def boxes_to_b64text(
-        self, elements: Tuple[BaseElement] = None, **options
-    ) -> Tuple[bytes, Tuple[int, int]]:
-        """
-        Produces a base64 png representation and a tuple with the size of the pillow image
-        associated to the object.
-        """
-        contents, size = self.boxes_to_png(elements, **options)
-        encoded = base64.b64encode(contents)
-        encoded = b"data:image/png;base64," + encoded
-        return encoded, size
-
-    def boxes_to_png(self, elements=None, **options) -> Tuple[bytes, Tuple[int, int]]:
-        """
-        returns a tuple with the set of bytes with a png representation of the image
-        and the scaled size.
-        """
-        return png_format_graph(self.G, **self.options), (800, 600)
-
-    def boxes_to_svg(self, elements=None, **options):
-        return svg_format_graph(self.G, **self.options), (400, 300)
-
-    def boxes_to_tex(self, elements=None, **options) -> str:
-        """
-        Store the associated image as a png file and return
-        a LaTeX command for including it.
-        """
-
-        data, size = self.boxes_to_png(elements, **options)
-        res = 100  # pixels/cm
-        width_str, height_str = (str(n / res).strip() for n in size)
-        head = rf"\includegraphics[width={width_str}cm,height={height_str}cm]"
-
-        # This produces a random name, where the png file is going to be stored.
-        # LaTeX does not have a native way to store an figure embeded in
-        # the source.
-        fp = tempfile.NamedTemporaryFile(delete=True, suffix=".png")
-        path = fp.name
-        fp.close()
-
-        with open(path, "wb") as imgfile:
-            imgfile.write(data)
-
-        return head + "{" + format(path) + "}"
-
-    def boxes_to_text(self, elements=None, **options):
-        return "-Graph-"
-
-    def boxes_to_mathml(self, elements=None, **options):
-        encoded, size = self.boxes_to_b64text(elements, **options)
-        decoded = encoded.decode("utf8")
-        # see https://tools.ietf.org/html/rfc2397
-        return f'<mglyph src="{decoded}" width="{size[0]}px" height="{size[1]}px" />'
-
-
-class HITSCentrality(_Centrality):
-    """
-    <url>
-    :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
-generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>, <url>
-    :WMA:
-    https://reference.wolfram.com/language/ref/HITSCentrality.html</url>
-
-    <dl>
-      <dt>'HITSCentrality'[$g$]
-      <dd>gives a list of authority and hub centralities for\
-          the vertices in the graph $g$.
-    </dl>
-
-    """
-
-    summary_text = "get the HITS centrality"
-
-    def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            G, _ = graph.coalesced_graph(evaluation)  # FIXME warn if weight > 1
-
-            tol = 1.0e-14
-            _, a = nx.hits(G, normalized=True, tol=tol)
-            h, _ = nx.hits(G, normalized=False, tol=tol)
-
-            def _crop(x):
-                return 0 if x < tol else x
-
-            vertices = graph.vertices
-            return ListExpression(
-                ListExpression(*[Real(_crop(a.get(v, 0))) for v in vertices]),
-                ListExpression(*[Real(_crop(h.get(v, 0))) for v in vertices]),
-            )
 
 
 class HighlightGraph(_NetworkXBuiltin):
@@ -1759,111 +1218,6 @@ class HighlightGraph(_NetworkXBuiltin):
         if graph:
             rule_exprs = ListExpression(*[Expression(SymbolRule, *r) for r in rules])
             return graph.with_highlight(rule_exprs)
-
-
-class KatzCentrality(_ComponentwiseCentrality):
-    """
-    <url>
-    :Katz Centrality:
-    https://en.wikipedia.org/wiki/Katz_centrality</url> (<url>
-    :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
-/generated/networkx.algorithms.centrality.katz_centrality.html\
-#networkx.algorithms.centrality.katz_centrality</url>, <url>
-    :WMA:
-    https://reference.wolfram.com/language/ref/KatzCentrality.html</url>)
-
-    <dl>
-      <dt>'KatzCentrality'[$g$, $alpha$]
-      <dd>gives a list of Katz centralities for the \
-          vertices in the graph $g$ and weight $alpha$.
-      <dt>'KatzCentrality'[$g$, $alpha$, $beta$]
-      <dd>gives a list of Katz centralities for the \
-          vertices in the graph $g$ and weight $alpha$ and initial centralities $beta$.
-    </dl>
-
-    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]
-     = -Graph-
-    >> g
-     = -Graph-
-    >> KatzCentrality[g, 0.2]
-     = {1.25202, 1.2504, 1.5021, 1.30042, 1.26008}
-
-    >> g = Graph[{a <-> b, b <-> c, a <-> c, d <-> e, e <-> f, f <-> d, e <-> d}]
-     = -Graph-
-
-    >> KatzCentrality[g, 0.1]
-     = {1.25, 1.25, 1.25, 1.41026, 1.41026, 1.28205}
-    """
-
-    summary_text = "get the Katz centrality"
-
-    rules = {
-        "Pymathics`KatzCentrality[Pymathics`g_, Pymathics`alpha_]": "Pymathics`KatzCentrality[Pymathics`g, Pymathics`alpha, 1]",
-    }
-
-    def _centrality(self, g, weight, alpha, beta):
-        return nx.katz_centrality(
-            g, alpha=alpha, beta=beta, normalized=False, weight=weight
-        )
-
-    def eval(self, graph, alpha, beta, expression, evaluation, options):
-        "Pymathics`KatzCentrality[Pymathics`graph_, alpha_, beta_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            try:
-                py_alpha = alpha.to_mpmath()
-                py_beta = beta.to_mpmath()
-            except NotImplementedError:
-                return
-            if py_alpha is None or py_beta is None:
-                return
-            return self._compute(
-                graph, evaluation, normalized=False, alpha=py_alpha, beta=py_beta
-            )
-
-
-class PageRankCentrality(_Centrality):
-    """
-    <url>
-    :Pagerank Centrality:
-    https://en.wikipedia.org/wiki/Pagerank</url> (<url>
-    :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
-    /generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html</url>,
-    <url>
-    :WMA:
-    https://reference.wolfram.com/language/ref/PageRankCentrality.html</url>)
-
-    <dl>
-      <dt>'PageRankCentrality'[$g$, $alpha$]
-      <dd>gives a list of page rank centralities for the \
-          vertices in the graph $g$ and weight $alpha$.
-      <dt>'PageRankCentrality'[$g$, $alpha$, $beta$]
-      <dd>gives a list of page rank centralities for the \
-          vertices in the graph $g$ and weight $alpha$ and initial centralities $beta$.
-    </dl>
-
-    # Not working, possibly because an issue in networkx
-
-    # >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
-     = {0.184502, 0.207565, 0.170664, 0.266605, 0.170664}
-    """
-
-    summary_text = "get the page rank centralities"
-
-    def eval_alpha_beta(self, graph, alpha, expression, evaluation, options):
-        "%(name)s[graph_, alpha_, OptionsPattern[%(name)s]]"
-        graph = self._build_graph(graph, evaluation, options, expression)
-        if graph:
-            py_alpha = alpha.to_mpmath()
-            if py_alpha is None:
-                return
-            G, weight = graph.coalesced_graph(evaluation)
-            centrality = nx.pagerank(G, alpha=py_alpha, weight=weight, tol=1.0e-7)
-            return ListExpression(
-                *[Real(centrality.get(v, 0)) for v in graph.vertices],
-            )
 
 
 class Property(Builtin):
@@ -1920,8 +1274,8 @@ class VertexAdd(_NetworkXBuiltin):
     https://reference.wolfram.com/language/ref/VertexAdd.html</url>
 
     <dl>
-      <dt>'VertexAdd'[$g$, $node$]
-      <dd>create a new graph from $g$, by adding the node $node$.
+      <dt>'VertexAdd'[$g$, $ver$]
+      <dd>create a new graph from $g$, by adding the vertex $ver$.
     </dl>
 
     >> g1 = Graph[{1 -> 2, 2 -> 3}];
@@ -2068,7 +1422,7 @@ class VertexList(_PatternList):
     """
     <dl>
       <dt>'VertexList[$edgelist$]'
-      <dd>list the nodes from a list of directed edges.
+      <dd>list the vertices from a list of directed edges.
     </dl>
 
     >> a=.;
