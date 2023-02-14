@@ -6,14 +6,17 @@ Core routines for working with Graphs.
 
 # uses networkx
 
+import base64
+import tempfile
+
 from collections import defaultdict
 from inspect import isgenerator
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, String
 from mathics.core.convert.expression import ListExpression, from_python
-from mathics.core.element import BaseElement
+from mathics.core.element import BaseElement, BoxElementMixin
 from mathics.core.expression import Expression
 from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
 from mathics.core.systemsymbols import (
