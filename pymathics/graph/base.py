@@ -1085,7 +1085,6 @@ class FindVertexCut(_NetworkXBuiltin):
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
 generated/networkx.algorithms.connectivity.cuts.minimum_node_cut.html
     </url>, \
-    https://reference.wolfram.com/language/ref/FindVertexCut.html</url>
     <url>
     :WMA:
     https://reference.wolfram.com/language/ref/FindVertexCut.html</url>)
