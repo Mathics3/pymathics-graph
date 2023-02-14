@@ -1634,20 +1634,20 @@ class GraphBox(BoxElementMixin):
         Produces a base64 png representation and a tuple with the size of the pillow image
         associated to the object.
         """
-        contents = self.boxes_to_png(elements, **options)
+        contents, size = self.boxes_to_png(elements, **options)
         encoded = base64.b64encode(contents)
         encoded = b"data:image/png;base64," + encoded
-        return encoded
+        return encoded, size
 
     def boxes_to_png(self, elements=None, **options) -> Tuple[bytes, Tuple[int, int]]:
         """
         returns a tuple with the set of bytes with a png representation of the image
         and the scaled size.
         """
-        return png_format_graph(self.G, **self.options)
+        return png_format_graph(self.G, **self.options), (800, 600)
 
     def boxes_to_svg(self, elements=None, **options):
-        return svg_format_graph(self.G, **self.options)
+        return svg_format_graph(self.G, **self.options), (400, 300)
 
     def boxes_to_tex(self, elements=None, **options) -> str:
         """
@@ -1655,11 +1655,7 @@ class GraphBox(BoxElementMixin):
         a LaTeX command for including it.
         """
 
-        data = self.boxes_to_png(elements, **options)
-        size = (
-            800,
-            800,
-        )
+        data, size = self.boxes_to_png(elements, **options)
         res = 100  # pixels/cm
         width_str, height_str = (str(n / res).strip() for n in size)
         head = rf"\includegraphics[width={width_str}cm,height={height_str}cm]"
@@ -1680,8 +1676,10 @@ class GraphBox(BoxElementMixin):
         return "-Graph-"
 
     def boxes_to_mathml(self, elements=None, **options):
-        result = self.boxes_to_svg(**options)
-        return result
+        encoded, size = self.boxes_to_b64text(elements, **options)
+        decoded = encoded.decode("utf8")
+        # see https://tools.ietf.org/html/rfc2397
+        return f'<mglyph src="{decoded}" width="{size[0]}px" height="{size[1]}px" />'
 
 
 class HITSCentrality(_Centrality):

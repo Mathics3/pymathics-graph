@@ -52,7 +52,7 @@ def format_graph(G, **options) -> str:
         # "edgecolors": "black",  # Set below
         # "width": 5,             # Marmonized
     }
-    draw_options.update(options)
+    # draw_options.update(options)
 
     vertex_labels = G.vertex_labels if hasattr(G, "vertex_labels") else False
     if vertex_labels:
