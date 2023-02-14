@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Core routines for working with Graphs.
+GraphBox. Should not be shown in documentation.
 """
+
+
 
 # uses networkx
 
