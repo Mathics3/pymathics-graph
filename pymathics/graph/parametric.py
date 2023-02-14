@@ -86,7 +86,7 @@ class BarbellGraph(_NetworkXBuiltin):
     :Barbell graph:https://en.wikipedia.org/wiki/Barbell_graph
     </url> (
     <url>
-    :NetworkX:https://networkx.org/documentation/stable/reference/\
+    :NetworkX:https://networkx.org/documentation/networkx-2.8.8/reference/\
 generated/networkx.generators.classic.barbell_graph.html</url>
 )
 
@@ -144,7 +144,7 @@ class BinomialTree(_NetworkXBuiltin):
     :Binomial tree:https://en.wikipedia.org/wiki/Binomial_tree
     </url> (
     <url>
-    :NetworkX:https://networkx.org/documentation/stable/reference/\
+    :NetworkX:https://networkx.org/documentation/networkx-2.8.8/reference/\
 generated/networkx.generators.classic.binomial_tree.html</url>,
     <url>
     :WMA:https://reference.wolfram.com/language/ref/BinomialTree.html
@@ -338,6 +338,11 @@ class FullRAryTree(_NetworkXBuiltin):
 
 class GraphAtlas(_NetworkXBuiltin):
     """
+    <url>:NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference/\
+generated/networkx.generators.atlas.graph_atlas.html
+    </url>
+
     <dl>
       <dt>'GraphAtlas[$n$]'
       <dd>Returns graph number $i$ from the NetworkX's Graph \
@@ -374,6 +379,10 @@ class GraphAtlas(_NetworkXBuiltin):
 
 class HknHararyGraph(_NetworkXBuiltin):
     """
+    <url>:NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference\
+/generated/networkx.generators.harary_graph.hkn_harary_graph.html#hkn-harary-graph
+    </url>
     <dl>
       <dt>'HknHararyGraph[$k$, $n$]'
       <dd>Returns the Harary graph with given node connectivity and node number.
@@ -404,6 +413,10 @@ class HknHararyGraph(_NetworkXBuiltin):
 
 class HmnHararyGraph(_NetworkXBuiltin):
     """
+    <url>:NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference\
+/generated/networkx.generators.harary_graph.hnm_harary_graph.html
+    </url>
     <dl>
       <dt>'HmnHararyGraph[$m$, $n$]'
       <dd>Returns the Harary graph with given numbers of nodes and edges.
@@ -454,6 +467,11 @@ class HmnHararyGraph(_NetworkXBuiltin):
 
 class KaryTree(_NetworkXBuiltin):
     """
+    <url>
+    :K-ary Tree:https://en.wikipedia.org/wiki/M-ary_tree
+    </url>
+
+
     <dl>
       <dt>'KaryTree[$r$, $n$]'
       <dd>Creates binary tree of $n$ vertices.
@@ -495,6 +513,12 @@ class KaryTree(_NetworkXBuiltin):
 
 class LadderGraph(_NetworkXBuiltin):
     """
+    <url>
+    :Ladder graph:https://en.wikipedia.org/wiki/Ladder_graph
+    </url>(<url>:NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference\
+/generated/networkx.generators.classic.ladder_graph.html
+    </url>)
     <dl>
       <dt>'LadderGraph[$n$]'
       <dd>Returns the Ladder graph of length $n$.
@@ -531,6 +555,10 @@ class LadderGraph(_NetworkXBuiltin):
 
 class PathGraph(_NetworkXBuiltin):
     """
+    <url>
+    :Path graph:https://en.wikipedia.org/wiki/Path_graph
+    </url>(<url>:WMA:https://reference.wolfram.com/language/ref/PathGraph.html
+    </url>)
     <dl>
       <dt>'PathGraph[{$v_1$, $v_2$, ...}]'
       <dd>Returns a Graph with a path with vertices $v_i$ and \
@@ -559,6 +587,10 @@ class PathGraph(_NetworkXBuiltin):
 
 class RandomTree(_NetworkXBuiltin):
     """
+    <url>:NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference\
+/generated/networkx.generators.trees.random_tree.html
+    </url>
     <dl>
       <dt>'RandomTree[$n$]'
       <dd>Returns a uniformly random tree on $n$ nodes.
@@ -595,6 +627,16 @@ class RandomTree(_NetworkXBuiltin):
 
 class StarGraph(_NetworkXBuiltin):
     """
+    <url>
+    :Path graph:https://en.wikipedia.org/wiki/Star_graph
+    </url>(
+    <url>:NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference\
+/generated/networkx.generators.classic.star_graph.html
+    </url>,
+    <url>:WMA:
+    https://reference.wolfram.com/language/ref/StarGraph.html
+    </url>)
     <dl>
       <dt>'StarGraph[$n$]'
       <dd>Returns a star graph with $n$ vertices.
