@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-GraphBox. Should not be shown in documentation.
+GraphBox.
 """
-
-
 
 # uses networkx
 
@@ -19,6 +17,7 @@ from mathics.core.element import BaseElement, BoxElementMixin
 
 from pymathics.graph.format import png_format_graph, svg_format_graph
 
+no_doc = True
 
 class GraphBox(BoxElementMixin):
     def __init__(self, G, **options):
