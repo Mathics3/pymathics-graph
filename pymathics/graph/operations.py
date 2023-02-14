@@ -18,6 +18,11 @@ from pymathics.graph.base import (
 
 class FindSpanningTree(_NetworkXBuiltin):
     """
+    <url>:Spanning Tree:https://en.wikipedia.org/wiki/Spanning_tree</url>
+    (<url>:WMA:
+    https://reference.wolfram.com/language/ref/FindSpanningTree.html
+    </url>)
+
     <dl>
       <dt>'FindSpanningTree'[$g$]
       <dd>finds a spanning tree of the graph $g$.
@@ -28,6 +33,7 @@ class FindSpanningTree(_NetworkXBuiltin):
     """
 
     options = DEFAULT_GRAPH_OPTIONS
+    summary_text = "find a spanning tree"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"

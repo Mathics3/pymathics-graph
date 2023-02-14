@@ -161,7 +161,7 @@ def check_well_formatted_docstring(docstr: str, instance: Builtin, module_name: 
     ("module_name",),
     [(module_name,) for module_name in modules],
 )
-@pytest.mark.skip("not ready")
+# @pytest.mark.skip("not ready")
 def test_summary_text_available(module_name):
     """
     Checks that each Builtin has its summary_text property.
@@ -175,7 +175,7 @@ def test_summary_text_available(module_name):
         var = name_is_builtin_symbol(module, name)
         if var is None:
             continue
-
+        print("processing ", [module, name, var])
         instance = var(expression=False)
         if not isinstance(instance, Builtin):
             continue

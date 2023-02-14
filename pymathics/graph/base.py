@@ -1054,6 +1054,8 @@ class AdjacencyList(_NetworkXBuiltin):
      = {2, 11, 100, x}
     """
 
+    summary_text = "list the adjacent vertices"
+
     def _retrieve(self, graph, what, neighbors, expression, evaluation):
         from mathics.builtin import pattern_objects
 
@@ -1519,6 +1521,10 @@ class FindShortestPath(_NetworkXBuiltin):
 
 class FindVertexCut(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/FindVertexCut.html</url>
+
     <dl>
     <dt>'FindVertexCut[$g$]'
         <dd>finds a set of vertices of minimum cardinality that, if removed, renders $g$ disconnected.
@@ -1574,6 +1580,9 @@ class FindVertexCut(_NetworkXBuiltin):
 
 class GraphAtom(AtomBuiltin):
     """
+    <url>:Graph:https://en.wikipedia.org/wiki/graph</url> (
+    <url>:WMA:
+    https://reference.wolfram.com/language/ref/Graph.html</url>)
     <dl>
       <dt>'Graph[{$e1, $e2, ...}]'
       <dd>returns a graph with edges $e_j$.
@@ -1610,6 +1619,7 @@ class GraphAtom(AtomBuiltin):
     # requires = ("networkx",)
     name = "Graph"
     options = DEFAULT_GRAPH_OPTIONS
+    summary_text = "build a graph"
 
     def eval(self, graph, evaluation, options):
         "Pymathics`Graph[graph_List, OptionsPattern[%(name)s]]"
@@ -1867,7 +1877,19 @@ class PageRankCentrality(_Centrality):
 
 
 class Property(Builtin):
-    pass
+    """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/Property.html</url>
+
+    <dl>
+      <dt>'Property'[$item$, {$name$, $val$}]
+      <dd>associate a property called $name$ with value $val$ to $item$.
+    </dl>
+
+    """
+
+    summary_text = "assign a property"
 
 
 class PropertyValue(Builtin):
@@ -2041,6 +2063,9 @@ class VertexDelete(_NetworkXBuiltin):
 
 class VertexIndex(_NetworkXBuiltin):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/VertexIndex.html</url>
     <dl>
       <dt>'VertexIndex'['g', 'v']
       <dd> gives the integer index of the vertex 'v' in the\
@@ -2066,6 +2091,9 @@ class VertexIndex(_NetworkXBuiltin):
 
 class VertexList(_PatternList):
     """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/VertexList.html</url>
     <dl>
       <dt>'VertexList[$edgelist$]'
       <dd>list the nodes from a list of directed edges.
