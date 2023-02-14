@@ -6,36 +6,37 @@ Core routines for working with Graphs.
 
 # uses networkx
 
+import base64
+import tempfile
+
 from collections import defaultdict
 from inspect import isgenerator
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 from mathics.builtin.base import AtomBuiltin, Builtin
-from mathics.builtin.box.graphics import GraphicsBox
 from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, Real, String
 from mathics.core.convert.expression import ListExpression, from_python
-from mathics.core.element import BaseElement
+from mathics.core.element import BaseElement, BoxElementMixin
 from mathics.core.expression import Expression
 from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
 from mathics.core.systemsymbols import (
     SymbolBlank,
     SymbolCases,
     SymbolFailed,
-    SymbolGraphics,
-    SymbolMakeBoxes,
     SymbolMissing,
     SymbolRGBColor,
     SymbolRule,
 )
-from mathics.eval.makeboxes import _boxed_string
 from mathics.eval.patterns import Matcher
 
+from pymathics.graph.format import png_format_graph, svg_format_graph
 from pymathics.graph.graphsymbols import (
     SymbolDirectedEdge,
     SymbolGraph,
     SymbolTwoWayRule,
     SymbolUndirectedEdge,
 )
+
 
 WL_MARKER_TO_NETWORKX = {
     "Circle": "o",
@@ -566,9 +567,9 @@ class Graph(Atom):
 
     options = DEFAULT_GRAPH_OPTIONS
 
-    def __init__(self, G, **kwargs):
+    def __init__(self, Gr, **kwargs):
         super(Graph, self).__init__()
-        self.G = G
+        self.G = Gr
         self.mixed = kwargs.get("mixed", False)
 
     def __hash__(self):
@@ -577,8 +578,8 @@ class Graph(Atom):
     def __str__(self):
         return "-Graph-"
 
-    def atom_to_boxes(self, f, evaluation) -> _boxed_string:
-        return _boxed_string("-Graph-")
+    def atom_to_boxes(self, f, evaluation) -> "GraphBox":
+        return GraphBox(self.G)
 
     def add_edges(self, new_edges, new_edge_properties):
         G = self.G.copy()
@@ -1621,25 +1622,64 @@ class GraphAtom(AtomBuiltin):
         )
 
 
-class GraphBox(GraphicsBox):
-    def _graphics_box(self, elements, options):
-        evaluation = options["evaluation"]
-        graph, form = elements
-        primitives = graph._layout(evaluation)
-        graphics = Expression(SymbolGraphics, primitives)
-        graphics_box = Expression(SymbolMakeBoxes, graphics, form).evaluate(evaluation)
-        return graphics_box
+class GraphBox(BoxElementMixin):
+    def __init__(self, G, **options):
+        self.G = G
+        self.options = options
 
-    def boxes_to_text(self, elements, **options):
+    def boxes_to_b64text(
+        self, elements: Tuple[BaseElement] = None, **options
+    ) -> Tuple[bytes, Tuple[int, int]]:
+        """
+        Produces a base64 png representation and a tuple with the size of the pillow image
+        associated to the object.
+        """
+        contents, size = self.boxes_to_png(elements, **options)
+        encoded = base64.b64encode(contents)
+        encoded = b"data:image/png;base64," + encoded
+        return encoded, size
+
+    def boxes_to_png(self, elements=None, **options) -> Tuple[bytes, Tuple[int, int]]:
+        """
+        returns a tuple with the set of bytes with a png representation of the image
+        and the scaled size.
+        """
+        return png_format_graph(self.G, **self.options), (800, 600)
+
+    def boxes_to_svg(self, elements=None, **options):
+        return svg_format_graph(self.G, **self.options), (400, 300)
+
+    def boxes_to_tex(self, elements=None, **options) -> str:
+        """
+        Store the associated image as a png file and return
+        a LaTeX command for including it.
+        """
+
+        data, size = self.boxes_to_png(elements, **options)
+        res = 100  # pixels/cm
+        width_str, height_str = (str(n / res).strip() for n in size)
+        head = rf"\includegraphics[width={width_str}cm,height={height_str}cm]"
+
+        # This produces a random name, where the png file is going to be stored.
+        # LaTeX does not have a native way to store an figure embeded in
+        # the source.
+        fp = tempfile.NamedTemporaryFile(delete=True, suffix=".png")
+        path = fp.name
+        fp.close()
+
+        with open(path, "wb") as imgfile:
+            imgfile.write(data)
+
+        return head + "{" + format(path) + "}"
+
+    def boxes_to_text(self, elements=None, **options):
         return "-Graph-"
 
-    def boxes_to_xml(self, elements, **options):
-        # Figure out what to do here.
-        return "-Graph-XML-"
-
-    def boxes_to_tex(self, elements, **options):
-        # Figure out what to do here.
-        return "-Graph-TeX-"
+    def boxes_to_mathml(self, elements=None, **options):
+        encoded, size = self.boxes_to_b64text(elements, **options)
+        decoded = encoded.decode("utf8")
+        # see https://tools.ietf.org/html/rfc2397
+        return f'<mglyph src="{decoded}" width="{size[0]}px" height="{size[1]}px" />'
 
 
 class HITSCentrality(_Centrality):
