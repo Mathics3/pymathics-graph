@@ -27,10 +27,10 @@ jobs:
         python -m pip install -e git+https://github.com/Mathics3/mathics-core#egg=Mathics3[full]
         (cd src/mathics3 && bash ./admin-tools/make-op-tables.sh)
         # python -m pip install Mathics3[full]
-        python -m pip install -e .	
+        python -m pip install -e .
     - name: install pymathics graph
       run: |
         make develop
-    - name: Test Mathics
+    - name: Test Mathics3
       run: |
         make -j3 check
