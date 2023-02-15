@@ -408,7 +408,7 @@ class Graph(Atom):
         new_edges = defaultdict(lambda: 0)
         for u, v, w in self.G.edges.data("Pymathics`EdgeWeight", default=None):
             if w is not None:
-                w = w.evaluate(evaluation).to_mpmath()
+                w = float(w.evaluate(evaluation).to_mpmath())
             else:
                 w = 1
             new_edges[(u, v)] += w
@@ -516,7 +516,6 @@ class Graph(Atom):
                 len(self.vertices),
                 hash(self),
             ]
-            return hash(self)
 
     def sort_vertices(self, vertices):
         return sorted(vertices)

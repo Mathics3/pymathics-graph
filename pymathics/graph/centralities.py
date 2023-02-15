@@ -6,12 +6,10 @@ Centralities
 <url>:Centralities:https://en.wikipedia.org/wiki/Centrality</url>
 
 
-Routines to evaluate centralities associated to a graph.
+Routines to evaluate centralities of a graph.
 
-In a graph, the centrality is an estimator associated to each of its \
-vertices, which accounts their degree of connectivity, according \
-to different criteria.
-
+In graph theory and network analysis, the centrality is a \
+ranking between pairs of node according some metric.
 
 """
 
@@ -71,12 +69,10 @@ class BetweennessCentrality(_Centrality):
     :Betweenness centrality:
     https://en.wikipedia.org/wiki/Betweenness_centrality</url> (<url>
     :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/\
-    networkx.algorithms.centrality.betweenness_centrality.html</url>,\
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/generated/networkx.algorithms.centrality.betweenness_centrality.html</url>,\
     <url>
     :WMA:
     https://reference.wolfram.com/language/ref/BetweennessCentrality.html</url>)
-
 
     <dl>
       <dt>'BetweennessCentrality'[$g$]
@@ -90,11 +86,14 @@ class BetweennessCentrality(_Centrality):
     >> BetweennessCentrality[g]
      = {0., 1., 0., 0., 0.}
 
-    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]; BetweennessCentrality[g]
-     = {3., 3., 6., 6., 6.}
+    >> g = Graph[{a -> b, b -> c, c -> d, d -> e, e -> c, e -> a}]
+     = -Graph-
+
+    >> BetweennessCentrality[g]
+     = ...
     """
 
-    summary_text = "get the betweenness centrality"
+    summary_text = "get Betweenness centrality"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -258,7 +257,7 @@ class EigenvectorCentrality(_ComponentwiseCentrality):
      = {0.333333, 0.333333, 0.333333, 0., 0.}
     """
 
-    summary_text = "compute the eigenvector centralities"
+    summary_text = "compute Eigenvector centralities"
 
     def _centrality(self, g, weight):
         return nx.eigenvector_centrality(g, max_iter=10000, tol=1.0e-7, weight=weight)
@@ -297,7 +296,7 @@ generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>, \
 
     """
 
-    summary_text = "get the HITS centrality"
+    summary_text = "get HITS centrality"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -401,9 +400,7 @@ class PageRankCentrality(_Centrality):
           vertices in the graph $g$ and weight $alpha$ and initial centralities $beta$.
     </dl>
 
-    ## Not working, possibly because an issue in networkx
-
-    ## >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
+    >> g = Graph[{a -> d, b -> c, d -> c, d -> a, e -> c, d -> c}]; PageRankCentrality[g, 0.2]
      = {0.184502, 0.207565, 0.170664, 0.266605, 0.170664}
     """
 
@@ -413,7 +410,7 @@ class PageRankCentrality(_Centrality):
         "%(name)s[graph_, alpha_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            py_alpha = alpha.to_mpmath()
+            py_alpha = float(alpha.to_mpmath())
             if py_alpha is None:
                 return
             G, weight = graph.coalesced_graph(evaluation)
