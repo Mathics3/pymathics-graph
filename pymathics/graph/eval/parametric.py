@@ -80,5 +80,4 @@ def eval_hkn_harary(
     if not g:
         return None
     g.k = py_k
-    g.n = py_n
     return g

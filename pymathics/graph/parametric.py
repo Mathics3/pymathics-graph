@@ -306,7 +306,7 @@ class CycleGraph(_NetworkXBuiltin):
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "CycleGraph[n_Integer, OptionsPattern[CycleGragh]]"
+        "CycleGraph[n_Integer, OptionsPattern[CycleGraph]]"
         n_int = n.value
         if n_int < 3:
             return eval_complete_graph(self, n, expression, evaluation, options)
@@ -447,7 +447,6 @@ class HmnHararyGraph(_NetworkXBuiltin):
         )
         if not g:
             return None
-        g.n = py_n
         g.m = py_m
         return g
 
@@ -653,5 +652,5 @@ class StarGraph(_NetworkXBuiltin):
         g = graph_helper(nx.star_graph, options, False, "spring", evaluation, 0, *args)
         if not g:
             return None
-        g.G.n = n
+        g.G.n = py_n
         return g
