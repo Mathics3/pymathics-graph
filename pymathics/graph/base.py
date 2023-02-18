@@ -86,7 +86,7 @@ def graph_helper(
     root: Optional[int] = None,
     *args,
     **kwargs,
-) -> Optional[Callable]:
+) -> Optional["Graph"]:
     should_digraph = can_digraph and has_directed_option(options)
     try:
         G = (
@@ -97,7 +97,11 @@ def graph_helper(
     except MemoryError:
         evaluation.message("Graph", "mem", evaluation)
         return None
-    if graph_layout and not options["System`GraphLayout"].get_string_value():
+    if (
+        graph_layout and not options["System`GraphLayout"].get_string_value()
+        if "System`GraphLayout" in options
+        else False
+    ):
         options["System`GraphLayout"] = String(graph_layout)
 
     g = Graph(G)
@@ -379,6 +383,19 @@ class Graph(Atom):
         super(Graph, self).__init__()
         self.G = Gr
         self.mixed = kwargs.get("mixed", False)
+
+        # Number of nodes
+        self.n: Optional[int] = None
+
+        # Here we define types that appear on some, but not all
+        # graphs. So these are optional, which we given an initial
+        # value of None
+
+        # Some graphs has a second int parameter like HknHarary
+        self.n: Optional[int] = None
+
+        # Trees have a root
+        self.root: Optional[int] = None
 
     def __hash__(self):
         return hash(("Pymathics`Graph", self.G))

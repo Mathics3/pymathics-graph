@@ -6,7 +6,7 @@ Parametric Graphs
 from typing import Optional
 
 import networkx as nx
-from mathics.core.atoms import Integer
+from mathics.core.atoms import Integer, Integer2
 from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
 
@@ -31,8 +31,8 @@ from pymathics.graph.tree import DEFAULT_TREE_OPTIONS
 class BalancedTree(_NetworkXBuiltin):
     """
     <url>
-    :WMA:https://reference.wolfram.com/language/ref/BalancedTree.html
-    </url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/BalancedTree.html</url>
 
     <dl>
       <dt>'BalancedTree[$r$, $h$]'
@@ -83,12 +83,11 @@ class BalancedTree(_NetworkXBuiltin):
 class BarbellGraph(_NetworkXBuiltin):
     """
     <url>
-    :Barbell graph:https://en.wikipedia.org/wiki/Barbell_graph
-    </url> (
-    <url>
+    :Barbell graph:https://en.wikipedia.org/wiki/Barbell_graph </url> (<url>
     :NetworkX:https://networkx.org/documentation/networkx-2.8.8/reference/\
-generated/networkx.generators.classic.barbell_graph.html</url>
-)
+generated/networkx.generators.classic.barbell_graph.html</url>, <url>
+    :Wolfram MathWorld:
+    https://mathworld.wolfram.com/BarbellGraph.html</url>)
 
     <dl>
       <dt>'BarbellGraph[$m1$, $m2$]'
@@ -133,23 +132,18 @@ generated/networkx.generators.classic.barbell_graph.html</url>
         if not g:
             return None
 
-        g.G.m1 = m1
-        g.G.m2 = m2
+        g.G.m1 = py_m1
+        g.G.m2 = py_m2
         return g
 
 
 class BinomialTree(_NetworkXBuiltin):
     """
     <url>
-    :Binomial tree:https://en.wikipedia.org/wiki/Binomial_tree
-    </url> (
-    <url>
-    :NetworkX:https://networkx.org/documentation/networkx-2.8.8/reference/\
-generated/networkx.generators.classic.binomial_tree.html</url>,
-    <url>
-    :WMA:https://reference.wolfram.com/language/ref/BinomialTree.html
-    </url>
-    )
+    :NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference/\
+generated/networkx.generators.classic.binomial_tree.html</url>, <url>
+    :WMA:https://reference.wolfram.com/language/ref/BinomialTree.html</url>
 
     <dl>
       <dt>'BinomialTree[$n$]'
@@ -157,14 +151,16 @@ generated/networkx.generators.classic.binomial_tree.html</url>,
 
       The binomial tree of order $n$ with root $R$ is defined as:
 
-      If $k$=0,  $B[k]$ = $B[0]$ = {$R$}. i.e., the binomial tree of order \
+      If $k$=0, 'B[$k$]' = 'B[0]' = {$R$}. i.e., the binomial tree of order \
       zero consists of a single node, $R$.
 
-      If $k>0$, B[k] = {$R$, $B[0$], $B[1]$ .. $B[k]$, i.e., the binomial tree \
+      If $k$>0, 'B[$k$]' = {$R$, 'B[0]', 'B[1]' ... 'B[$k$]'}, i.e., the binomial tree \
       of order $k$>0 comprises the root $R$, and $k$ binomial subtrees, \
-      $B[0] to $B[k].
+      'B[0]' to 'B[$k$]'.
 
-      Binomial trees are the underlying datastructre in Binomial Heaps.
+      Binomial trees are the underlying data structure in <url>
+      :Binomial heaps:
+      https://en.wikipedia.org/wiki/Binomial_heap#Binomial_tree</url>.
     </dl>
 
     >> BinomialTree[3]
@@ -180,7 +176,7 @@ generated/networkx.generators.classic.binomial_tree.html</url>,
 
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
-    ) -> Graph:
+    ) -> Optional[Graph]:
         "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
         py_n = n.value
 
@@ -198,17 +194,15 @@ generated/networkx.generators.classic.binomial_tree.html</url>,
 
 class CompleteGraph(_NetworkXBuiltin):
     """
-    <url>Complete Multipartite Graph:
-    https://en.wikipedia.org/wiki/Multipartite_graph
-    </url>\
-    (<url>
+    <url>
+    :Complete Multipartite Graph:
+    https://en.wikipedia.org/wiki/Multipartite_graph</url> (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/\
-generated/networkx.generators.classic.complete_multipartite_graph.html
-    </url>, \
-    <url>
-    :WMA:https://reference.wolfram.com/language/ref/CompleteGraph.html
-    </url>)
+generated/networkx.generators.classic.complete_multipartite_graph.html</url>, <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/CompleteGraph.html</url>)
+
     <dl>
       <dt>'CompleteGraph[$n$]'
       <dd>Returns the complete graph with $n$ vertices, $K_n$.
@@ -222,25 +216,30 @@ generated/networkx.generators.classic.complete_multipartite_graph.html
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
 
-    summary_text = "build a completely connected graph"
+    summary_text = "build a completely-connected graph"
 
     def eval(self, n: Integer, expression, evaluation: Evaluation, options: dict):
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
+        "CompleteGraph[n_Integer, OptionsPattern[CompleteGraph]]"
         return eval_complete_graph(self, n, expression, evaluation, options)
 
-    def eval_multipartite(self, n, evaluation: Evaluation, options: dict):
-        "%(name)s[n_List, OptionsPattern[%(name)s]]"
+    def eval_multipartite(
+        self, n, evaluation: Evaluation, options: dict
+    ) -> Optional[Graph]:
+        "CompleteGraph[n_List, OptionsPattern[CompleteGraph]]"
         if all(isinstance(i, Integer) for i in n.elements):
-            return Graph(
-                nx.complete_multipartite_graph(*[i.get_int_value() for i in n.elements])
-            )
+            return Graph(nx.complete_multipartite_graph(*[i.value for i in n.elements]))
 
 
 class CompleteKaryTree(_NetworkXBuiltin):
     """
     <url>
-    :K-ary Tree:https://en.wikipedia.org/wiki/M-ary_tree
-    </url>
+    :M-ary Tree:
+    https://en.wikipedia.org/wiki/M-ary_tree</url> (<url>
+    :NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference/\
+generated/networkx.generators.classic.full_rary_tree.html</url>, <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/CompleteKaryTree.html</url>)
 
     <dl>
       <dt>'CompleteKaryTree[$n$, $k$]'
@@ -261,8 +260,10 @@ class CompleteKaryTree(_NetworkXBuiltin):
     options = DEFAULT_TREE_OPTIONS
     summary_text = "build a complete k-ary tree"
 
-    def eval(self, k, n, expression, evaluation: Evaluation, options: dict):
-        "%(name)s[n_Integer, k_Integer, OptionsPattern[%(name)s]]"
+    def eval(
+        self, k: Integer, n: Integer, expression, evaluation: Evaluation, options: dict
+    ):
+        "CompleteKaryTree[n_Integer, k_Integer, OptionsPattern[CompleteKaryTree]]"
 
         n_int = n.value
         k_int = k.value
@@ -273,21 +274,23 @@ class CompleteKaryTree(_NetworkXBuiltin):
         )
 
     # FIXME: can be done with rules?
-    def eval_2(self, n, expression, evaluation: Evaluation, options: dict):
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
+    def eval_2(self, n: Integer, expression, evaluation: Evaluation, options: dict):
+        "CompleteKaryTree[n_Integer, OptionsPattern[CompleteKaryTree]]"
 
-        n_int = n.get_int_value()
+        n_int = n.value
 
         new_n_int = int(2**n_int) - 1
         return eval_full_rary_tree(
-            self, Integer(2), Integer(new_n_int), expression, evaluation, options
+            self, Integer2, Integer(new_n_int), expression, evaluation, options
         )
 
 
 class CycleGraph(_NetworkXBuiltin):
     """
     <url>:Cycle Graph:
-    https://en.wikipedia.org/wiki/Cycle_graph</url>
+    https://en.wikipedia.org/wiki/Cycle_graph</url> (<url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/CycleGraph.html</url>)
 
     <dl>
       <dt>'CycleGraph[$n$]'
@@ -300,48 +303,15 @@ class CycleGraph(_NetworkXBuiltin):
 
     summary_text = "build a cycle graph"
 
-    def eval(self, n: Integer, expression, evaluation: Evaluation, options: dict):
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        n_int = n.get_int_value()
+    def eval(
+        self, n: Integer, expression, evaluation: Evaluation, options: dict
+    ) -> Optional[Graph]:
+        "CycleGraph[n_Integer, OptionsPattern[CycleGragh]]"
+        n_int = n.value
         if n_int < 3:
             return eval_complete_graph(self, n, expression, evaluation, options)
         else:
-            return eval_hkn_harary(self, Integer(2), n, expression, evaluation, options)
-
-
-# It seems that this makes the same than CompleteKaryTree
-class FullRAryTree(_NetworkXBuiltin):
-    """
-    <url>
-    :K-ary Tree:https://en.wikipedia.org/wiki/M-ary_tree
-    </url>
-
-    <dl>
-      <dt>'FullRAryTree[$r$, $n$]'
-      <dd>Creates a full $r$-ary tree of $n$ vertices.
-    </dl>
-
-    In the returned tree, with $n$ nodes, the from root $R$ to any
-    leaf will differ by most 1, the height of the tree from any root
-    to a leaf is O(log($n, $r$)).
-
-    >> FullRAryTree[2, 10]
-     = -Graph-
-
-    """
-
-    messages = {
-        "ilsmp": "Expected a non-negative integer at position 1 in ``.",
-        "ilsmp2": "Expected a non-negative integer at position 2 in ``.",
-        "mem": "Out of memory",
-    }
-
-    options = DEFAULT_TREE_OPTIONS
-    summary_text = "build a full r-ary tree"
-
-    def eval(self, r, n, expression, evaluation: Evaluation, options: dict):
-        "%(name)s[r_Integer, n_Integer, OptionsPattern[%(name)s]]"
-        return eval_full_rary_tree(self, r, n, expression, evaluation, options)
+            return eval_hkn_harary(self, Integer2, n, expression, evaluation, options)
 
 
 class GraphAtlas(_NetworkXBuiltin):
@@ -365,11 +335,13 @@ generated/networkx.generators.atlas.graph_atlas.html
     messages = {
         "ilsmp": "Expected a positive integer at position 1 in ``.",
     }
-    summary_text = "build the i-esim graph from the NetworkX atlas"
+    summary_text = "retrieve a graph by number from the NetworkX Atlas"
 
-    def eval(self, n, expression, evaluation: Evaluation, options: dict):
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
-        py_n = n.get_int_value()
+    def eval(
+        self, n: Integer, expression, evaluation: Evaluation, options: dict
+    ) -> Optional[Graph]:
+        "GraphAtlas[n_Integer, OptionsPattern[GraphAtlas]]"
+        py_n = n.value
 
         if py_n < 1:
             evaluation.message(self.get_name(), "ilsmp", expression)
@@ -381,7 +353,7 @@ generated/networkx.generators.atlas.graph_atlas.html
         )
         if not g:
             return None
-        g.n = n
+        g.n = py_n
         return g
 
 
@@ -389,8 +361,10 @@ class HknHararyGraph(_NetworkXBuiltin):
     """
     <url>:NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference\
-/generated/networkx.generators.harary_graph.hkn_harary_graph.html#hkn-harary-graph
-    </url>
+/generated/networkx.generators.harary_graph.hkn_harary_graph.html#hkn-harary-graph</url>, <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/HknHararyGraph.html</url>
+
     <dl>
       <dt>'HknHararyGraph[$k$, $n$]'
       <dd>Returns the Harary graph with given node connectivity and node number.
@@ -421,10 +395,13 @@ class HknHararyGraph(_NetworkXBuiltin):
 
 class HmnHararyGraph(_NetworkXBuiltin):
     """
-    <url>:NetworkX:
+    <url>
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference\
-/generated/networkx.generators.harary_graph.hnm_harary_graph.html
-    </url>
+/generated/networkx.generators.harary_graph.hnm_harary_graph.html</url>, <url>
+   :WMA:
+    https://reference.wolfram.com/language/ref/HmnHararyGraph.html</url>
+
     <dl>
       <dt>'HmnHararyGraph[$m$, $n$]'
       <dd>Returns the Harary graph with given numbers of nodes and edges.
@@ -448,7 +425,9 @@ class HmnHararyGraph(_NetworkXBuiltin):
 
     summary_text = "build a Hmn Harary graph"
 
-    def eval(self, n, m, expression, evaluation: Evaluation, options: dict):
+    def eval(
+        self, n: Integer, m: Integer, expression, evaluation: Evaluation, options: dict
+    ) -> Optional[Graph]:
         "%(name)s[n_Integer, m_Integer, OptionsPattern[%(name)s]]"
         py_n = n.value
 
@@ -456,7 +435,7 @@ class HmnHararyGraph(_NetworkXBuiltin):
             evaluation.message(self.get_name(), "ilsmp", expression)
             return
 
-        py_m = m.get_int_value()
+        py_m = m.value
 
         if py_m < 0:
             evaluation.message(self.get_name(), "ilsmp2", expression)
@@ -476,7 +455,7 @@ class HmnHararyGraph(_NetworkXBuiltin):
 class KaryTree(_NetworkXBuiltin):
     """
     <url>
-    :K-ary Tree:https://en.wikipedia.org/wiki/M-ary_tree
+    :M-ary Tree:https://en.wikipedia.org/wiki/M-ary_tree
     </url>
 
 
@@ -504,17 +483,17 @@ class KaryTree(_NetworkXBuiltin):
     }
 
     options = DEFAULT_TREE_OPTIONS
-    summary_text = "build a Kary tree"
+    summary_text = "build a k-ary tree"
 
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
-    ) -> Graph:
+    ) -> Optional[Graph]:
         "KaryTree[n_Integer, OptionsPattern[KaryTree]]"
-        return eval_full_rary_tree(self, Integer(2), n, expression, evaluation, options)
+        return eval_full_rary_tree(self, Integer2, n, expression, evaluation, options)
 
     def eval_with_k(
         self, n: Integer, k: Integer, expression, evaluation: Evaluation, options: dict
-    ) -> Graph:
+    ) -> Optional[Graph]:
         "KaryTree[n_Integer, k_Integer, OptionsPattern[KaryTree]]"
         return eval_full_rary_tree(self, k, n, expression, evaluation, options)
 
@@ -527,6 +506,7 @@ class LadderGraph(_NetworkXBuiltin):
     https://networkx.org/documentation/networkx-2.8.8/reference\
 /generated/networkx.generators.classic.ladder_graph.html
     </url>)
+
     <dl>
       <dt>'LadderGraph[$n$]'
       <dd>Returns the Ladder graph of length $n$.
@@ -543,8 +523,8 @@ class LadderGraph(_NetworkXBuiltin):
 
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
-    ) -> Graph:
-        "LadderGraph[n_Integer, OptionsPattern[%(name)s]]"
+    ) -> Optional[Graph]:
+        "LadderGraph[n_Integer, OptionsPattern[LadderGraph]]"
         py_n = n.value
 
         if py_n < 1:
@@ -617,7 +597,7 @@ class RandomTree(_NetworkXBuiltin):
 
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
-    ) -> Graph:
+    ) -> Optional[Graph]:
         "RandomTree[n_Integer, OptionsPattern[RandomTree]]"
         py_n = n.value
 
@@ -661,7 +641,7 @@ class StarGraph(_NetworkXBuiltin):
 
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
-    ) -> Graph:
+    ) -> Optional[Graph]:
         "StarGraph[n_Integer, OptionsPattern[StarGraph]]"
         py_n = n.value
 
