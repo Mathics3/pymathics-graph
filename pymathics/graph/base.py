@@ -87,6 +87,17 @@ def graph_helper(
     *args,
     **kwargs,
 ) -> Optional["Graph"]:
+    """
+    This is a wrapping function for a NetworkX function of some sort indicated in ``graph_generator``,
+    e.g. ``nx.complete_graph``.
+
+    ``args`` and ``kwargs`` are passed to the NetworkX function, while ``can_digraph`` determines
+    whether ``create_using=nx.DiGraph``is added to the NetworkX graph-generation function call.
+
+    Parameter ``options`` and ``graph_layout`` are Mathics3 Graph
+    options; ``graph_layout`` has a ``String()`` wrapped around it
+    ``root`` is used when the graph is a tree.
+    """
     should_digraph = can_digraph and has_directed_option(options)
     try:
         G = (

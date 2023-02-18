@@ -36,7 +36,7 @@ def eval_full_rary_tree(
     self, r: Integer, n: Integer, expression, evaluation: Evaluation, options: dict
 ) -> Optional[Graph]:
     """
-    Call networkx to get a full_rary_tree using parameters, ``r`` and ``t``.
+    Call ``networkx.full_rary_tree()`` using parameters, ``r`` and ``t``.
     """
     py_r = r.value
 
