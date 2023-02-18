@@ -8,11 +8,11 @@ Core routines for working with Graphs.
 
 from collections import defaultdict
 from inspect import isgenerator
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 from mathics.builtin.base import AtomBuiltin, Builtin
 from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, String
-from mathics.core.convert.expression import ListExpression, from_python
+from mathics.core.convert.expression import ListExpression, from_python, to_mathics_list
 from mathics.core.element import BaseElement
 from mathics.core.expression import Expression
 from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
@@ -86,7 +86,18 @@ def graph_helper(
     root: Optional[int] = None,
     *args,
     **kwargs,
-) -> Optional[Callable]:
+) -> Optional["Graph"]:
+    """
+    This is a wrapping function for a NetworkX function of some sort indicated in ``graph_generator``,
+    e.g. ``nx.complete_graph``.
+
+    ``args`` and ``kwargs`` are passed to the NetworkX function, while ``can_digraph`` determines
+    whether ``create_using=nx.DiGraph``is added to the NetworkX graph-generation function call.
+
+    Parameter ``options`` and ``graph_layout`` are Mathics3 Graph
+    options; ``graph_layout`` has a ``String()`` wrapped around it
+    ``root`` is used when the graph is a tree.
+    """
     should_digraph = can_digraph and has_directed_option(options)
     try:
         G = (
@@ -97,7 +108,11 @@ def graph_helper(
     except MemoryError:
         evaluation.message("Graph", "mem", evaluation)
         return None
-    if graph_layout and not options["System`GraphLayout"].get_string_value():
+    if (
+        graph_layout and not options["System`GraphLayout"].get_string_value()
+        if "System`GraphLayout" in options
+        else False
+    ):
         options["System`GraphLayout"] = String(graph_layout)
 
     g = Graph(G)
@@ -279,7 +294,14 @@ class _NetworkXBuiltin(Builtin):
     def _not_an_edge(self, expression, pos, evaluation):
         evaluation.message(self.get_name(), "inv", "edge", pos, expression)
 
-    def _build_graph(self, graph, evaluation, options, expr, quiet=False):
+    def _build_graph(
+        self,
+        graph: Union["Graph", Expression],
+        evaluation,
+        options: dict,
+        expr,
+        quiet=False,
+    ) -> Optional["Graph"]:
         head = graph.get_head()
         if head is SymbolGraph and isinstance(graph, Atom) and hasattr(graph, "G"):
             return graph
@@ -380,6 +402,16 @@ class Graph(Atom):
         self.G = Gr
         self.mixed = kwargs.get("mixed", False)
 
+        # Here we define types that appear on some, but not all
+        # graphs. So these are optional, which we given an initial
+        # value of None
+
+        # Some graphs has a second int parameter like HknHarary
+        self.n: Optional[int] = None
+
+        # Trees have a root
+        self.root: Optional[int] = None
+
     def __hash__(self):
         return hash(("Pymathics`Graph", self.G))
 
@@ -424,14 +456,13 @@ class Graph(Atom):
 
         return new_graph, "WEIGHT"
 
-    def delete_edges(self, edges_to_delete):
+    def delete_edges(self, edges_to_delete) -> "Graph":
         G = self.G.copy()
         directed = G.is_directed()
 
-        edges_to_delete = list(_normalize_edges(edges_to_delete))
-        edges_to_delete = self.edges.filter(edges_to_delete)
+        normalized_edges_to_delete = list(_normalize_edges(edges_to_delete))
 
-        for edge in edges_to_delete:
+        for edge in normalized_edges_to_delete:
             if edge.has_form("DirectedEdge", 2):
                 if directed:
                     u, v = edge.elements
@@ -444,12 +475,7 @@ class Graph(Atom):
                 else:
                     G.remove_edge(u, v)
 
-        edges = self.edges.clone()
-        edges.delete(edges_to_delete)
-
-        return Graph(
-            self.vertices, edges, G, self.layout, self.options, self.highlights
-        )
+        return Graph(G)
 
     def delete_vertices(self, vertices_to_delete):
         G = self.G.copy()
@@ -800,8 +826,7 @@ class AdjacencyList(_NetworkXBuiltin):
     :Adjacency list:
     https://en.wikipedia.org/wiki/Adjacency_list</url> (<url>
     :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/readwrite/adjlist.html</url>,
-    <url>
+    https://networkx.org/documentation/networkx-2.8.8/reference/readwrite/adjlist.html</url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/AdjacencyList.html</url>)
 
@@ -1401,8 +1426,8 @@ class VertexDelete(_NetworkXBuiltin):
 
     summary_text = "remove a vertex"
 
-    def eval(self, graph, what, expression, evaluation, options):
-        "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
+    def eval(self, graph, what, expression, evaluation, options) -> Optional[Graph]:
+        "VertexDelete[graph_, what_, OptionsPattern[VertexDelete]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             from mathics.builtin import pattern_objects
@@ -1516,41 +1541,46 @@ class UndirectedEdge(Builtin):
 #                 return mathics_graph.add_edges(*zip(*[_parse_item(what)]))
 
 
-# class EdgeDelete(_NetworkXBuiltin):
-#     """
-#     >> Length[EdgeList[EdgeDelete[{a -> b, b -> c, c -> d}, b -> c]]]
-#      = 2
+class EdgeDelete(_NetworkXBuiltin):
+    """
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/EdgeDelete.html</url>
 
-#     >> Length[EdgeList[EdgeDelete[{a -> b, b -> c, c -> b, c -> d}, b <-> c]]]
-#      = 4
+    <dl>
+      <dt>'EdgeDelete'[$g$, $edge$]
+      <dd>remove the edge $edge$.
+    </dl>
 
-#     >> Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, b -> c]]]
-#      = 3
+    >> g = Graph[{1 -> 2, 2 -> 3, 3 -> 1}, VertexLabels->True]
+     = -Graph-
 
-#     >> Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, c -> b]]]
-#      = 3
+    >> EdgeList[EdgeDelete[g, 2 -> 3]]
+     = {{1, 2}, {3, 1}}
 
-#     >> Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, b <-> c]]]
-#      = 2
+    ## >> g = Graph[{4<->5,5<->7,7<->9,9<->5,2->4,4->6,6->2}, VertexLabels->True]
+    ##  = -Graph-
 
-#     >> EdgeDelete[{4<->5,5<->7,7<->9,9<->5,2->4,4->6,6->2}, _UndirectedEdge]
-#      = -Graph-
-#     """
+    ## >> EdgeDelete[g, _UndirectedEdge]
+    ##  = -Graph-
+    """
 
-#     def eval(self, graph, what, expression, evaluation, options):
-#         "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
-#         graph = self._build_graph(graph, evaluation, options, expression)
-#         if graph:
-#             from mathics.builtin import pattern_objects
+    summary_text = "remove an edge"
 
-#             head_name = what.get_head_name()
-#             if head_name in pattern_objects:
-#                 cases = Expression(
-#                     SymbolCases, ListExpression(*graph.edges), what
-#                 ).evaluate(evaluation)
-#                 if cases.get_head_name() == "System`List":
-#                     return graph.delete_edges(cases.elements)
-#             elif head_name == "System`List":
-#                 return graph.delete_edges(what.elements)
-#             else:
-#                 return graph.delete_edges([what])
+    def eval(self, graph, what, expression, evaluation, options) -> Optional[Graph]:
+        "EdgeDelete[graph_, what_, OptionsPattern[EdgeDelete]]"
+        graph = self._build_graph(graph, evaluation, options, expression)
+        if graph:
+            from mathics.builtin import pattern_objects
+
+            head_name = what.get_head_name()
+            if head_name in pattern_objects:
+                cases = Expression(
+                    SymbolCases, to_mathics_list(*graph.edges), what
+                ).evaluate(evaluation)
+                if cases.get_head_name() == "System`List":
+                    return graph.delete_edges(cases.elements)
+            elif head_name == "System`List":
+                return graph.delete_edges(what.elements)
+            else:
+                return graph.delete_edges([what])

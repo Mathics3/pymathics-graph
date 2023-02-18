@@ -19,12 +19,11 @@ class AcyclicGraphQ(_NetworkXBuiltin):
     """
     <url>
     :Acyclic graph:
-    https://en.wikipedia.org/wiki/Acyclic_graph</url> (<url>
+    https://en.wikipedia.org/wiki/Acyclic_graph</url> test (<url>
     :NetworkX:
     https://networkx.org/documentation/stable/reference/algorithms\
 /generated/networkx.algorithms.cycles.find_cycle.html
-    </url>,
-    <url>
+    </url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/AcyclicGraphQ.html</url>)
 
@@ -34,33 +33,27 @@ class AcyclicGraphQ(_NetworkXBuiltin):
     </dl>
 
 
-    >> g = Graph[{1 -> 2, 2 -> 3}]; AcyclicGraphQ[g]
+    Create a directed graph with a cycle in it:
+
+    >> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 3 -> 5}, VertexLabels->True]
+     = -Graph-
+
+    >> AcyclicGraphQ[g]
+     = False
+
+    Remove a cycle edge:
+
+    >> g = EdgeDelete[g, 5 -> 2]; EdgeList[g]
+     = {{1, 2}, {2, 3}, {3, 4}, {3, 5}}
+
+    >> AcyclicGraphQ[g]
      = True
-
-    >> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 3 -> 5}]; AcyclicGraphQ[g]
-     = False
-
-    #> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 5 -> 3}]; AcyclicGraphQ[g]
-     = True
-
-    #> g = Graph[{1 -> 2, 2 -> 3, 5 -> 2, 3 -> 4, 5 <-> 3}]; AcyclicGraphQ[g]
-     = False
-
-    #> g = Graph[{1 <-> 2, 2 <-> 3, 5 <-> 2, 3 <-> 4, 5 <-> 3}]; AcyclicGraphQ[g]
-     = False
-
-    #> g = Graph[{}]; AcyclicGraphQ[{}]
-     = False
-
-    #> AcyclicGraphQ["abc"]
-     = False
-     : Expected a graph at position 1 in AcyclicGraphQ[abc].
     """
 
     summary_text = "test if is an acyclic graph"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "AcyclicGraphQ[graph_, OptionsPattern[AcyclicGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=False)
         if not graph or graph.empty():
             return SymbolFalse

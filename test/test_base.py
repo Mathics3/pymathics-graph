@@ -30,3 +30,23 @@ def setup_module(module):
 )
 def test_degree_centrality(str_expr, str_expected, msg):
     check_evaluation(str_expr, str_expected, failure_message=msg)
+
+
+@pytest.mark.parametrize(
+    ("str_expr", "str_expected", "msg"),
+    [
+        (None, None, None),
+        (
+            "Length[EdgeList[EdgeDelete[{a -> b, b -> c, c -> d}, b -> c]]]",
+            "2",
+            None,
+        ),
+        # ("Length[EdgeList[EdgeDelete[{a -> b, b -> c, c -> b, c -> d}, b <-> c]]]", "4", None),
+        ("Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, b -> c]]]", "3", None),
+        ("Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, c -> b]]]", "3", None),
+        ("Length[EdgeList[EdgeDelete[{a -> b, b <-> c, c -> d}, b <-> c]]]", "2", None),
+        (None, None, None),
+    ],
+)
+def test_edge_delete(str_expr, str_expected, msg):
+    check_evaluation(str_expr, str_expected, failure_message=msg)

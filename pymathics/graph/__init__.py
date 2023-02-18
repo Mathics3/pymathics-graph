@@ -41,6 +41,7 @@ from pymathics.graph.base import (
     AdjacencyList,
     DirectedEdge,
     EdgeConnectivity,
+    EdgeDelete,
     EdgeIndex,
     EdgeList,
     EdgeRules,
@@ -60,7 +61,7 @@ from pymathics.graph.base import (
     VertexList,
 )
 
-from pymathics.graph.centralities import(
+from pymathics.graph.centralities import (
     BetweennessCentrality,
     ClosenessCentrality,
     DegreeCentrality,
@@ -86,7 +87,6 @@ from pymathics.graph.parametric import (
     CompleteGraph,
     CompleteKaryTree,
     CycleGraph,
-    FullRAryTree,
     GraphAtlas,
     HknHararyGraph,
     HmnHararyGraph,
@@ -137,6 +137,7 @@ __all__ = [
     "DirectedGraphQ",
     "EdgeConnectivity",
     "EdgeCount",
+    "EdgeDelete",
     "EdgeIndex",
     "EdgeList",
     "EdgeRules",
@@ -144,7 +145,6 @@ __all__ = [
     "FindShortestPath",
     "FindSpanningTree",
     "FindVertexCut",
-    "FullRAryTree",
     "Graph",
     "GraphAtlas",
     "GraphAtom",
