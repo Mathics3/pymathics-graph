@@ -303,7 +303,7 @@ class PathGraphQ(_NetworkXBuiltin):
 
     <dl>
       <dt>'LoopFreeGraphQ'[$graph$]
-      <dd>True if $graph$ is a 'Graph' and it becomes disconected by removing \
+      <dd>True if $graph$ is a 'Graph' and it becomes disconnected by removing \
     a single edge.
     </dl>
 

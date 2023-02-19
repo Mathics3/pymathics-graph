@@ -1494,7 +1494,7 @@ class VertexList(_PatternList):
      = {10}
     """
 
-    summary_text = "list the vertex"
+    summary_text = "list the vertices of a graph"
 
     def _items(self, graph):
         return graph.vertices
