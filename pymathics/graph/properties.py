@@ -75,8 +75,7 @@ class ConnectedGraphQ(_NetworkXBuiltin):
     :NetworkX:
 https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
 /generated/networkx.algorithms.components.is_connected.html
-    </url>,
-    <url>
+    </url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/ConnectedGraphQ.html</url>)
 
@@ -130,8 +129,7 @@ class DirectedGraphQ(_NetworkXBuiltin):
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference\
 /generated/networkx.classes.function.is_directed.html
-    </url>,
-    <url>
+    </url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/DirectedGraphQ.html</url>)
 
@@ -173,8 +171,7 @@ class LoopFreeGraphQ(_NetworkXBuiltin):
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/\
 generated/networkx.classes.function.nodes_with_selfloops.html
-    </url>,
-    <url>
+    </url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/LoopFreeGraphQ.html</url>)
 
@@ -211,8 +208,8 @@ class MixedGraphQ(_NetworkXBuiltin):
     """
     <url>
     :Mixed Graph:
-    https://en.wikipedia.org/wiki/Mixed_graph</url> test <url>:WMA:
-    https://reference.wolfram.com/language/ref/MixedGraphQ.html</url>
+    https://en.wikipedia.org/wiki/Mixed_graph</url> test (<url>:WMA:
+    https://reference.wolfram.com/language/ref/MixedGraphQ.html</url>)
 
     <dl>
       <dt>'MixedGraphQ'[$graph$]
@@ -297,7 +294,7 @@ class PathGraphQ(_NetworkXBuiltin):
     <url>
     :Path graph:
     https://en.wikipedia.org/wiki/Path_graph
-    </url> (<url>
+    </url> test (<url>
     :WMA:
     https://reference.wolfram.com/language/ref/PathGraphQ.html</url>)
 
@@ -363,34 +360,34 @@ class PathGraphQ(_NetworkXBuiltin):
 
 class PlanarGraphQ(_NetworkXBuiltin):
     """
-    <url>
-    :Planar Graph:
-    https://en.wikipedia.org/wiki/Planar_graph</url>
-
-    <dl>
-      <dt>'PlanarGraphQ'[$g$]
-      <dd>Returns True if $g$ is a planar graph and False otherwise.
-    </dl>
-
-    >> PlanarGraphQ[CycleGraph[4]]
-    = True
-
-    >> PlanarGraphQ[CompleteGraph[5]]
-    = False
-
-    >> PlanarGraphQ[CompleteGraph[4]]
-     = True
-
-    >> PlanarGraphQ[CompleteGraph[5]]
-     = False
-
-    #> PlanarGraphQ[Graph[{}]]
-     = False
+        <url>
+        :Planar Graph:
+        https://en.wikipedia.org/wiki/Planar_graph</url> test (<url>
+        :NetworkX:
+        https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/
+    generated/networkx.algorithms.planarity.check_planarity.html</url>, <url>
+        :WMA:
+        https://reference.wolfram.com/language/ref/PlanaGraphQ.html</url>)
 
 
-    >> PlanarGraphQ["abc"]
-     : Expected a graph at position 1 in PlanarGraphQ[abc].
-     = False
+        <dl>
+          <dt>'PlanarGraphQ'[$g$]
+          <dd>Returns True if $g$ is a planar graph and False otherwise.
+        </dl>
+
+        >> PlanarGraphQ[CycleGraph[4]]
+        = True
+
+        >> PlanarGraphQ[CompleteGraph[5]]
+        = False
+
+        #> PlanarGraphQ[Graph[{}]]
+         = False
+
+
+        >> PlanarGraphQ["abc"]
+         : Expected a graph at position 1 in PlanarGraphQ[abc].
+         = False
     """
 
     options = DEFAULT_GRAPH_OPTIONS
@@ -407,18 +404,17 @@ class PlanarGraphQ(_NetworkXBuiltin):
 
 class SimpleGraphQ(_NetworkXBuiltin):
     """
-    <url>
-    :Simple graph:
+    Simple (not multigraph)<url>
+    :graph:
     https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)#Graph
-    </url> (
-    <url>
+    </url> test (<url>
     :WMA:
     https://reference.wolfram.com/language/ref/SimpleGraphQ.html</url>)
 
     <dl>
       <dt>'LoopFreeGraphQ'[$graph$]
       <dd>True if $graph$ is a 'Graph', loop-free and each pair of \
-    vertices are connected at most by a single edge.
+          vertices are connected at most by a single edge.
     </dl>
 
     >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; SimpleGraphQ[g]
@@ -437,10 +433,10 @@ class SimpleGraphQ(_NetworkXBuiltin):
      = False
     """
 
-    summary_text = "test if a graph is simple"
+    summary_text = "test if a graph is simple (not multigraph)"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "LoopFreeGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             if graph.empty():
