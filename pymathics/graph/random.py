@@ -20,7 +20,7 @@ from pymathics.graph.base import (
 class RandomGraph(_NetworkXBuiltin):
     """
     <url>
-    :WMA:https://reference.wolfram.com/language/ref/RandomGraph.html
+    :WMA link:https://reference.wolfram.com/language/ref/RandomGraph.html
     </url>
 
     <dl>

@@ -896,12 +896,11 @@ class AdjacencyList(_NetworkXBuiltin):
 
 class DirectedEdge(Builtin):
     """
-    <url>
-    :Directed edge:
+    Edge of a <url>
+    :Directed graph:
     https://en.wikipedia.org/wiki/Directed_graph</url> (<url>
     :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/classes/digraph.html</url>,
-    <url>
+    https://networkx.org/documentation/networkx-2.8.8/reference/classes/digraph.html</url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/DirectedEdge.html</url>)
 
@@ -919,11 +918,10 @@ class EdgeConnectivity(_NetworkXBuiltin):
     """
     <url>
     :Edge connectivity:
-    https://en.wikipedia.org/wiki/Directed_graph</url> (<url>
+    https://en.wikipedia.org/wiki/Directed_graph#Directed_graph_connectivity</url> (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
-    generated/networkx.algorithms.connectivity.connectivity.edge_connectivity.html</url>,
-    <url>
+generated/networkx.algorithms.connectivity.connectivity.edge_connectivity.html</url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/EdgeConnectivity.html</url>)
 
@@ -969,7 +967,7 @@ class EdgeConnectivity(_NetworkXBuiltin):
 class EdgeIndex(_NetworkXBuiltin):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/EdgeIndex.html</url>
 
     <dl>
@@ -997,7 +995,7 @@ class EdgeIndex(_NetworkXBuiltin):
 class EdgeList(_PatternList):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/EdgeList.html</url>
 
     <dl>
@@ -1015,7 +1013,7 @@ class EdgeList(_PatternList):
 class EdgeRules(_NetworkXBuiltin):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/EdgeRules.html</url>
 
     <dl>
@@ -1047,8 +1045,7 @@ class FindShortestPath(_NetworkXBuiltin):
     https://en.wikipedia.org/wiki/Shortest_path_problem</url> (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
-    /generated/networkx.algorithms.shortest_paths.generic.shortest_path.html</url>,
-    <url>
+    /generated/networkx.algorithms.shortest_paths.generic.shortest_path.html</url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/FindShortestPath.html</url>)
 
@@ -1082,7 +1079,7 @@ class FindShortestPath(_NetworkXBuiltin):
     summary_text = "find the shortest path between two vertices"
 
     def eval_s_t(self, graph, s, t, expression, evaluation, options):
-        "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
+        "FindShortestPath[graph_, s_, t_, OptionsPattern[FindShortestPath]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph:
             return
@@ -1168,8 +1165,7 @@ generated/networkx.algorithms.connectivity.cuts.minimum_node_cut.html
 
 class GraphAtom(AtomBuiltin):
     """
-    <url>:Graph:https://en.wikipedia.org/wiki/graph</url> (
-    <url>:WMA:
+    <url>:Graph:https://en.wikipedia.org/wiki/graph</url> (<url>:WMA:
     https://reference.wolfram.com/language/ref/Graph.html</url>)
     <dl>
       <dt>'Graph[{$e1, $e2, ...}]'
@@ -1223,7 +1219,7 @@ class GraphAtom(AtomBuiltin):
 class HighlightGraph(_NetworkXBuiltin):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/HighlightGraph.html</url>
 
     <dl>
@@ -1263,7 +1259,7 @@ class HighlightGraph(_NetworkXBuiltin):
 class Property(Builtin):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/Property.html</url>
 
     <dl>
@@ -1279,7 +1275,7 @@ class Property(Builtin):
 class PropertyValue(Builtin):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/PropertyValue.html</url>
 
     <dl>
@@ -1322,7 +1318,7 @@ class PropertyValue(Builtin):
 class VertexAdd(_NetworkXBuiltin):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/VertexAdd.html</url>
 
     <dl>
@@ -1342,7 +1338,7 @@ class VertexAdd(_NetworkXBuiltin):
     summary_text = "add a vertex"
 
     def eval(self, graph: Expression, what, expression, evaluation, options):
-        "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
+        "VertexAdd[graph_, what_, OptionsPattern[VertexAdd]]"
         mathics_graph = self._build_graph(graph, evaluation, options, expression)
         if mathics_graph:
             if what.get_head_name() == "System`List":
@@ -1356,7 +1352,7 @@ class VertexAdd(_NetworkXBuiltin):
 class VertexConnectivity(_NetworkXBuiltin):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/VertexConnectivity.html</url>
 
     <dl>
@@ -1407,7 +1403,7 @@ class VertexConnectivity(_NetworkXBuiltin):
 class VertexDelete(_NetworkXBuiltin):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/VertexDelete.html</url>
 
     <dl>
@@ -1448,7 +1444,7 @@ class VertexDelete(_NetworkXBuiltin):
 class VertexIndex(_NetworkXBuiltin):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/VertexIndex.html</url>
     <dl>
       <dt>'VertexIndex'['g', 'v']
@@ -1476,7 +1472,7 @@ class VertexIndex(_NetworkXBuiltin):
 class VertexList(_PatternList):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/VertexList.html</url>
     <dl>
       <dt>'VertexList[$edgelist$]'
@@ -1503,7 +1499,7 @@ class VertexList(_PatternList):
 class UndirectedEdge(Builtin):
     """
     <url>
-    :WMA:
+    :WMA link:
     https://reference.wolfram.com/language/ref/UndirectedEdge.html</url>
 
     <dl>
@@ -1543,9 +1539,9 @@ class UndirectedEdge(Builtin):
 
 class EdgeDelete(_NetworkXBuiltin):
     """
-    <url>
+    Delete an Edge (<url>
     :WMA:
-    https://reference.wolfram.com/language/ref/EdgeDelete.html</url>
+    https://reference.wolfram.com/language/ref/EdgeDelete.html</url>)
 
     <dl>
       <dt>'EdgeDelete'[$g$, $edge$]
