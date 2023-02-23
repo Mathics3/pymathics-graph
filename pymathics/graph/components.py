@@ -16,8 +16,12 @@ from pymathics.graph.base import _NetworkXBuiltin
 class ConnectedComponents(_NetworkXBuiltin):
     """
     <url>
-    :WMA:https://reference.wolfram.com/language/ref/ConnectedComponents.html
-    </url>
+    :Strongly connected components:
+    https://en.wikipedia.org/wiki/Strongly_connected_component</url> (<url>
+    :NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
+generated/networkx.algorithms.components.strongly_connected_components.html</url>, <url>
+:WMA:https://reference.wolfram.com/language/ref/ConnectedComponents.html</url>)
 
     <dl>
       <dt>'ConnectedComponents'[$g$]
@@ -83,8 +87,13 @@ class ConnectedComponents(_NetworkXBuiltin):
 class WeaklyConnectedComponents(_NetworkXBuiltin):
     """
     <url>
-    :WMA:https://reference.wolfram.com/language/ref/WeaklyConnectedComponents.html
-    </url>
+    :Weak components:
+    https://en.wikipedia.org/wiki/Weak_component</url> (<url>
+    :NetworkX:
+    https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/\
+generated/networkx.algorithms.components.weakly_connected_components.html</url>, <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/WeaklyConnectedComponents.html</url>)
 
     <dl>
       <dt>'WeaklyConnectedComponents'[$g$]

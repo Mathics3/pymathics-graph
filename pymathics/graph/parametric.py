@@ -140,10 +140,12 @@ generated/networkx.generators.classic.barbell_graph.html</url>, <url>
 class BinomialTree(_NetworkXBuiltin):
     """
     <url>
+    :Binomial tree:
+    https://en.wikipedia.org/wiki/Binomial_heap</url> (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/\
 generated/networkx.generators.classic.binomial_tree.html</url>, <url>
-    :WMA:https://reference.wolfram.com/language/ref/BinomialTree.html</url>
+    :WMA:https://reference.wolfram.com/language/ref/BinomialTree.html</url>)
 
     <dl>
       <dt>'BinomialTree[$n$]'

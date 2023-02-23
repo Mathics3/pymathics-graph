@@ -81,7 +81,7 @@ def graph_helper(
     graph_generator_func: Callable,
     options: dict,
     can_digraph: bool,
-    graph_layout: str,
+    graph_layout: Optional[str],
     evaluation,
     root: Optional[int] = None,
     *args,
@@ -124,7 +124,7 @@ def graph_helper(
 
 
 def has_directed_option(options: dict) -> bool:
-    return options.get("System`DirectedEdges", False).to_python()
+    return options.get("System`DirectedEdges", False)
 
 
 def _process_graph_options(g, options: dict) -> None:
@@ -173,15 +173,15 @@ def _process_graph_options(g, options: dict) -> None:
 
 
 def _circular_layout(G):
-    return nx.drawing.circular_layout(G, scale=1.5)
+    return nx.drawing.circular_layout(G, scale=1)
 
 
 def _spectral_layout(G):
-    return nx.drawing.spectral_layout(G, scale=2.0)
+    return nx.drawing.spectral_layout(G, scale=2)
 
 
 def _shell_layout(G):
-    return nx.drawing.shell_layout(G, scale=2.0)
+    return nx.drawing.shell_layout(G, scale=2)
 
 
 def _generic_layout(G, warn):
