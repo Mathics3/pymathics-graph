@@ -3,6 +3,7 @@ Curated Graphs
 """
 
 import networkx as nx
+from typing import Callable, Dict, Optional, Tuple
 from mathics.core.evaluation import Evaluation
 
 from pymathics.graph.base import Graph, _NetworkXBuiltin, graph_helper
@@ -11,8 +12,7 @@ from pymathics.graph.base import Graph, _NetworkXBuiltin, graph_helper
 class GraphData(_NetworkXBuiltin):
     """
     <url>
-    :WMA:https://reference.wolfram.com/language/ref/GraphData.html
-    </url>
+    :WMA link:https://reference.wolfram.com/language/ref/GraphData.html</url>
 
     <dl>
       <dt>'GraphData[$name$]'
@@ -25,7 +25,9 @@ class GraphData(_NetworkXBuiltin):
 
     summary_text = "create a graph by name"
 
-    def eval(self, name, expression, evaluation: Evaluation, options: dict) -> Graph:
+    def eval(
+        self, name, expression, evaluation: Evaluation, options: dict
+    ) -> Optional[Graph]:
         "GraphData[name_String, OptionsPattern[GraphData]]"
         py_name = name.get_string_value()
         fn, layout = WL_TO_NETWORKX_FN.get(py_name, (None, None))
@@ -42,12 +44,13 @@ class GraphData(_NetworkXBuiltin):
             # if len([p for p in list(parameters) if p.kind in [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD]]) != 0:
             #     return
         if fn:
-            g = graph_helper(fn, options, False, evaluation, layout)
-            g.G.name = py_name
+            g = graph_helper(fn, options, False, layout, evaluation)
+            if g is not None:
+                g.G.name = py_name
             return g
 
 
-WL_TO_NETWORKX_FN = {
+WL_TO_NETWORKX_FN: Dict[str, Tuple[Callable, Optional[str]]] = {
     "DodecahedralGraph": (nx.dodecahedral_graph, None),
     "DiamondGraph": (nx.diamond_graph, "spring"),
     "PappusGraph": (nx.pappus_graph, "circular"),
