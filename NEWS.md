@@ -2,10 +2,10 @@
 -----
 
 Revise for 6.0.0 Mathics3 API and current Mathics3 builtin standards
-decribed in [Guidelines for Writing
+described in [Guidelines for Writing
 Documentation](https://mathics-development-guide.readthedocs.io/en/latest/extending/developing-code/extending/documentation-markup.html#guidelines-for-writing-documentation).
 
-Thie package has undergone a major overhaul. Modules have been split out along into logical groups following the documentation structure.
+This package has undergone a major overhaul. Modules have been split out along into logical groups following the documentation structure.
 
 We have gradually been rolling in more Python type annotations and
 have been using current Python practices. Tools such as using
