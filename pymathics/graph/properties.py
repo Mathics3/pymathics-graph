@@ -404,7 +404,7 @@ class PlanarGraphQ(_NetworkXBuiltin):
 
 class SimpleGraphQ(_NetworkXBuiltin):
     """
-    Simple (not multigraph)<url>
+    Simple (not multigraph) <url>
     :graph:
     https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)#Graph
     </url> test (<url>
@@ -412,7 +412,7 @@ class SimpleGraphQ(_NetworkXBuiltin):
     https://reference.wolfram.com/language/ref/SimpleGraphQ.html</url>)
 
     <dl>
-      <dt>'LoopFreeGraphQ'[$graph$]
+      <dt>'SimpleGraphQ'[$graph$]
       <dd>True if $graph$ is a 'Graph', loop-free and each pair of \
           vertices are connected at most by a single edge.
     </dl>
