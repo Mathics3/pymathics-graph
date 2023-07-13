@@ -15,6 +15,7 @@ from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, Stri
 from mathics.core.convert.expression import ListExpression, from_python, to_mathics_list
 from mathics.core.element import BaseElement
 from mathics.core.expression import Expression
+from mathics.core.pattern import pattern_objects
 from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
 from mathics.core.systemsymbols import (
     SymbolBlank,
@@ -853,7 +854,6 @@ class AdjacencyList(_NetworkXBuiltin):
     summary_text = "list the adjacent vertices"
 
     def _retrieve(self, graph, what, neighbors, expression, evaluation):
-        from mathics.builtin import pattern_objects
 
         if what.get_head_name() in pattern_objects:
             collected = set()
@@ -1426,7 +1426,6 @@ class VertexDelete(_NetworkXBuiltin):
         "VertexDelete[graph_, what_, OptionsPattern[VertexDelete]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            from mathics.builtin import pattern_objects
 
             head_name = what.get_head_name()
             if head_name in pattern_objects:
@@ -1567,7 +1566,6 @@ class EdgeDelete(_NetworkXBuiltin):
         "EdgeDelete[graph_, what_, OptionsPattern[EdgeDelete]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
-            from mathics.builtin import pattern_objects
 
             head_name = what.get_head_name()
             if head_name in pattern_objects:
