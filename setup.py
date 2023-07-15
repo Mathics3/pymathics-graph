@@ -33,7 +33,7 @@ setup(
     packages=find_namespace_packages(include=["pymathics.*"]),
     install_requires=[
         "Mathics3>=6.0.0",
-        "networkx>=2.8.0",
+        "networkx>=3.0.0",
         "pydot",
         "matplotlib",
         "scipy>=1.10.0",
