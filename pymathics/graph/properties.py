@@ -254,7 +254,8 @@ class MultigraphQ(_NetworkXBuiltin):
     :Multigraph:
     https://en.wikipedia.org/wiki/Multigraph</url> test (<url>
     :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/classes/multigraph.html</url>, <url>
+https://networkx.org/documentation/networkx-2.8.8/reference/classes/multigraph.html</url>, \
+    <url>
     :WMA:
     https://reference.wolfram.com/language/ref/MulitGraphQ.html</url>)
 
