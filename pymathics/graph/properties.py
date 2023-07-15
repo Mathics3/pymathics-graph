@@ -436,7 +436,7 @@ class SimpleGraphQ(_NetworkXBuiltin):
     summary_text = "test if a graph is simple (not multigraph)"
 
     def eval(self, graph, expression, evaluation, options):
-        "LoopFreeGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
+        "SimpleGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             if graph.empty():

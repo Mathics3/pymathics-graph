@@ -21,7 +21,7 @@ Examples:
     = -Graph-
 
    >> ConnectedComponents[g]
-    = {{3, 4}, {2}, {1}}
+    = {{4, 3}, {2}, {1}}
 
    >> WeaklyConnectedComponents[g]
     = {{1, 2, 3, 4}}
