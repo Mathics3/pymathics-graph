@@ -32,7 +32,7 @@ setup(
     version=__version__,  # noqa
     packages=find_namespace_packages(include=["pymathics.*"]),
     install_requires=[
-        "Mathics3>=6.0.0",
+        "Mathics3>=6.0.1",
         "networkx>=3.0.0",
         "pydot",
         "matplotlib",
