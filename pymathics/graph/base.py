@@ -840,6 +840,7 @@ class AdjacencyList(_NetworkXBuiltin):
           matching $pattern$.
     </dl>
 
+    >> LoadModule["pymathics.graph"];
     >> AdjacencyList[{1 -> 2, 2 -> 3}, 3]
      = {2}
 
