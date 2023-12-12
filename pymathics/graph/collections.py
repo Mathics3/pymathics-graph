@@ -7,6 +7,9 @@ Collection classes
 
 from pymathics.graph.graphsymbols import SymbolDirectedEdge
 
+# There is no user-facing documentation here.
+no_doc = True
+
 
 def _count_edges(counts, edges, sign):
     n_directed, n_undirected = counts

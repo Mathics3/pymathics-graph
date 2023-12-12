@@ -7,8 +7,9 @@ import pkgutil
 import pytest
 
 from pymathics.graph import __file__ as module_initfile_path
-from mathics.core.load_builtin import name_is_builtin_symbol
+
 from mathics.core.builtin import Builtin
+from mathics.core.load_builtin import name_is_builtin_symbol
 from mathics.doc.common_doc import skip_doc
 
 
@@ -70,8 +71,7 @@ if CHECK_GRAMMAR:
 module_subdirs = tuple()
 
 __py_files__ = [
-    osp.basename(f[0:-3])
-    for f in glob.glob(osp.join(module_path, "[a-z]*.py"))
+    osp.basename(f[0:-3]) for f in glob.glob(osp.join(module_path, "[a-z]*.py"))
 ]
 
 
@@ -122,7 +122,6 @@ def check_grammar(text: str):
     for msg in filtered_matches:
         print("\t", msg)
     return False
-
 
 
 def check_well_formatted_docstring(docstr: str, instance: Builtin, module_name: str):

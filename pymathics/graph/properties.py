@@ -50,7 +50,7 @@ class AcyclicGraphQ(_NetworkXBuiltin):
      = True
     """
 
-    summary_text = "test if is an acyclic graph"
+    summary_text = "test if is a graph is acyclic"
 
     def eval(self, graph, expression, evaluation, options):
         "AcyclicGraphQ[graph_, OptionsPattern[AcyclicGraphQ]]"
@@ -71,12 +71,11 @@ class ConnectedGraphQ(_NetworkXBuiltin):
     :Connected graph:
     https://en.wikipedia.org/wiki/Connectivity_(graph_theory)\
 #Connected_vertices_and_graphs
-    </url> (<url>
+    </url> test (<url>
     :NetworkX:
 https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
 /generated/networkx.algorithms.components.is_connected.html
-    </url>,
-    <url>
+    </url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/ConnectedGraphQ.html</url>)
 
@@ -110,7 +109,7 @@ https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
      = False
     """
 
-    summary_text = "test if is a connected graph"
+    summary_text = "test if a graph is a connected"
 
     def eval(self, graph, expression, evaluation, options):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
@@ -126,12 +125,11 @@ class DirectedGraphQ(_NetworkXBuiltin):
     <url>
     :Directed graph:
     https://en.wikipedia.org/wiki/Directed_graph
-    </url> (<url>
+    </url> test (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference\
 /generated/networkx.classes.function.is_directed.html
-    </url>,
-    <url>
+    </url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/DirectedGraphQ.html</url>)
 
@@ -153,10 +151,10 @@ class DirectedGraphQ(_NetworkXBuiltin):
      = False
     """
 
-    summary_text = "test if is a directed graph"
+    summary_text = "test if a graph is directed"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "DirectedGraphQ[graph_, OptionsPattern[DirectedGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             return from_python(graph.is_directed())
@@ -169,12 +167,11 @@ class LoopFreeGraphQ(_NetworkXBuiltin):
     <url>
     :Loop-Free graph:
     https://en.wikipedia.org/wiki/Loop_(graph_theory)
-    </url> (<url>
+    </url> test (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/\
 generated/networkx.classes.function.nodes_with_selfloops.html
-    </url>,
-    <url>
+    </url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/LoopFreeGraphQ.html</url>)
 
@@ -196,10 +193,10 @@ generated/networkx.classes.function.nodes_with_selfloops.html
      = False
     """
 
-    summary_text = "test if is a loop-free graph"
+    summary_text = "test if a graph is loop free"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "LoopFreeGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if not graph or graph.empty():
             return SymbolFalse
@@ -210,40 +207,41 @@ generated/networkx.classes.function.nodes_with_selfloops.html
 class MixedGraphQ(_NetworkXBuiltin):
     """
     <url>
-    :WMA:
-    https://reference.wolfram.com/language/ref/MixedGraphQ.html</url>
+    :Mixed Graph:
+    https://en.wikipedia.org/wiki/Mixed_graph</url> test (<url>:WMA:
+    https://reference.wolfram.com/language/ref/MixedGraphQ.html</url>)
 
     <dl>
       <dt>'MixedGraphQ'[$graph$]
       <dd>returns 'True' if $graph$ is a 'Graph' with both directed and undirected edges, \
-    and 'False' otherwise.
+          and 'False' otherwise.
     </dl>
 
-    >> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
+    >> MixedGraphQ[Graph[{1 -> 2, 2 -> 3}]]
      = False
 
-    # Seems to not be implemented...
-    # >> g = Graph[{1 -> 2, 2 <-> 3}]; MixedGraphQ[g]
-    # = True
+    >> MixedGraphQ[Graph[{1 -> 2, 2 <-> 3}]]
+     = True
 
-    #> g = Graph[{}]; MixedGraphQ[g]
+    >> MixedGraphQ[Graph[{}]]
      = False
 
-    #> MixedGraphQ["abc"]
+    >> MixedGraphQ["abc"]
      = False
 
-    # #> g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
-    #  = False
-    # #> g = EdgeAdd[g, a <-> b]; MixedGraphQ[g]
-    #  = True
-    # #> g = EdgeDelete[g, a <-> b]; MixedGraphQ[g]
-    # = False
+    ## Add as pytests
+    ## > g = Graph[{1 -> 2, 2 -> 3}]; MixedGraphQ[g]
+    ##  = False
+    ## > g = EdgeAdd[g, a <-> b]; MixedGraphQ[g]
+    ##   = True
+    ## > g = EdgeDelete[g, a <-> b]; MixedGraphQ[g]
+    ## = False
     """
 
-    summary_text = "test if is a graph with directed and undirected edges"
+    summary_text = "test if a graph has directed and undirected edges"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "MixedGraphQ[graph_, OptionsPattern[MixedGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             return from_python(graph.is_mixed_graph())
@@ -253,9 +251,14 @@ class MixedGraphQ(_NetworkXBuiltin):
 class MultigraphQ(_NetworkXBuiltin):
     """
     <url>
+    :Multigraph:
+    https://en.wikipedia.org/wiki/Multigraph</url> test (<url>
     :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/classes/multigraph.html
-    </url>,
+https://networkx.org/documentation/networkx-2.8.8/reference/classes/multigraph.html</url>, \
+    <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/MulitGraphQ.html</url>)
+
 
     <dl>
       <dt>'MultigraphQ'[$graph$]
@@ -276,10 +279,10 @@ class MultigraphQ(_NetworkXBuiltin):
      = False
     """
 
-    summary_text = "test if is a multi graph"
+    summary_text = "test if a graph is a multi graph"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "MultigraphQ[graph_, OptionsPattern[MultigraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             return from_python(graph.is_multigraph())
@@ -292,14 +295,13 @@ class PathGraphQ(_NetworkXBuiltin):
     <url>
     :Path graph:
     https://en.wikipedia.org/wiki/Path_graph
-    </url> (
-    <url>
+    </url> test (<url>
     :WMA:
     https://reference.wolfram.com/language/ref/PathGraphQ.html</url>)
 
     <dl>
       <dt>'LoopFreeGraphQ'[$graph$]
-      <dd>True if $graph$ is a 'Graph' and it becomes disconected by removing \
+      <dd>True if $graph$ is a 'Graph' and it becomes disconnected by removing \
     a single edge.
     </dl>
 
@@ -335,10 +337,10 @@ class PathGraphQ(_NetworkXBuiltin):
      = False
     """
 
-    summary_text = "test if is a path-like graph"
+    summary_text = "test if a graph is a path-like graph"
 
     def eval(self, graph, expression, evaluation, options):
-        "PathGraphQ[graph_, OptionsPattern[%(name)s]]"
+        "PathGraphQ[graph_, OptionsPattern[PathGraphQ]]"
         if not isinstance(graph, Graph) or graph.empty():
             return SymbolFalse
 
@@ -359,38 +361,38 @@ class PathGraphQ(_NetworkXBuiltin):
 
 class PlanarGraphQ(_NetworkXBuiltin):
     """
-    <url>
-    :Planar Graph:
-    https://en.wikipedia.org/wiki/Planar_graph</url>
-
-    <dl>
-      <dt>'PlanarGraphQ'[$g$]
-      <dd>Returns True if $g$ is a planar graph and False otherwise.
-    </dl>
-
-    >> PlanarGraphQ[CycleGraph[4]]
-    = True
-
-    >> PlanarGraphQ[CompleteGraph[5]]
-    = False
-
-    >> PlanarGraphQ[CompleteGraph[4]]
-     = True
-
-    >> PlanarGraphQ[CompleteGraph[5]]
-     = False
-
-    #> PlanarGraphQ[Graph[{}]]
-     = False
+        <url>
+        :Planar Graph:
+        https://en.wikipedia.org/wiki/Planar_graph</url> test (<url>
+        :NetworkX:
+        https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/
+    generated/networkx.algorithms.planarity.check_planarity.html</url>, <url>
+        :WMA:
+        https://reference.wolfram.com/language/ref/PlanaGraphQ.html</url>)
 
 
-    >> PlanarGraphQ["abc"]
-     : Expected a graph at position 1 in PlanarGraphQ[abc].
-     = False
+        <dl>
+          <dt>'PlanarGraphQ'[$g$]
+          <dd>Returns True if $g$ is a planar graph and False otherwise.
+        </dl>
+
+        >> PlanarGraphQ[CycleGraph[4]]
+        = True
+
+        >> PlanarGraphQ[CompleteGraph[5]]
+        = False
+
+        #> PlanarGraphQ[Graph[{}]]
+         = False
+
+
+        >> PlanarGraphQ["abc"]
+         : Expected a graph at position 1 in PlanarGraphQ[abc].
+         = False
     """
 
     options = DEFAULT_GRAPH_OPTIONS
-    summary_text = "test if is a planar graph"
+    summary_text = "test if a graph is planar"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "Pymathics`PlanarGraphQ[graph_, OptionsPattern[PlanarGraphQ]]"
@@ -403,18 +405,17 @@ class PlanarGraphQ(_NetworkXBuiltin):
 
 class SimpleGraphQ(_NetworkXBuiltin):
     """
-    <url>
-    :Simple graph:
+    Simple (not multigraph) <url>
+    :graph:
     https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)#Graph
-    </url> (
-    <url>
+    </url> test (<url>
     :WMA:
     https://reference.wolfram.com/language/ref/SimpleGraphQ.html</url>)
 
     <dl>
-      <dt>'LoopFreeGraphQ'[$graph$]
+      <dt>'SimpleGraphQ'[$graph$]
       <dd>True if $graph$ is a 'Graph', loop-free and each pair of \
-    vertices are connected at most by a single edge.
+          vertices are connected at most by a single edge.
     </dl>
 
     >> g = Graph[{1 -> 2, 2 -> 3, 3 <-> 4}]; SimpleGraphQ[g]
@@ -433,10 +434,10 @@ class SimpleGraphQ(_NetworkXBuiltin):
      = False
     """
 
-    summary_text = "test if is a simple graph"
+    summary_text = "test if a graph is simple (not multigraph)"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "SimpleGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             if graph.empty():

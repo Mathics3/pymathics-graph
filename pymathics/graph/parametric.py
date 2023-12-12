@@ -140,10 +140,12 @@ generated/networkx.generators.classic.barbell_graph.html</url>, <url>
 class BinomialTree(_NetworkXBuiltin):
     """
     <url>
+    :Binomial tree:
+    https://en.wikipedia.org/wiki/Binomial_heap</url> (<url>
     :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference/\
 generated/networkx.generators.classic.binomial_tree.html</url>, <url>
-    :WMA:https://reference.wolfram.com/language/ref/BinomialTree.html</url>
+    :WMA:https://reference.wolfram.com/language/ref/BinomialTree.html</url>)
 
     <dl>
       <dt>'BinomialTree[$n$]'
@@ -500,11 +502,10 @@ class KaryTree(_NetworkXBuiltin):
 class LadderGraph(_NetworkXBuiltin):
     """
     <url>
-    :Ladder graph:https://en.wikipedia.org/wiki/Ladder_graph
-    </url>(<url>:NetworkX:
+    :Ladder graph:https://en.wikipedia.org/wiki/Ladder_graph</url> (<url>
+    :NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference\
-/generated/networkx.generators.classic.ladder_graph.html
-    </url>)
+/generated/networkx.generators.classic.ladder_graph.html</url>)
 
     <dl>
       <dt>'LadderGraph[$n$]'
@@ -544,7 +545,7 @@ class PathGraph(_NetworkXBuiltin):
     """
     <url>
     :Path graph:https://en.wikipedia.org/wiki/Path_graph
-    </url>(<url>:WMA:https://reference.wolfram.com/language/ref/PathGraph.html
+    </url> (<url>:WMA:https://reference.wolfram.com/language/ref/PathGraph.html
     </url>)
     <dl>
       <dt>'PathGraph[{$v_1$, $v_2$, ...}]'
@@ -576,8 +577,10 @@ class RandomTree(_NetworkXBuiltin):
     """
     <url>:NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference\
-/generated/networkx.generators.trees.random_tree.html
-    </url>
+/generated/networkx.generators.trees.random_tree.html</url>, <url>
+    :WMA:
+    https://reference.wolfram.com/language/ref/RandomTree.html</url>
+
     <dl>
       <dt>'RandomTree[$n$]'
       <dd>Returns a uniformly random tree on $n$ nodes.
@@ -615,13 +618,11 @@ class RandomTree(_NetworkXBuiltin):
 class StarGraph(_NetworkXBuiltin):
     """
     <url>
-    :Path graph:https://en.wikipedia.org/wiki/Star_graph
-    </url>(
-    <url>:NetworkX:
+    :Star graph:https://en.wikipedia.org/wiki/Star_graph
+    </url>(<url>:NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference\
 /generated/networkx.generators.classic.star_graph.html
-    </url>,
-    <url>:WMA:
+    </url>, <url>:WMA:
     https://reference.wolfram.com/language/ref/StarGraph.html
     </url>)
     <dl>
