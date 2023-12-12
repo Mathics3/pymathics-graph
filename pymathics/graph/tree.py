@@ -18,7 +18,7 @@ DEFAULT_TREE_OPTIONS = {
     **{"GraphLayout": '"tree"'},
 }
 
-from mathics.builtin.base import AtomBuiltin
+from mathics.core.builtin import AtomBuiltin
 
 
 # FIXME: do we need to have TreeGraphAtom and TreeGraph?
