@@ -4,6 +4,7 @@ from typing import Optional
 
 from mathics.core.load_builtin import import_and_load_builtins
 from mathics.core.symbols import Symbol
+from mathics.core.load_builtin import import_and_load_builtins
 from mathics.session import MathicsSession
 
 import_and_load_builtins()
@@ -12,7 +13,7 @@ import_and_load_builtins()
 # For consistency set the character encoding ASCII which is
 # the lowest common denominator available on all systems.
 session = MathicsSession(
-    add_builtin=True, catch_interrupt=False, character_encoding="ASCII"
+    character_encoding="ASCII"
 )
 
 
