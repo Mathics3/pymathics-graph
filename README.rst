@@ -1,6 +1,6 @@
 |Pypi Installs| |Latest Version| |Supported Python Versions|
 
-`Mathics <https://mathics.org>`_ Graph Module using `NetworkX <https://networkx.org/>`_ and `Matplotlib <https://matplotlib.org>`_
+`Mathics3 <https://mathics.org>`_ Graph Module using `NetworkX <https://networkx.org/>`_ and `Matplotlib <https://matplotlib.org>`_
 
 Example Session
 ---------------

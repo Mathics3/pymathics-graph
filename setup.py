@@ -7,8 +7,8 @@ import os.path as osp
 from setuptools import setup, find_namespace_packages
 
 # Ensure user has the correct Python version
-if sys.version_info < (3, 7):
-    print("Mathics support Python 3.7 and above; you have %d.%d" % sys.version_info[:2])
+if sys.version_info < (3, 8):
+    print("Mathics support Python 3.8 and above; you have %d.%d" % sys.version_info[:2])
     sys.exit(-1)
 
 
@@ -28,11 +28,11 @@ long_description = read("README.rst") + "\n"
 is_PyPy = platform.python_implementation() == "PyPy"
 
 setup(
-    name="pymathics-graph",
+    name="Mathics3-graph",
     version=__version__,  # noqa
     packages=find_namespace_packages(include=["pymathics.*"]),
     install_requires=[
-        "Mathics3>=7.0.0dev",
+        "Mathics3>=7.0.0.dev0",
         "networkx>=3.0.0",
         "pydot",
         "matplotlib",
@@ -50,10 +50,10 @@ setup(
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Scientific/Engineering",
