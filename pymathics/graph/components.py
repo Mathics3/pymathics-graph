@@ -60,7 +60,7 @@ generated/networkx.algorithms.components.strongly_connected_components.html</url
                 if graph.G.is_directed()
                 else nx.connected_components
             )
-            components = [to_mathics_list(*c) for c in connect_fn(graph.G)]
+            components = [to_mathics_list(*sorted(c)) for c in connect_fn(graph.G)]
             return ListExpression(*components)
 
 
