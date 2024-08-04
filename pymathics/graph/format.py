@@ -35,7 +35,7 @@ def format_graph(G, **options) -> str:
 
     global node_size
     global cached_pair
-
+    pyplot.close()
     pyplot.switch_backend("AGG")
     cached_pair = None
 
