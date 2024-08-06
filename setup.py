@@ -28,7 +28,7 @@ long_description = read("README.rst") + "\n"
 is_PyPy = platform.python_implementation() == "PyPy"
 
 setup(
-    name="Mathics3-graph",
+    name="pymathics3-graph",
     version=__version__,  # noqa
     packages=find_namespace_packages(include=["pymathics.*"]),
     install_requires=[
