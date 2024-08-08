@@ -1448,6 +1448,7 @@ class VertexIndex(_NetworkXBuiltin):
       <dd> gives the integer index of the vertex 'v' in the\
        graph 'g'.
     </dl>
+
     >> a=.;
     >> VertexIndex[{c <-> d, d <-> a}, a]
      = 3

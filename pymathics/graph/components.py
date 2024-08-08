@@ -71,6 +71,7 @@ generated/networkx.algorithms.components.strongly_connected_components.html</url
 #       <dt>'FindHamiltonianPath[$g$]'
 #       <dd>returns a Hamiltonian path in the given tournament graph.
 #       </dl>
+#
 #     """
 #     def eval_(self, graph, expression, evaluation: Evaluation, options):
 #         "FindHamiltonianPath[graph_, OptionsPattern[FindHamiltonPath]]"

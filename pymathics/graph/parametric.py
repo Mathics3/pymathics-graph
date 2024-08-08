@@ -469,6 +469,7 @@ class KaryTree(_NetworkXBuiltin):
       <dt>'KaryTree[$n$, $k$]'
       <dd>Creates $k$-ary tree with $n$ vertices.
     </dl>
+
     >> KaryTree[10]
      = -Graph-
 
@@ -552,6 +553,7 @@ class PathGraph(_NetworkXBuiltin):
       <dd>Returns a Graph with a path with vertices $v_i$ and \
       edges between $v-i$ and $v_i+1$ .
     </dl>
+
     >> PathGraph[{1, 2, 3}]
      = -Graph-
     """
