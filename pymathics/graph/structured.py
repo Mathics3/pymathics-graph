@@ -21,6 +21,7 @@ class PathGraph(_NetworkXBuiltin):
       <dt>'PathGraph[{$v_1$, $v_2$, ...}]'
       <dd>Returns a Graph with a path with vertices $v_i$ and edges between $v-i$ and $v_i+1$ .
     </dl>
+
     >> PathGraph[{1, 2, 3}]
      = -Graph-
     """
