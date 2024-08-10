@@ -1,3 +1,12 @@
+7.0.0
+-----
+
+* Revise for 7.0.0 Mathics3 API; we need to explicilty load builtins
+* Newer matplotlib requires a plot close.
+* Networkx 3.3 supported
+* sort connected components in output
+
+
 6.0.0
 -----
 

@@ -1,4 +1,4 @@
-name: Pymathics.graph (ubuntu)
+name: Mathic3 Graph Module (ubuntu)
 
 on:
   push:
@@ -8,14 +8,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10']
+        python-version: ['3.9', '3.10', '3.11']
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -24,11 +24,12 @@ jobs:
         python -m pip install pytest
         # Can comment out when next Mathics core and Mathics-scanner are released
         # python -m pip install -e git+https://github.com/Mathics3/mathics-scanner#egg=Mathics-Scanner[full]
-        python -m pip install -e git+https://github.com/Mathics3/mathics-core#egg=Mathics3[full]
-        (cd src/mathics3 && bash ./admin-tools/make-op-tables.sh)
+        # python -m pip install -e git+https://github.com/Mathics3/mathics-core#egg=Mathics3[full]
+        python -m pip install -e .
+        # (cd src/mathics3 && bash ./admin-tools/make-op-tables.sh)
     - name: install pymathics graph
       run: |
         make develop
-    - name: Test Mathics3
+    - name: Test Mathics3 Module Graph
       run: |
         make -j3 check
