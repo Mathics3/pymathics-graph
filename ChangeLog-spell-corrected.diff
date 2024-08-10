@@ -1,0 +1,124 @@
+--- ChangeLog	2024-08-10 03:46:00.609284564 -0400
++++ ChangeLog-spell-corrected	2024-08-10 03:45:36.963397654 -0400
+@@ -6,7 +6,7 @@
+ 
+ 2024-08-08  R. Bernstein <rocky@users.noreply.github.com>
+ 
+-	* : Merge pull request #33 from Mathics3/dl_blanklines addiing blanklines between </dl> and the examples in docstrings
++	* : Merge pull request #33 from Mathics3/dl_blanklines adding blanklines between </dl> and the examples in docstrings
+ 
+ 2024-08-06  rocky <rb@dustyfeet.com>
+ 
+@@ -48,7 +48,7 @@
+ 
+ 	* Makefile, pymathics/graph/base.py, pymathics/graph/tree.py,
+ 	pymathics/graph/version.py, setup.py,
+-	test/consistency-and-style/test_summary_text.py, test/helper.py: 
++	test/consistency-and-style/test_summary_text.py, test/helper.py:
+ 	fixes
+ 
+ 2023-07-24  rocky <rb@dustyfeet.com>
+@@ -65,7 +65,7 @@
+ 
+ 2023-04-22  rocky <rb@dustyfeet.com>
+ 
+-	* pymathics/graph/properties.py, pymathics/graph/version.py: 
++	* pymathics/graph/properties.py, pymathics/graph/version.py:
+ 	Revisions for NetWorkX >= 3.0.0
+ 
+ 2023-03-02  rocky <rb@dustyfeet.com>
+@@ -129,7 +129,7 @@
+ 2023-02-17  rocky <rb@dustyfeet.com>
+ 
+ 	* pymathics/graph/__init__.py, pymathics/graph/base.py,
+-	pymathics/graph/eval/parametric.py, pymathics/graph/parametric.py: 
++	pymathics/graph/eval/parametric.py, pymathics/graph/parametric.py:
+ 	Make a pass over parametric graph section..  Some type-checking corrections were made and some bugs found from
+ 	this fixed.
+ 
+@@ -145,7 +145,7 @@
+ 2023-02-14  Juan Mauricio Matera <matera@fisica.unlp.edu.ar>
+ 
+ 	* pymathics/graph/base.py, pymathics/graph/centralities.py,
+-	pymathics/graph/operations.py, pymathics/graph/parametric.py: 
++	pymathics/graph/operations.py, pymathics/graph/parametric.py:
+ 	another round of small fixes (#20) * another round of small fixes * remove extra line
+ 
+ 2023-02-14  Juan Mauricio Matera <matera@fisica.unlp.edu.ar>
+@@ -225,7 +225,7 @@
+ 2023-02-12  rocky <rb@dustyfeet.com>
+ 
+ 	* pymathics/graph/eval/tree.py, pymathics/graph/tree.py: Sort out
+-	Tree module ...  This might be temporay though based on WMA docs
++	Tree module ...  This might be temporary though based on WMA docs
+ 
+ 2023-02-12  rocky <rb@dustyfeet.com>
+ 
+@@ -331,7 +331,7 @@
+ 
+ 	* README.rst, pymathics/graph/__main__.py,
+ 	pymathics/graph/algorithms.py, pymathics/graph/generators.py,
+-	pymathics/graph/tree.py, pymathics/graph/version.py, setup.py: 
++	pymathics/graph/tree.py, pymathics/graph/version.py, setup.py:
+ 	Changes for Mathics 6.0.0
+ 
+ 2022-07-31  rocky <rb@dustyfeet.com>
+@@ -386,7 +386,7 @@
+ 
+ 2022-07-19  rocky <rb@dustyfeet.com>
+ 
+-	* .pre-commit-config.yaml, pymathics/graph/__main__.py, setup.py: 
++	* .pre-commit-config.yaml, pymathics/graph/__main__.py, setup.py:
+ 	WIP - conversion to mathics 5.0.0
+ 
+ 2022-07-11  rocky <rb@dustyfeet.com>
+@@ -444,7 +444,7 @@
+ 
+ 2021-02-15  rocky <rb@dustyfeet.com>
+ 
+-	* pymathics/graph/generators.py: KaryTree doc formating typo
++	* pymathics/graph/generators.py: KaryTree doc formatting typo
+ 
+ 2020-12-24  rocky <rb@dustyfeet.com>
+ 
+@@ -453,7 +453,7 @@
+ 2020-12-24  rocky <rb@dustyfeet.com>
+ 
+ 	* NEWS.md, README.rst, admin-tools/.gitignore,
+-	admin-tools/make-dist.sh, admin-tools/pyenv-versions, setup.py: 
++	admin-tools/make-dist.sh, admin-tools/pyenv-versions, setup.py:
+ 	Administrivia....  Add NEWS.md and code to build distribution
+ 
+ 2020-12-24  rocky <rb@dustyfeet.com>
+@@ -532,7 +532,7 @@
+ 
+ 2020-12-05  rocky <rb@dustyfeet.com>
+ 
+-	* pymathics/graph/graph_generators.py, pymathics/graph/tree.py: 
++	* pymathics/graph/graph_generators.py, pymathics/graph/tree.py:
+ 	graph layout should be Python string
+ 
+ 2020-12-05  rocky <rb@dustyfeet.com>
+@@ -542,7 +542,7 @@
+ 
+ 2020-12-04  rocky <rb@dustyfeet.com>
+ 
+-	* pymathics/graph/__main__.py, pymathics/graph/graph_generators.py: 
++	* pymathics/graph/__main__.py, pymathics/graph/graph_generators.py:
+ 	VertexLabeling->VertexLabels Use helper function in CompleteGraph
+ 
+ 2020-12-04  rocky <rb@dustyfeet.com>
+@@ -582,7 +582,7 @@
+ 
+ 2020-11-29  rocky <rb@dustyfeet.com>
+ 
+-	* pymathics/graph/__main__.py, pymathics/graph/graph_generators.py: 
++	* pymathics/graph/__main__.py, pymathics/graph/graph_generators.py:
+ 	DRY graph generators
+ 
+ 2020-11-29  rocky <rb@dustyfeet.com>
+@@ -618,4 +618,3 @@
+ 2020-11-05  rocky <rocky@gnu.org>
+ 
+ 	* pymathics.graph: Mathic Graph functions
+-
