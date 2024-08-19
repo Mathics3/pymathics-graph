@@ -118,7 +118,7 @@ pymathics_version_data = {
     "requires": ["networkx"],
 }
 
-# Thsee are the publicly exported names
+# These are the publicly exported names
 __all__ = [
     "AcyclicGraphQ",
     "AdjacencyList",
