@@ -856,7 +856,7 @@ class AdjacencyList(_NetworkXBuiltin):
     def _retrieve(self, graph, what, neighbors, expression, evaluation):
         if what.get_head_name() in pattern_objects:
             collected = set()
-            match = Matcher(what).match
+            match = Matcher(what, evaluation).match
             for v in graph.G.nodes:
                 if match(v, evaluation):
                     collected.update(neighbors(v))
