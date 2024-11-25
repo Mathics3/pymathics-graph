@@ -579,7 +579,7 @@ class RandomTree(_NetworkXBuiltin):
     """
     <url>:NetworkX:
     https://networkx.org/documentation/networkx-2.8.8/reference\
-/generated/networkx.generators.trees.random_tree.html</url>, <url>
+/generated/networkx.generators.trees.random_labeled_tree.html</url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/RandomTree.html</url>
 
@@ -610,7 +610,9 @@ class RandomTree(_NetworkXBuiltin):
             return
 
         args = (py_n,)
-        g = graph_helper(nx.random_tree, options, False, "tree", evaluation, 0, *args)
+        g = graph_helper(
+            nx.random_labeled_tree, options, False, "tree", evaluation, 0, *args
+        )
         if not g:
             return None
         g.G.n = n
