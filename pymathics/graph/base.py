@@ -10,6 +10,11 @@ from collections import defaultdict
 from inspect import isgenerator
 from typing import Callable, Optional, Union
 
+from mathics.builtin.no_meaning import (
+    DirectedEdge as GenericDirectedEdge,
+    UndirectedEdge as GenericUndirectedEdge,
+)
+from mathics.core.attributes import A_PROTECTED, A_READ_PROTECTED
 from mathics.core.builtin import AtomBuiltin, Builtin
 from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, String
 from mathics.core.convert.expression import ListExpression, from_python, to_mathics_list
@@ -893,8 +898,8 @@ class AdjacencyList(_NetworkXBuiltin):
             return self._retrieve(graph, what, neighbors, expression, evaluation)
 
 
-class DirectedEdge(Builtin):
-    """
+class DirectedEdge(GenericDirectedEdge):
+    r"""
     Edge of a <url>
     :Directed graph:
     https://en.wikipedia.org/wiki/Directed_graph</url> (<url>
@@ -908,9 +913,15 @@ class DirectedEdge(Builtin):
       <dt>'DirectedEdge[$u$, $v$]'
       <dd>create a directed edge from $u$ to $v$.
     </dl>
+
+    >> DirectedEdge[x, y, z]
+     = x → y → z
+
+    >> a \[DirectedEdge] b
+     = a → b
     """
 
-    summary_text = "make a directed graph edge"
+    attributes = A_PROTECTED | A_READ_PROTECTED
 
 
 class EdgeConnectivity(_NetworkXBuiltin):
@@ -1494,7 +1505,7 @@ class VertexList(_PatternList):
         return graph.vertices
 
 
-class UndirectedEdge(Builtin):
+class UndirectedEdge(GenericUndirectedEdge):
     """
     <url>
     :WMA link:
@@ -1506,17 +1517,10 @@ class UndirectedEdge(Builtin):
     </dl>
 
     >> a <-> b
-     = UndirectedEdge[a, b]
-
-    >> (a <-> b) <-> c
-     = UndirectedEdge[UndirectedEdge[a, b], c]
-
-    >> a <-> (b <-> c)
-     = UndirectedEdge[a, UndirectedEdge[b, c]]
+     = ...
     """
 
-    summary_text = "undirected graph edge"
-    pass
+    attributes = A_PROTECTED | A_READ_PROTECTED
 
 
 # class EdgeAdd(_NetworkXBuiltin):
