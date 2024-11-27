@@ -4,13 +4,13 @@
 Core routines for working with Graphs.
 """
 
-# uses networkx
+# uses NetworkX
 
 from collections import defaultdict
 from inspect import isgenerator
 from typing import Callable, Optional, Union
 
-from mathics.builtin.no_meaning import (
+from mathics.builtin.no_meaning.infix_extra import (
     DirectedEdge as GenericDirectedEdge,
     UndirectedEdge as GenericUndirectedEdge,
 )
@@ -19,6 +19,7 @@ from mathics.core.builtin import AtomBuiltin, Builtin
 from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, String
 from mathics.core.convert.expression import ListExpression, from_python, to_mathics_list
 from mathics.core.element import BaseElement
+from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
 from mathics.core.pattern import pattern_objects
 from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
@@ -131,133 +132,6 @@ def graph_helper(
 
 def has_directed_option(options: dict) -> bool:
     return options.get("System`DirectedEdges", False)
-
-
-def _process_graph_options(g, options: dict) -> None:
-    """
-    Handle common graph-related options like VertexLabels, PlotLabel, VertexShape, etc.
-    """
-    # FIXME: for now we are adding both to both g and g.G.
-    # g is where it is used in format. However we should wrap this as our object.
-    # Access in G which might be better, currently isn't used.
-    g.G.vertex_labels = g.vertex_labels = (
-        options["System`VertexLabels"].to_python()
-        if "System`VertexLabels" in options
-        else False
-    )
-    shape = (
-        options["System`VertexShape"].get_string_value()
-        if "System`VertexShape" in options
-        else "Circle"
-    )
-
-    g.G.node_shape = g.node_shape = WL_MARKER_TO_NETWORKX.get(shape, shape)
-
-    color = (
-        options["System`VertexStyle"].get_string_value()
-        if "System`VertexStyle" in options
-        else "Blue"
-    )
-
-    g.graph_layout = (
-        options["System`GraphLayout"].get_string_value()
-        if "System`GraphLayout" in options
-        else ""
-    )
-
-    g.G.graph_layout = g.graph_layout = WL_LAYOUT_TO_NETWORKX.get(
-        g.graph_layout, g.graph_layout
-    )
-
-    g.G.node_color = g.node_color = WL_COLOR_TO_NETWORKX.get(color, color)
-
-    g.G.title = g.title = (
-        options["System`PlotLabel"].get_string_value()
-        if "System`PlotLabel" in options
-        else None
-    )
-
-
-def _circular_layout(G):
-    return nx.drawing.circular_layout(G, scale=1)
-
-
-def _spectral_layout(G):
-    return nx.drawing.spectral_layout(G, scale=2)
-
-
-def _shell_layout(G):
-    return nx.drawing.shell_layout(G, scale=2)
-
-
-def _generic_layout(G, warn):
-    return nx.nx_pydot.graphviz_layout(G, prog="dot")
-
-
-def _path_layout(G, root):
-    v = root
-    x = 0
-    y = 0
-
-    k = 0
-    d = 0
-
-    pos = {}
-    neighbors = G.neighbors(v)
-
-    for _ in range(len(G)):
-        pos[v] = (x, y)
-
-        if not neighbors:
-            break
-        try:
-            v = next(neighbors) if isgenerator(neighbors) else neighbors[0]
-        except StopIteration:
-            break
-        neighbors = G.neighbors(v)
-
-        if k == 0:
-            if d < 1 or neighbors:
-                d += 1
-            x += d
-        elif k == 1:
-            y += d
-        elif k == 2:
-            if neighbors:
-                d += 1
-            x -= d
-        elif k == 3:
-            y -= d
-
-        k = (k + 1) % 4
-
-    return pos
-
-
-def _auto_layout(G, warn):
-    path_root = None
-
-    for v, d in G.degree(G.nodes):
-        if d == 1 and G.neighbors(v):
-            path_root = v
-        elif d > 2:
-            path_root = None
-            break
-
-    if path_root is not None:
-        return _path_layout(G, path_root)
-    else:
-        return _generic_layout(G, warn)
-
-
-def _convert_networkx_graph(G, options):
-    mapping = dict((v, Integer(i)) for i, v in enumerate(G.nodes))
-    G = nx.relabel_nodes(G, mapping)
-    [Expression(SymbolUndirectedEdge, u, v) for u, v in G.edges]
-    return Graph(
-        G,
-        **options,
-    )
 
 
 _default_minimum_distance = 0.3
@@ -424,7 +298,7 @@ class Graph(Atom):
     def __str__(self):
         return "-Graph-"
 
-    def atom_to_boxes(self, f, evaluation) -> "GraphBox":
+    def atom_to_boxes(self, f, evaluation: Evaluation) -> "GraphBox":
         return GraphBox(self.G)
 
     def add_edges(self, new_edges, new_edge_properties):
@@ -439,7 +313,7 @@ class Graph(Atom):
         G.add_nodes_from(vertices_to_add)
         return Graph(G)
 
-    def coalesced_graph(self, evaluation):
+    def coalesced_graph(self, evaluation: Evaluation):
         if not isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph)):
             return self.G, "WEIGHT"
 
@@ -601,6 +475,133 @@ def _graph_from_list(rules, options, new_vertices=None):
         return _create_graph(
             new_edges, new_edge_properties, options=options, new_vertices=new_vertices
         )
+
+
+def _process_graph_options(g: Graph, options: dict) -> None:
+    """
+    Handle common graph-related options like VertexLabels, PlotLabel, VertexShape, etc.
+    """
+    # FIXME: for now we are adding both to both g and g.G.
+    # g is where it is used in format. However we should wrap this as our object.
+    # Access in G which might be better, currently isn't used.
+    g.G.vertex_labels = g.vertex_labels = (
+        options["System`VertexLabels"].to_python()
+        if "System`VertexLabels" in options
+        else False
+    )
+    shape = (
+        options["System`VertexShape"].get_string_value()
+        if "System`VertexShape" in options
+        else "Circle"
+    )
+
+    g.G.node_shape = g.node_shape = WL_MARKER_TO_NETWORKX.get(shape, shape)
+
+    color = (
+        options["System`VertexStyle"].get_string_value()
+        if "System`VertexStyle" in options
+        else "Blue"
+    )
+
+    g.graph_layout = (
+        options["System`GraphLayout"].get_string_value()
+        if "System`GraphLayout" in options
+        else ""
+    )
+
+    g.G.graph_layout = g.graph_layout = WL_LAYOUT_TO_NETWORKX.get(
+        g.graph_layout, g.graph_layout
+    )
+
+    g.G.node_color = g.node_color = WL_COLOR_TO_NETWORKX.get(color, color)
+
+    g.G.title = g.title = (
+        options["System`PlotLabel"].get_string_value()
+        if "System`PlotLabel" in options
+        else None
+    )
+
+
+def _circular_layout(G: Graph):
+    return nx.drawing.circular_layout(G, scale=1)
+
+
+def _spectral_layout(G: Graph):
+    return nx.drawing.spectral_layout(G, scale=2)
+
+
+def _shell_layout(G: Graph):
+    return nx.drawing.shell_layout(G, scale=2)
+
+
+def _generic_layout(G, warn):
+    return nx.nx_pydot.graphviz_layout(G, prog="dot")
+
+
+def _path_layout(G, root):
+    v = root
+    x = 0
+    y = 0
+
+    k = 0
+    d = 0
+
+    pos = {}
+    neighbors = G.neighbors(v)
+
+    for _ in range(len(G)):
+        pos[v] = (x, y)
+
+        if not neighbors:
+            break
+        try:
+            v = next(neighbors) if isgenerator(neighbors) else neighbors[0]
+        except StopIteration:
+            break
+        neighbors = G.neighbors(v)
+
+        if k == 0:
+            if d < 1 or neighbors:
+                d += 1
+            x += d
+        elif k == 1:
+            y += d
+        elif k == 2:
+            if neighbors:
+                d += 1
+            x -= d
+        elif k == 3:
+            y -= d
+
+        k = (k + 1) % 4
+
+    return pos
+
+
+def _auto_layout(G: Graph, warn):
+    path_root = None
+
+    for v, d in G.degree(G.nodes):
+        if d == 1 and G.neighbors(v):
+            path_root = v
+        elif d > 2:
+            path_root = None
+            break
+
+    if path_root is not None:
+        return _path_layout(G, path_root)
+    else:
+        return _generic_layout(G, warn)
+
+
+def _convert_networkx_graph(G: Graph, options: dict):
+    mapping = dict((v, Integer(i)) for i, v in enumerate(G.nodes))
+    G = nx.relabel_nodes(G, mapping)
+    [Expression(SymbolUndirectedEdge, u, v) for u, v in G.edges]
+    return Graph(
+        G,
+        **options,
+    )
 
 
 def _create_graph(
@@ -813,7 +814,9 @@ def _create_graph(
 
 
 class _PatternList(_NetworkXBuiltin):
-    def eval(self, graph, expression, evaluation, options):
+    def eval(
+        self, graph, expression: Expression, evaluation: Evaluation, options: dict
+    ):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
@@ -903,8 +906,6 @@ class DirectedEdge(GenericDirectedEdge):
     Edge of a <url>
     :Directed graph:
     https://en.wikipedia.org/wiki/Directed_graph</url> (<url>
-    :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/classes/digraph.html</url>, <url>
     :WMA:
     https://reference.wolfram.com/language/ref/DirectedEdge.html</url>)
 
@@ -920,6 +921,10 @@ class DirectedEdge(GenericDirectedEdge):
     >> a \[DirectedEdge] b
      = a → b
     """
+
+    # attributes change from the default, so we need to
+    # specify this below. Other things like "formats",
+    # "operator" and "summary" do not change from the default.
 
     attributes = A_PROTECTED | A_READ_PROTECTED
 
@@ -1088,7 +1093,9 @@ class FindShortestPath(_NetworkXBuiltin):
 
     summary_text = "find the shortest path between two vertices"
 
-    def eval_s_t(self, graph, s, t, expression, evaluation, options):
+    def eval_s_t(
+        self, graph, s, t, expression: Expression, evaluation: Evaluation, options: dict
+    ):
         "FindShortestPath[graph_, s_, t_, OptionsPattern[FindShortestPath]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph:
@@ -1507,7 +1514,9 @@ class VertexList(_PatternList):
 
 class UndirectedEdge(GenericUndirectedEdge):
     """
-    <url>
+    Edge of a <url>
+    :Undirected graph:
+    https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)#Undirected_graph</url> <url>
     :WMA link:
     https://reference.wolfram.com/language/ref/UndirectedEdge.html</url>
 
@@ -1519,6 +1528,10 @@ class UndirectedEdge(GenericUndirectedEdge):
     >> a <-> b
      = ...
     """
+
+    # attributes change from the default, so we need to
+    # specify this below. Other things like "formats",
+    # "operator" and "summary" do not change from the default.
 
     attributes = A_PROTECTED | A_READ_PROTECTED
 
