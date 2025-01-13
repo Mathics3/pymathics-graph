@@ -52,7 +52,7 @@ class AcyclicGraphQ(_NetworkXBuiltin):
 
     summary_text = "test if is a graph is acyclic"
 
-    def eval(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "AcyclicGraphQ[graph_, OptionsPattern[AcyclicGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=False)
         if not graph or graph.empty():
@@ -73,7 +73,7 @@ class ConnectedGraphQ(_NetworkXBuiltin):
 #Connected_vertices_and_graphs
     </url> test (<url>
     :NetworkX:
-https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
+https://networkx.org/documentation/stable/reference/algorithms\
 /generated/networkx.algorithms.components.is_connected.html
     </url>, <url>
     :WMA:
@@ -111,7 +111,7 @@ https://networkx.org/documentation/networkx-2.8.8/reference/algorithms\
 
     summary_text = "test if a graph is a connected"
 
-    def eval(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "%(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
@@ -127,7 +127,7 @@ class DirectedGraphQ(_NetworkXBuiltin):
     https://en.wikipedia.org/wiki/Directed_graph
     </url> test (<url>
     :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference\
+    https://networkx.org/documentation/stable/reference\
 /generated/networkx.classes.function.is_directed.html
     </url>, <url>
     :WMA:
@@ -153,13 +153,38 @@ class DirectedGraphQ(_NetworkXBuiltin):
 
     summary_text = "test if a graph is directed"
 
-    def eval(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "DirectedGraphQ[graph_, OptionsPattern[DirectedGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             return from_python(graph.is_directed())
         else:
             return SymbolFalse
+
+
+class GraphQ(_NetworkXBuiltin):
+    """
+    <url>:WMA link:
+    https://reference.wolfram.com/language/ref/GraphQ.html</url>
+    <dl>
+      <dt>'GraphQ'[$graph$]
+      <dd>True if $graph$ is a 'Graph'.
+    </dl>
+
+    A graph with one one node and one self-looping edge:
+    >> GraphQ[{1 -> 2, 2 -> 3, 3 -> 1}]
+     = True
+
+    >> GraphQ[{1, 2, 3}]
+     = False
+    """
+
+    summary_text = "test object is a graph"
+
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
+        "GraphQ[graph_, OptionsPattern[GraphQ]]"
+        graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
+        return SymbolTrue if graph else SymbolFalse
 
 
 class LoopFreeGraphQ(_NetworkXBuiltin):
@@ -169,7 +194,7 @@ class LoopFreeGraphQ(_NetworkXBuiltin):
     https://en.wikipedia.org/wiki/Loop_(graph_theory)
     </url> test (<url>
     :NetworkX:
-    https://networkx.org/documentation/networkx-2.8.8/reference/\
+    https://networkx.org/documentation/stable/reference/\
 generated/networkx.classes.function.nodes_with_selfloops.html
     </url>, <url>
     :WMA:
@@ -195,7 +220,7 @@ generated/networkx.classes.function.nodes_with_selfloops.html
 
     summary_text = "test if a graph is loop free"
 
-    def eval(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "LoopFreeGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if not graph or graph.empty():
@@ -240,7 +265,7 @@ class MixedGraphQ(_NetworkXBuiltin):
 
     summary_text = "test if a graph has directed and undirected edges"
 
-    def eval(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "MixedGraphQ[graph_, OptionsPattern[MixedGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
@@ -254,7 +279,7 @@ class MultigraphQ(_NetworkXBuiltin):
     :Multigraph:
     https://en.wikipedia.org/wiki/Multigraph</url> test (<url>
     :NetworkX:
-https://networkx.org/documentation/networkx-2.8.8/reference/classes/multigraph.html</url>, \
+https://networkx.org/documentation/stable/reference/classes/multigraph.html</url>, \
     <url>
     :WMA:
     https://reference.wolfram.com/language/ref/MulitGraphQ.html</url>)
@@ -281,7 +306,7 @@ https://networkx.org/documentation/networkx-2.8.8/reference/classes/multigraph.h
 
     summary_text = "test if a graph is a multi graph"
 
-    def eval(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "MultigraphQ[graph_, OptionsPattern[MultigraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
@@ -339,7 +364,7 @@ class PathGraphQ(_NetworkXBuiltin):
 
     summary_text = "test if a graph is a path-like graph"
 
-    def eval(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "PathGraphQ[graph_, OptionsPattern[PathGraphQ]]"
         if not isinstance(graph, Graph) or graph.empty():
             return SymbolFalse
@@ -365,7 +390,7 @@ class PlanarGraphQ(_NetworkXBuiltin):
         :Planar Graph:
         https://en.wikipedia.org/wiki/Planar_graph</url> test (<url>
         :NetworkX:
-        https://networkx.org/documentation/networkx-2.8.8/reference/algorithms/
+        https://networkx.org/documentation/stable/reference/algorithms/
     generated/networkx.algorithms.planarity.check_planarity.html</url>, <url>
         :WMA:
         https://reference.wolfram.com/language/ref/PlanaGraphQ.html</url>)
@@ -436,7 +461,7 @@ class SimpleGraphQ(_NetworkXBuiltin):
 
     summary_text = "test if a graph is simple (not multigraph)"
 
-    def eval(self, graph, expression, evaluation, options):
+    def eval(self, graph, expression, evaluation: Evaluation, options: dict):
         "SimpleGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:

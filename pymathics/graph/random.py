@@ -2,6 +2,8 @@
 Random Graphs
 """
 
+from typing import Any, Generator
+
 import networkx as nx
 from mathics.builtin.numbers.randomnumbers import RandomEnv
 from mathics.core.atoms import Integer, Integer1
@@ -36,7 +38,7 @@ class RandomGraph(_NetworkXBuiltin):
 
     def _generate(
         self, n: Integer, m: Integer, k: Integer, evaluation: Evaluation, options: dict
-    ) -> Graph:
+    ) -> Generator[Any, Any, Any]:
         py_n = n.value
         py_m = m.value
         py_k = k.value
@@ -64,6 +66,6 @@ class RandomGraph(_NetworkXBuiltin):
         expression,
         evaluation: Evaluation,
         options: dict,
-    ) -> Graph:
+    ) -> ListExpression:
         "RandomGraph[{n_Integer, m_Integer}, k_Integer, OptionsPattern[RandomGraph]]"
         return ListExpression(*self._generate(n, m, k, evaluation, options))

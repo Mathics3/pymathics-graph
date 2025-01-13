@@ -60,7 +60,6 @@ from pymathics.graph.base import (
     VertexIndex,
     VertexList,
 )
-
 from pymathics.graph.centralities import (
     BetweennessCentrality,
     ClosenessCentrality,
@@ -70,7 +69,6 @@ from pymathics.graph.centralities import (
     KatzCentrality,
     PageRankCentrality,
 )
-
 from pymathics.graph.components import ConnectedComponents, WeaklyConnectedComponents
 from pymathics.graph.curated import GraphData
 from pymathics.graph.measures_and_metrics import (
@@ -99,6 +97,7 @@ from pymathics.graph.properties import (
     AcyclicGraphQ,
     ConnectedGraphQ,
     DirectedGraphQ,
+    GraphQ,
     LoopFreeGraphQ,
     MixedGraphQ,
     MultigraphQ,
@@ -151,6 +150,7 @@ __all__ = [
     "GraphBox",
     "GraphData",
     "GraphDistance",
+    "GraphQ",
     "HITSCentrality",
     "HighlightGraph",
     "HknHararyGraph",
