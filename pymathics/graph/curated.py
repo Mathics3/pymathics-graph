@@ -28,7 +28,7 @@ class GraphData(_NetworkXBuiltin):
     def eval(
         self, name, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "GraphData[name_String, OptionsPattern[GraphData]]"
+        "expression: GraphData[name_String, OptionsPattern[GraphData]]"
         py_name = name.get_string_value()
         fn, layout = WL_TO_NETWORKX_FN.get(py_name, (None, None))
         if not fn:

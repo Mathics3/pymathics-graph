@@ -31,7 +31,7 @@ class _PatternCount(_NetworkXBuiltin):
     no_doc = True
 
     def eval(self, graph, expression, evaluation, options) -> Optional[Integer]:
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             return Integer(len(self._items(graph)))
@@ -39,7 +39,7 @@ class _PatternCount(_NetworkXBuiltin):
     def eval_patt(
         self, graph, patt, expression, evaluation, options
     ) -> Optional[Expression]:
-        "%(name)s[graph_, patt_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, patt_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             return Expression(
@@ -132,7 +132,7 @@ class GraphDistance(_NetworkXBuiltin):
     def eval_s(
         self, graph, s, expression, evaluation: Evaluation, options: dict
     ) -> Optional[ListExpression]:
-        "GraphDistance[graph_, s_, OptionsPattern[GraphDistance]]"
+        "expression: GraphDistance[graph_, s_, OptionsPattern[GraphDistance]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             weight = graph.update_weights(evaluation)
@@ -141,7 +141,7 @@ class GraphDistance(_NetworkXBuiltin):
             return to_mathics_list(*[d.get(v, inf) for v in graph.vertices])
 
     def eval_s_t(self, graph, s, t, expression, evaluation: Evaluation, options: dict):
-        "GraphDistance[graph_, s_, t_, OptionsPattern[GraphDistance]]"
+        "expression: GraphDistance[graph_, s_, t_, OptionsPattern[GraphDistance]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph:
             return

@@ -104,5 +104,5 @@ class TreeGraphQ(_NetworkXBuiltin):
     def eval(
         self, g, expression, evaluation: Evaluation, options: dict
     ) -> SymbolConstant:
-        "TreeGraphQ[g_, OptionsPattern[%(name)s]]"
+        "expression: TreeGraphQ[g_, OptionsPattern[%(name)s]]"
         return eval_TreeGraphQ(g)
