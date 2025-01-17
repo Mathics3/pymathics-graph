@@ -59,7 +59,7 @@ class BalancedTree(_NetworkXBuiltin):
     def eval(
         self, r: Integer, h: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "%(name)s[r_Integer, h_Integer, OptionsPattern[%(name)s]]"
+        "expression:%(name)s[r_Integer, h_Integer, OptionsPattern[%(name)s]]"
         py_r = r.value
 
         if py_r < 0:
@@ -113,7 +113,7 @@ generated/networkx.generators.classic.barbell_graph.html</url>, <url>
         evaluation: Evaluation,
         options: dict,
     ) -> Optional[Graph]:
-        "BarbellGraph[m1_Integer, m2_Integer, OptionsPattern[BarbellGraph]]"
+        "expression: BarbellGraph[m1_Integer, m2_Integer, OptionsPattern[BarbellGraph]]"
         py_m1 = m1.value
 
         if py_m1 < 0:
@@ -179,7 +179,7 @@ generated/networkx.generators.classic.binomial_tree.html</url>, <url>
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "%(name)s[n_Integer, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[n_Integer, OptionsPattern[%(name)s]]"
         py_n = n.value
 
         if py_n < 0:
@@ -221,7 +221,7 @@ generated/networkx.generators.classic.complete_multipartite_graph.html</url>, <u
     summary_text = "build a completely-connected graph"
 
     def eval(self, n: Integer, expression, evaluation: Evaluation, options: dict):
-        "CompleteGraph[n_Integer, OptionsPattern[CompleteGraph]]"
+        "expression: CompleteGraph[n_Integer, OptionsPattern[CompleteGraph]]"
         return eval_complete_graph(self, n, expression, evaluation, options)
 
     def eval_multipartite(
@@ -265,7 +265,7 @@ generated/networkx.generators.classic.full_rary_tree.html</url>, <url>
     def eval(
         self, k: Integer, n: Integer, expression, evaluation: Evaluation, options: dict
     ):
-        "CompleteKaryTree[n_Integer, k_Integer, OptionsPattern[CompleteKaryTree]]"
+        "expression: CompleteKaryTree[n_Integer, k_Integer, OptionsPattern[CompleteKaryTree]]"
 
         n_int = n.value
         k_int = k.value
@@ -277,7 +277,7 @@ generated/networkx.generators.classic.full_rary_tree.html</url>, <url>
 
     # FIXME: can be done with rules?
     def eval_2(self, n: Integer, expression, evaluation: Evaluation, options: dict):
-        "CompleteKaryTree[n_Integer, OptionsPattern[CompleteKaryTree]]"
+        "expression: CompleteKaryTree[n_Integer, OptionsPattern[CompleteKaryTree]]"
 
         n_int = n.value
 
@@ -308,7 +308,7 @@ class CycleGraph(_NetworkXBuiltin):
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "CycleGraph[n_Integer, OptionsPattern[CycleGraph]]"
+        "expression: CycleGraph[n_Integer, OptionsPattern[CycleGraph]]"
         n_int = n.value
         if n_int < 3:
             return eval_complete_graph(self, n, expression, evaluation, options)
@@ -342,7 +342,7 @@ generated/networkx.generators.atlas.graph_atlas.html
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "GraphAtlas[n_Integer, OptionsPattern[GraphAtlas]]"
+        "expression: GraphAtlas[n_Integer, OptionsPattern[GraphAtlas]]"
         py_n = n.value
 
         if py_n < 1:
@@ -391,7 +391,7 @@ class HknHararyGraph(_NetworkXBuiltin):
     summary_text = "build a Hkn Harary graph"
 
     def eval(self, k, n, expression, evaluation: Evaluation, options: dict):
-        "%(name)s[k_Integer, n_Integer, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[k_Integer, n_Integer, OptionsPattern[%(name)s]]"
         return eval_hkn_harary(self, k, n, expression, evaluation, options)
 
 
@@ -430,7 +430,7 @@ class HmnHararyGraph(_NetworkXBuiltin):
     def eval(
         self, n: Integer, m: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "%(name)s[n_Integer, m_Integer, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[n_Integer, m_Integer, OptionsPattern[%(name)s]]"
         py_n = n.value
 
         if py_n < 0:
@@ -490,13 +490,13 @@ class KaryTree(_NetworkXBuiltin):
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "KaryTree[n_Integer, OptionsPattern[KaryTree]]"
+        "expression: KaryTree[n_Integer, OptionsPattern[KaryTree]]"
         return eval_full_rary_tree(self, Integer2, n, expression, evaluation, options)
 
     def eval_with_k(
         self, n: Integer, k: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "KaryTree[n_Integer, k_Integer, OptionsPattern[KaryTree]]"
+        "expression: KaryTree[n_Integer, k_Integer, OptionsPattern[KaryTree]]"
         return eval_full_rary_tree(self, k, n, expression, evaluation, options)
 
 
@@ -525,7 +525,7 @@ class LadderGraph(_NetworkXBuiltin):
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "LadderGraph[n_Integer, OptionsPattern[LadderGraph]]"
+        "expression: LadderGraph[n_Integer, OptionsPattern[LadderGraph]]"
         py_n = n.value
 
         if py_n < 1:
@@ -602,7 +602,7 @@ class RandomTree(_NetworkXBuiltin):
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "RandomTree[n_Integer, OptionsPattern[RandomTree]]"
+        "expression: RandomTree[n_Integer, OptionsPattern[RandomTree]]"
         py_n = n.value
 
         if py_n < 0:
@@ -646,7 +646,7 @@ class StarGraph(_NetworkXBuiltin):
     def eval(
         self, n: Integer, expression, evaluation: Evaluation, options: dict
     ) -> Optional[Graph]:
-        "StarGraph[n_Integer, OptionsPattern[StarGraph]]"
+        "expression: StarGraph[n_Integer, OptionsPattern[StarGraph]]"
         py_n = n.value
 
         if py_n < 1:

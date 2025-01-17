@@ -96,7 +96,7 @@ class BetweennessCentrality(_Centrality):
     summary_text = "get Betweenness centrality"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             weight = graph.update_weights(evaluation)
@@ -143,7 +143,7 @@ class ClosenessCentrality(_Centrality):
     summary_text = "get the closeness centrality"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             weight = graph.update_weights(evaluation)
@@ -196,19 +196,19 @@ class DegreeCentrality(_Centrality):
         )
 
     def eval(self, graph, expression, evaluation, options):
-        "Pymathics`DegreeCentrality[graph_, OptionsPattern[]]"
+        "expression: Pymathics`DegreeCentrality[graph_, OptionsPattern[]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             return self._from_dict(graph, nx.degree_centrality(graph.G))
 
     def eval_in(self, graph, expression, evaluation, options):
-        '%(name)s[graph_, "In", OptionsPattern[]]'
+        'expression: %(name)s[graph_, "In", OptionsPattern[]]'
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             return self._from_dict(graph, nx.in_degree_centrality(graph.G))
 
     def eval_out(self, graph, expression, evaluation, options):
-        '%(name)s[graph_, "Out", OptionsPattern[]]'
+        'expression: %(name)s[graph_, "Out", OptionsPattern[]]'
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             return self._from_dict(graph, nx.out_degree_centrality(graph.G))
@@ -263,13 +263,13 @@ class EigenvectorCentrality(_ComponentwiseCentrality):
         return nx.eigenvector_centrality(g, max_iter=10000, tol=1.0e-7, weight=weight)
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             return self._compute(graph, evaluation)
 
     def eval_in_out(self, graph, dir, expression, evaluation, options):
-        "%(name)s[graph_, dir_String, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, dir_String, OptionsPattern[%(name)s]]"
         py_dir = dir.get_string_value()
         if py_dir not in ("In", "Out"):
             return
@@ -299,7 +299,7 @@ generated/networkx.algorithms.link_analysis.hits_alg.hits.html</url>, \
     summary_text = "get HITS centrality"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             G, _ = graph.coalesced_graph(evaluation)  # FIXME warn if weight > 1
@@ -364,7 +364,7 @@ class KatzCentrality(_ComponentwiseCentrality):
         )
 
     def eval(self, graph, alpha, beta, expression, evaluation, options):
-        "Pymathics`KatzCentrality[Pymathics`graph_, alpha_, beta_, OptionsPattern[%(name)s]]"
+        "expression: Pymathics`KatzCentrality[Pymathics`graph_, alpha_, beta_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             try:
@@ -407,7 +407,7 @@ class PageRankCentrality(_Centrality):
     summary_text = "get the page rank centralities"
 
     def eval_alpha_beta(self, graph, alpha, expression, evaluation, options):
-        "%(name)s[graph_, alpha_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, alpha_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             py_alpha = float(alpha.to_mpmath())

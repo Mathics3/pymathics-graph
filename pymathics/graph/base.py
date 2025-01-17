@@ -817,13 +817,13 @@ class _PatternList(_NetworkXBuiltin):
     def eval(
         self, graph, expression: Expression, evaluation: Evaluation, options: dict
     ):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             return ListExpression(*(from_python(q) for q in self._items(graph)))
 
     def eval_patt(self, graph, patt, expression, evaluation, options):
-        "%(name)s[graph_, patt_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, patt_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             return Expression(SymbolCases, ListExpression(*self._items(graph)), patt)
@@ -875,7 +875,7 @@ class AdjacencyList(_NetworkXBuiltin):
             self._not_a_vertex(expression, 2, evaluation)
 
     def eval(self, graph, what, expression, evaluation, options):
-        "%(name)s[graph_, what_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, what_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             G = graph.G.to_undirected()  # FIXME inefficient
@@ -884,7 +884,7 @@ class AdjacencyList(_NetworkXBuiltin):
             )
 
     def eval_d(self, graph, what, d, expression, evaluation, options):
-        "%(name)s[graph_, what_, d_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, what_, d_, OptionsPattern[%(name)s]]"
         py_d = d.to_mpmath()
         if py_d is None:
             return
@@ -967,13 +967,13 @@ generated/networkx.algorithms.connectivity.connectivity.edge_connectivity.html</
     summary_text = "edge connectivity of a graph"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph and not graph.empty():
             return Integer(nx.edge_connectivity(graph.G))
 
     def eval_st(self, graph, s, t, expression, evaluation, options):
-        "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph and not graph.empty():
             return Integer(nx.edge_connectivity(graph.G, s, t))
@@ -995,7 +995,7 @@ class EdgeIndex(_NetworkXBuiltin):
     summary_text = "find the position of an edge"
 
     def eval(self, graph, v, expression, evaluation, options):
-        "%(name)s[graph_, v_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, v_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             # FIXME: check if directionality must be considered or not.
@@ -1040,7 +1040,7 @@ class EdgeRules(_NetworkXBuiltin):
     summary_text = "list the edge as rules"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
 
@@ -1096,7 +1096,7 @@ class FindShortestPath(_NetworkXBuiltin):
     def eval_s_t(
         self, graph, s, t, expression: Expression, evaluation: Evaluation, options: dict
     ):
-        "FindShortestPath[graph_, s_, t_, OptionsPattern[FindShortestPath]]"
+        "expression: FindShortestPath[graph_, s_, t_, OptionsPattern[FindShortestPath]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph:
             return
@@ -1153,7 +1153,7 @@ generated/networkx.algorithms.connectivity.cuts.minimum_node_cut.html
     summary_text = "find the vertex cuts"
 
     def eval(self, graph, expression, evaluation, options):
-        "FindVertexCut[graph_, OptionsPattern[%(name)s]]"
+        "expression: FindVertexCut[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             if graph.empty() or not is_connected(graph.G):
@@ -1164,7 +1164,7 @@ generated/networkx.algorithms.connectivity.cuts.minimum_node_cut.html
                 )
 
     def eval_st(self, graph, s, t, expression, evaluation, options):
-        "FindVertexCut[graph_, s_, t_, OptionsPattern[%(name)s]]"
+        "expression: FindVertexCut[graph_, s_, t_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph:
             return
@@ -1248,7 +1248,7 @@ class HighlightGraph(_NetworkXBuiltin):
     summary_text = "highlight elements in a graph"
 
     def eval(self, graph, what, expression, evaluation, options):
-        "HighlightGraph[graph_, what_List, OptionsPattern[%(name)s]]"
+        "expression: HighlightGraph[graph_, what_List, OptionsPattern[%(name)s]]"
         default_highlight = [Expression(SymbolRGBColor, Integer1, Integer0, Integer0)]
 
         def parse(item):
@@ -1355,7 +1355,7 @@ class VertexAdd(_NetworkXBuiltin):
     summary_text = "add a vertex"
 
     def eval(self, graph: Expression, what, expression, evaluation, options):
-        "VertexAdd[graph_, what_, OptionsPattern[VertexAdd]]"
+        "expression: VertexAdd[graph_, what_, OptionsPattern[VertexAdd]]"
         mathics_graph = self._build_graph(graph, evaluation, options, expression)
         if mathics_graph:
             if what.get_head_name() == "System`List":
@@ -1399,7 +1399,7 @@ class VertexConnectivity(_NetworkXBuiltin):
     summary_text = "vertex connectivity"
 
     def eval(self, graph, expression, evaluation, options):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph and not graph.empty():
             if not is_connected(graph.G):
@@ -1408,7 +1408,7 @@ class VertexConnectivity(_NetworkXBuiltin):
                 return Integer(nx.node_connectivity(graph.G))
 
     def eval_st(self, graph, s, t, expression, evaluation, options):
-        "%(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, s_, t_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph and not graph.empty():
             if not is_connected(graph.G):
@@ -1440,7 +1440,7 @@ class VertexDelete(_NetworkXBuiltin):
     summary_text = "remove a vertex"
 
     def eval(self, graph, what, expression, evaluation, options) -> Optional[Graph]:
-        "VertexDelete[graph_, what_, OptionsPattern[VertexDelete]]"
+        "expression: VertexDelete[graph_, what_, OptionsPattern[VertexDelete]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             head_name = what.get_head_name()
@@ -1475,7 +1475,7 @@ class VertexIndex(_NetworkXBuiltin):
     summary_text = "find the position of a vertex"
 
     def eval(self, graph, v, expression, evaluation, options):
-        "%(name)s[graph_, v_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, v_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             try:
@@ -1579,7 +1579,7 @@ class EdgeDelete(_NetworkXBuiltin):
     summary_text = "remove an edge"
 
     def eval(self, graph, what, expression, evaluation, options) -> Optional[Graph]:
-        "EdgeDelete[graph_, what_, OptionsPattern[EdgeDelete]]"
+        "expression: EdgeDelete[graph_, what_, OptionsPattern[EdgeDelete]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             head_name = what.get_head_name()

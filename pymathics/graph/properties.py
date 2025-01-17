@@ -53,7 +53,7 @@ class AcyclicGraphQ(_NetworkXBuiltin):
     summary_text = "test if is a graph is acyclic"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "AcyclicGraphQ[graph_, OptionsPattern[AcyclicGraphQ]]"
+        "expression: AcyclicGraphQ[graph_, OptionsPattern[AcyclicGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=False)
         if not graph or graph.empty():
             return SymbolFalse
@@ -112,7 +112,7 @@ https://networkx.org/documentation/stable/reference/algorithms\
     summary_text = "test if a graph is a connected"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             return from_python(is_connected(graph.G))
@@ -154,7 +154,7 @@ class DirectedGraphQ(_NetworkXBuiltin):
     summary_text = "test if a graph is directed"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "DirectedGraphQ[graph_, OptionsPattern[DirectedGraphQ]]"
+        "expression: DirectedGraphQ[graph_, OptionsPattern[DirectedGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             return from_python(graph.is_directed())
@@ -182,7 +182,7 @@ class GraphQ(_NetworkXBuiltin):
     summary_text = "test object is a graph"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "GraphQ[graph_, OptionsPattern[GraphQ]]"
+        "expression: GraphQ[graph_, OptionsPattern[GraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         return SymbolTrue if graph else SymbolFalse
 
@@ -221,7 +221,7 @@ generated/networkx.classes.function.nodes_with_selfloops.html
     summary_text = "test if a graph is loop free"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "LoopFreeGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
+        "expression: LoopFreeGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if not graph or graph.empty():
             return SymbolFalse
@@ -266,7 +266,7 @@ class MixedGraphQ(_NetworkXBuiltin):
     summary_text = "test if a graph has directed and undirected edges"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "MixedGraphQ[graph_, OptionsPattern[MixedGraphQ]]"
+        "expression: MixedGraphQ[graph_, OptionsPattern[MixedGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             return from_python(graph.is_mixed_graph())
@@ -307,7 +307,7 @@ https://networkx.org/documentation/stable/reference/classes/multigraph.html</url
     summary_text = "test if a graph is a multi graph"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "MultigraphQ[graph_, OptionsPattern[MultigraphQ]]"
+        "expression: MultigraphQ[graph_, OptionsPattern[MultigraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             return from_python(graph.is_multigraph())
@@ -365,7 +365,7 @@ class PathGraphQ(_NetworkXBuiltin):
     summary_text = "test if a graph is a path-like graph"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "PathGraphQ[graph_, OptionsPattern[PathGraphQ]]"
+        "expression: PathGraphQ[graph_, OptionsPattern[PathGraphQ]]"
         if not isinstance(graph, Graph) or graph.empty():
             return SymbolFalse
 
@@ -420,7 +420,7 @@ class PlanarGraphQ(_NetworkXBuiltin):
     summary_text = "test if a graph is planar"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "Pymathics`PlanarGraphQ[graph_, OptionsPattern[PlanarGraphQ]]"
+        "expression: Pymathics`PlanarGraphQ[graph_, OptionsPattern[PlanarGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if not graph or graph.empty():
             return SymbolFalse
@@ -462,7 +462,7 @@ class SimpleGraphQ(_NetworkXBuiltin):
     summary_text = "test if a graph is simple (not multigraph)"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "SimpleGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
+        "expression: SimpleGraphQ[graph_, OptionsPattern[LoopFreeGraphQ]]"
         graph = self._build_graph(graph, evaluation, options, expression, quiet=True)
         if graph:
             if graph.empty():

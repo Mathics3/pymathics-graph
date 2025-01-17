@@ -40,7 +40,7 @@ generated/networkx.algorithms.tree.mst.minimum_spanning_edges.html
     summary_text = "find a spanning tree"
 
     def eval(self, graph, expression, evaluation: Evaluation, options: dict):
-        "%(name)s[graph_, OptionsPattern[%(name)s]]"
+        "expression: %(name)s[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             graph.update_weights(evaluation)

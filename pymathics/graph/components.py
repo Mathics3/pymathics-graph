@@ -52,7 +52,7 @@ generated/networkx.algorithms.components.strongly_connected_components.html</url
     def eval(
         self, graph, expression, evaluation: Evaluation, options: dict
     ) -> Optional[ListExpression]:
-        "ConnectedComponents[graph_, OptionsPattern[%(name)s]]"
+        "expression: ConnectedComponents[graph_, OptionsPattern[%(name)s]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             connect_fn = (
@@ -123,7 +123,7 @@ generated/networkx.algorithms.components.weakly_connected_components.html</url>,
     summary_text = "list the weakly connected components"
 
     def eval(self, graph, expression, evaluation: Evaluation, options):
-        "WeaklyConnectedComponents[graph_, OptionsPattern[WeaklyConnectedComponents]]"
+        "expression: WeaklyConnectedComponents[graph_, OptionsPattern[WeaklyConnectedComponents]]"
         graph = self._build_graph(graph, evaluation, options, expression)
         if graph:
             components = nx.connected_components(graph.G.to_undirected())
