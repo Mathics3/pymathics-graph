@@ -1,5 +1,18 @@
+8.0.0
+-----
+
+Jan 26, 2025
+
+This release tracks the API changes in the Mathics Kernel.
+
+* Added builtin function `GraphQ[]`. (Combinatorica uses this)
+* Redo `DirectedEdge` and `UndirectedEdge` as operators
+
 7.0.0
 -----
+
+Aug 10, 2025
+
 
 * Revise for 7.0.0 Mathics3 API; we need to explicilty load builtins
 * Newer matplotlib requires a plot close.
