@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-import platform
 import os.path as osp
-from setuptools import setup, find_namespace_packages
+import platform
+import sys
+
+from setuptools import find_namespace_packages, setup
 
 # Ensure user has the correct Python version
 if sys.version_info < (3, 8):
@@ -32,7 +33,7 @@ setup(
     version=__version__,  # noqa
     packages=find_namespace_packages(include=["pymathics.*"]),
     install_requires=[
-        "Mathics3>=7.0.0.dev0",
+        "Mathics3>=8.0.0",
         "networkx>=3.0.0",
         "pydot",
         "matplotlib",
@@ -54,12 +55,11 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Scientific/Engineering",
-        "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Topic :: Scientific/Engineering :: Mathematics",
-        "Topic :: Scientific/Engineering :: Physics",
         "Topic :: Software Development :: Interpreters",
     ],
     # TODO: could also include long_description, download_url,
