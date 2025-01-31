@@ -87,7 +87,7 @@ class TreeGraphQ(_NetworkXBuiltin):
     (<url>:WMA:https://reference.wolfram.com/language/ref/TreeGraphQ.html</url>)
 
     <dl>
-      <dt>'TreeGraphQ[$g$]'
+      <dt>'TreeGraphQ'[$g$]
       <dd>returns $True$ if the graph $g$ is a tree and $False$ otherwise.
     </dl>
 

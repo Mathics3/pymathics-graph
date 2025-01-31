@@ -18,7 +18,7 @@ class PathGraph(_NetworkXBuiltin):
     </url>
 
     <dl>
-      <dt>'PathGraph[{$v_1$, $v_2$, ...}]'
+      <dt>'PathGraph'[{$v_1$, $v_2$, ...}]
       <dd>Returns a Graph with a path with vertices $v_i$ and edges between $v-i$ and $v_i+1$ .
     </dl>
 
@@ -50,7 +50,7 @@ class TreeGraph(Graph):
     </url>
 
     <dl>
-      <dt>'TreeGraph[{$edge_1$, $edge_2$, ...}]'
+      <dt>'TreeGraph'[{$edge_1$, $edge_2$, ...}]
       <dd>create a tree-like from a list of edges.
     </dl>
 
