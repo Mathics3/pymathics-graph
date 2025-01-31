@@ -67,7 +67,7 @@ class EdgeCount(_PatternCount):
        <dt>'EdgeCount[$g$, $patt$]'
        <dd>returns the number of edges that match the pattern $patt$.
 
-       <dt>'EdgeCount[{$v$->$w}, ...}, ...]'
+       <dt>'EdgeCount[{$v$->$w$}, ...}, ...]'
        <dd>uses rules $v$->$w$ to specify the graph $g$.
     </dl>
 
@@ -175,7 +175,7 @@ class VertexCount(_PatternCount):
        <dt>'VertexCount[$g$, $patt$]'
        <dd>returns the number of vertices that match the pattern $patt$.
 
-       <dt>'VertexCount[{$v$->$w}, ...}, ...]'
+       <dt>'VertexCount[{$v$->$w$}, ...}, ...]'
        <dd>uses rules $v$->$w$ to specify the graph $g$.
     </dl>
 
@@ -215,7 +215,7 @@ class VertexDegree(_NetworkXBuiltin):
        <dt>'EdgeCount[$g$, $patt$]'
        <dd>returns the number of edges that match the pattern $patt$.
 
-       <dt>'EdgeCount[{$v$->$w}, ...}, ...]'
+       <dt>'EdgeCount[{$v$->$w$}, ...}, ...]'
        <dd>uses rules $v$->$w$ to specify the graph $g$.
     </dl>
 
