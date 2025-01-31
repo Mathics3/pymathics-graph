@@ -911,7 +911,7 @@ class DirectedEdge(GenericDirectedEdge):
 
 
     <dl>
-      <dt>'DirectedEdge[$u$, $v$]'
+      <dt>'DirectedEdge'[$u$, $v$]
       <dd>create a directed edge from $u$ to $v$.
     </dl>
 
@@ -941,7 +941,7 @@ generated/networkx.algorithms.connectivity.connectivity.edge_connectivity.html</
     https://reference.wolfram.com/language/ref/EdgeConnectivity.html</url>)
 
     <dl>
-      <dt>'EdgeConnectivity[$g$]'
+      <dt>'EdgeConnectivity'[$g$]
       <dd>gives the edge connectivity of the graph $g$.
     </dl>
 
@@ -1128,9 +1128,9 @@ generated/networkx.algorithms.connectivity.cuts.minimum_node_cut.html
     https://reference.wolfram.com/language/ref/FindVertexCut.html</url>)
 
     <dl>
-    <dt>'FindVertexCut[$g$]'
+    <dt>'FindVertexCut'[$g$]
         <dd>finds a set of vertices of minimum cardinality that, if removed, renders $g$ disconnected.
-    <dt>'FindVertexCut[$g$, $s$, $t$]'
+    <dt>'FindVertexCut'[$g$, $s$, $t$]
         <dd>finds a vertex cut that disconnects all paths from $s$ to $t$.
     </dl>
 
@@ -1185,12 +1185,12 @@ class GraphAtom(AtomBuiltin):
     <url>:Graph:https://en.wikipedia.org/wiki/graph</url> (<url>:WMA:
     https://reference.wolfram.com/language/ref/Graph.html</url>)
     <dl>
-      <dt>'Graph[{$e1, $e2, ...}]'
+      <dt>'Graph'[{$e1, $e2, ...}]
       <dd>returns a graph with edges $e_j$.
     </dl>
 
     <dl>
-      <dt>'Graph[{v1, v2, ...}, {$e1, $e2, ...}]'
+      <dt>'Graph'[{v1, v2, ...}, {$e1, $e2, ...}]
       <dd>returns a graph with vertices $v_i$ and edges $e_j$.
     </dl>
 
@@ -1491,7 +1491,7 @@ class VertexList(_PatternList):
     :WMA link:
     https://reference.wolfram.com/language/ref/VertexList.html</url>
     <dl>
-      <dt>'VertexList[$edgelist$]'
+      <dt>'VertexList'[$edgelist$]
       <dd>list the vertices from a list of directed edges.
     </dl>
 
@@ -1521,7 +1521,7 @@ class UndirectedEdge(GenericUndirectedEdge):
     https://reference.wolfram.com/language/ref/UndirectedEdge.html</url>
 
     <dl>
-      <dt>'UndirectedEdge[$u$, $v$]'
+      <dt>'UndirectedEdge'[$u$, $v$]
       <dd>create an undirected edge between $u$ and $v$.
     </dl>
 

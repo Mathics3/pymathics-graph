@@ -15,7 +15,7 @@ class GraphData(_NetworkXBuiltin):
     :WMA link:https://reference.wolfram.com/language/ref/GraphData.html</url>
 
     <dl>
-      <dt>'GraphData[$name$]'
+      <dt>'GraphData'[$name$]
       <dd>Returns a graph with the specified name.
     </dl>
 

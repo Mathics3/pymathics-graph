@@ -61,13 +61,13 @@ class EdgeCount(_PatternCount):
     https://reference.wolfram.com/language/ref/EdgeCount.html</url>
 
     <dl>
-       <dt>'EdgeCount[$g$]'
+       <dt>'EdgeCount'[$g$]
        <dd>returns a count of the number of edges in graph $g$.
 
-       <dt>'EdgeCount[$g$, $patt$]'
+       <dt>'EdgeCount'[$g$, $patt$]
        <dd>returns the number of edges that match the pattern $patt$.
 
-       <dt>'EdgeCount[{$v$->$w$}, ...}, ...]'
+       <dt>'EdgeCount'[{$v$->$w$}, ...}, ...]
        <dd>uses rules $v$->$w$ to specify the graph $g$.
     </dl>
 
@@ -96,12 +96,12 @@ class GraphDistance(_NetworkXBuiltin):
     </dl>
 
     <dl>
-      <dt>'GraphDistance[$g$, $s$]'
+      <dt>'GraphDistance'[$g$, $s$]
       <dd>returns the distance from source vertex $s$ to all vertices in the graph $g$.
     </dl>
 
     <dl>
-      <dt>'GraphDistance[{$v$->$w$, ...}, ...]'
+      <dt>'GraphDistance'[{$v$->$w$, ...}, ...]
       <dd>use rules $v$->$w$ to specify the graph $g$.
     </dl>
 
@@ -169,13 +169,13 @@ class VertexCount(_PatternCount):
     https://reference.wolfram.com/language/ref/VertexCount.html</url>
 
     <dl>
-       <dt>'VertexCount[$g$]'
+       <dt>'VertexCount'[$g$]
        <dd>returns a count of the number of vertices in graph $g$.
 
-       <dt>'VertexCount[$g$, $patt$]'
+       <dt>'VertexCount'[$g$, $patt$]
        <dd>returns the number of vertices that match the pattern $patt$.
 
-       <dt>'VertexCount[{$v$->$w$}, ...}, ...]'
+       <dt>'VertexCount'[{$v$->$w$}, ...}, ...]
        <dd>uses rules $v$->$w$ to specify the graph $g$.
     </dl>
 
@@ -209,13 +209,13 @@ class VertexDegree(_NetworkXBuiltin):
     https://reference.wolfram.com/language/ref/VertexDegree.html</url>
 
     <dl>
-       <dt>'VertexDegree[$g$]'
+       <dt>'VertexDegree'[$g$]
        <dd>returns a list of the degrees of each of the vertices in graph $g$.
 
-       <dt>'EdgeCount[$g$, $patt$]'
+       <dt>'EdgeCount'[$g$, $patt$]
        <dd>returns the number of edges that match the pattern $patt$.
 
-       <dt>'EdgeCount[{$v$->$w$}, ...}, ...]'
+       <dt>'EdgeCount'[{$v$->$w$}, ...}, ...]
        <dd>uses rules $v$->$w$ to specify the graph $g$.
     </dl>
 

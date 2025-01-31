@@ -35,7 +35,7 @@ class BalancedTree(_NetworkXBuiltin):
     https://reference.wolfram.com/language/ref/BalancedTree.html</url>
 
     <dl>
-      <dt>'BalancedTree[$r$, $h$]'
+      <dt>'BalancedTree'[$r$, $h$]
       <dd>Returns the perfectly balanced $r$-ary tree of height $h$.
 
       In this tree produced, all non-leaf nodes will have $r$ children and \
@@ -90,7 +90,7 @@ generated/networkx.generators.classic.barbell_graph.html</url>, <url>
     https://mathworld.wolfram.com/BarbellGraph.html</url>)
 
     <dl>
-      <dt>'BarbellGraph[$m1$, $m2$]'
+      <dt>'BarbellGraph'[$m_1$, $m_2$]
       <dd>Barbell Graph: two complete graphs connected by a path.
     </dl>
 
@@ -148,7 +148,7 @@ generated/networkx.generators.classic.binomial_tree.html</url>, <url>
     :WMA:https://reference.wolfram.com/language/ref/BinomialTree.html</url>)
 
     <dl>
-      <dt>'BinomialTree[$n$]'
+      <dt>'BinomialTree'[$n$]
       <dd>Returns the Binomial Tree of order $n$.
 
       The binomial tree of order $n$ with root $R$ is defined as:
@@ -206,7 +206,7 @@ generated/networkx.generators.classic.complete_multipartite_graph.html</url>, <u
     https://reference.wolfram.com/language/ref/CompleteGraph.html</url>)
 
     <dl>
-      <dt>'CompleteGraph[$n$]'
+      <dt>'CompleteGraph'[$n$]
       <dd>Returns the complete graph with $n$ vertices, $K_n$.
     </dl>
 
@@ -244,7 +244,7 @@ generated/networkx.generators.classic.full_rary_tree.html</url>, <url>
     https://reference.wolfram.com/language/ref/CompleteKaryTree.html</url>)
 
     <dl>
-      <dt>'CompleteKaryTree[$n$, $k$]'
+      <dt>'CompleteKaryTree'[$n$, $k$]
       <dd>Creates a complete $k$-ary tree of $n$ levels.
     </dl>
 
@@ -295,7 +295,7 @@ class CycleGraph(_NetworkXBuiltin):
     https://reference.wolfram.com/language/ref/CycleGraph.html</url>)
 
     <dl>
-      <dt>'CycleGraph[$n$]'
+      <dt>'CycleGraph'[$n$]
       <dd>Returns the cycle graph with $n$ vertices $C_n$.
     </dl>
 
@@ -324,7 +324,7 @@ generated/networkx.generators.atlas.graph_atlas.html
     </url>
 
     <dl>
-      <dt>'GraphAtlas[$n$]'
+      <dt>'GraphAtlas'[$n$]
       <dd>Returns graph number $i$ from the NetworkX's Graph \
       Atlas. There are about 1200 of them and get large as $i$ \
       increases.
@@ -368,7 +368,7 @@ class HknHararyGraph(_NetworkXBuiltin):
     https://reference.wolfram.com/language/ref/HknHararyGraph.html</url>
 
     <dl>
-      <dt>'HknHararyGraph[$k$, $n$]'
+      <dt>'HknHararyGraph'[$k$, $n$]
       <dd>Returns the Harary graph with given node connectivity and node number.
 
       This second generator gives the Harary graph that minimizes the \
@@ -405,7 +405,7 @@ class HmnHararyGraph(_NetworkXBuiltin):
     https://reference.wolfram.com/language/ref/HmnHararyGraph.html</url>
 
     <dl>
-      <dt>'HmnHararyGraph[$m$, $n$]'
+      <dt>'HmnHararyGraph'[$m$, $n$]
       <dd>Returns the Harary graph with given numbers of nodes and edges.
 
       This generator gives the Harary graph that maximizes the node \
@@ -461,12 +461,12 @@ class KaryTree(_NetworkXBuiltin):
 
 
     <dl>
-      <dt>'KaryTree[$r$, $n$]'
+      <dt>'KaryTree'[$r$, $n$]
       <dd>Creates binary tree of $n$ vertices.
     </dl>
 
     <dl>
-      <dt>'KaryTree[$n$, $k$]'
+      <dt>'KaryTree'[$n$, $k$]
       <dd>Creates $k$-ary tree with $n$ vertices.
     </dl>
 
@@ -509,7 +509,7 @@ class LadderGraph(_NetworkXBuiltin):
 /generated/networkx.generators.classic.ladder_graph.html</url>)
 
     <dl>
-      <dt>'LadderGraph[$n$]'
+      <dt>'LadderGraph'[$n$]
       <dd>Returns the Ladder graph of length $n$.
     </dl>
 
@@ -549,7 +549,7 @@ class PathGraph(_NetworkXBuiltin):
     </url> (<url>:WMA:https://reference.wolfram.com/language/ref/PathGraph.html
     </url>)
     <dl>
-      <dt>'PathGraph[{$v_1$, $v_2$, ...}]'
+      <dt>'PathGraph'[{$v_1$, $v_2$, ...}]
       <dd>Returns a Graph with a path with vertices $v_i$ and \
       edges between $v-i$ and $v_i+1$ .
     </dl>
@@ -584,7 +584,7 @@ class RandomTree(_NetworkXBuiltin):
     https://reference.wolfram.com/language/ref/RandomTree.html</url>
 
     <dl>
-      <dt>'RandomTree[$n$]'
+      <dt>'RandomTree'[$n$]
       <dd>Returns a uniformly random tree on $n$ nodes.
     </dl>
 
@@ -630,7 +630,7 @@ class StarGraph(_NetworkXBuiltin):
     https://reference.wolfram.com/language/ref/StarGraph.html
     </url>)
     <dl>
-      <dt>'StarGraph[$n$]'
+      <dt>'StarGraph'[$n$]
       <dd>Returns a star graph with $n$ vertices.
     </dl>
 

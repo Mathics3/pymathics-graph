@@ -68,7 +68,7 @@ generated/networkx.algorithms.components.strongly_connected_components.html</url
 # class FindHamiltonianPath(_NetworkXBuiltin):
 #     """
 #     <dl>
-#       <dt>'FindHamiltonianPath[$g$]'
+#       <dt>'FindHamiltonianPath'[$g$]
 #       <dd>returns a Hamiltonian path in the given tournament graph.
 #       </dl>
 #
