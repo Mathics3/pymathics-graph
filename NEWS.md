@@ -1,3 +1,11 @@
+8.0.1
+-----
+
+Feb 8, 2025
+
+Documentation has been revised to make better use of TeX math mode.
+Adjust and correct packaging (thanks to Atri Bhattacharya for testing and packaging in OpenSUSE) .
+
 8.0.0
 -----
 

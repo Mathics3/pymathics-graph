@@ -3,7 +3,4 @@ include NEWS.md
 include ChangeLog
 include LICENSE
 include Makefile
-include requirements-cython.txt
-include requirements-dev.txt
-include requirements-full.txt
 recursive-include test *.py
