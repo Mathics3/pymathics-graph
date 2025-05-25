@@ -1,0 +1,66 @@
+[build-system]
+requires = [
+ "setuptools>=70.0.0", # CVE-2024-38335 recommends this
+        "networkx>=3.0.0",
+        "pydot",
+        "mpmath>=1.2.0",
+        "numpy<1.27",
+        "matplotlib",
+        "scipy>=1.10.0",
+	"sympy>=1.11,<1.13",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Mathics3-graph"
+description = "Mathics3 Graph Module using NetworkX"
+dependencies = [
+        "Mathics3>=8.0.1",
+        "Mathics3-Module-Base",
+        "networkx>=3.0.0",
+        "pydot",
+        "matplotlib",
+        "scipy>=1.10.0",
+]
+requires-python = ">=3.9" # Sympy 1.11 is supported only down to 3.8
+readme = "README.rst"
+license = {text = "GPL"}
+keywords = ["Mathematica", "Wolfram", "Interpreter", "Shell", "Math", "CAS"]
+maintainers = [
+    {name = "Mathics Group", email = "mathics-devel@googlegroups.com"},
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Interpreters",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/Mathics3/pymathics-graph"
+Downloads = "https://github.com/Mathics3/pymathics-graph/releases"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.setuptools]
+packages = [
+    "pymathics.graph",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "pymathics.graph.__version__"}
