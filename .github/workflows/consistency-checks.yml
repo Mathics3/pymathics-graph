@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.11']
+        python-version: ['3.13']
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -26,6 +26,7 @@ jobs:
         git clone https://github.com/Mathics3/mathics-core
         (cd mathics-core && make)
         (cd mathics-core && python -m pip install -e .[full])
+        python -m pip install -e git+https://github.com/Mathics3/Mathics3-Module-Base#egg=Mathics3-Module-Base
     - name: Install Pymathics.graph with minimum dependencies
       run: |
         make develop
