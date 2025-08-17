@@ -206,12 +206,16 @@ class _NetworkXBuiltin(Builtin):
     def element_order(self) -> tuple:
         """
         Return a value which is used in ordering elements
-        of an expression. The tuple is ultimately compared lexicographically.
+        of an expression and Sort[]. The tuple is ultimately compared lexicographically.
         """
-        # Return the precedence the expression `Image[]`,
-        # but with a `2` instead of `1` in the 5th position,
-        # and adding two extra fields: the length in the 3rd position,
-        # and a hash in the 6th place.
+        # Return the precedence similar to the key for an `Image[]`
+        # object, but with a `2` instead of `1` in the 5th position,
+        #
+        # Graphs with fewer vertices in a graph should appear before
+        # nodes with more vertices. This property is captured by the
+        # 3rd position, of the order tuple. A hash of the object is put
+        # last for two graphs are structurally the same but different, so that
+        # the same graph object will appear consecutively in a Sort[].
         return (
             GRAPH_EXPRESSION_SORT_KEY,
             SymbolGraph,
@@ -395,12 +399,16 @@ class Graph(Atom):
     def element_order(self) -> tuple:
         """
         Return a value which is used in ordering elements
-        of an expression. The tuple is ultimately compared lexicographically.
+        of an expression and Sort[]. The tuple is ultimately compared lexicographically.
         """
-        # Return the precedence the expression `Image[]`,
-        # but with a `2` instead of `1` in the 5th position,
-        # and adding two extra fields: the length in the 3rd position,
-        # and a hash in the 6th place.
+        # Return the precedence similar to the key for an `Image[]`
+        # object, but with a `2` instead of `1` in the 5th position,
+        #
+        # Graphs with fewer vertices in a graph should appear before
+        # nodes with more vertices. This property is captured by the
+        # 3rd position, of the order tuple. A hash of the object is put
+        # last for two graphs are structurally the same but different, so that
+        # the same graph object will appear consecutively in a Sort[].
         return (
             GRAPH_EXPRESSION_SORT_KEY,
             SymbolGraph,
