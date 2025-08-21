@@ -21,6 +21,7 @@ from mathics.core.convert.expression import ListExpression, from_python, to_math
 from mathics.core.element import BaseElement
 from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
+from mathics.core.keycomparable import IMAGE_EXPRESSION_SORT_KEY
 from mathics.core.pattern import pattern_objects
 from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
 from mathics.core.systemsymbols import (
@@ -42,6 +43,7 @@ from pymathics.graph.graphsymbols import (
     SymbolUndirectedEdge,
 )
 
+GRAPH_EXPRESSION_SORT_KEY = IMAGE_EXPRESSION_SORT_KEY + 1
 
 WL_MARKER_TO_NETWORKX = {
     "Circle": "o",
@@ -200,32 +202,28 @@ class _NetworkXBuiltin(Builtin):
     def __str__(self):
         return "-Graph-"
 
-    def get_sort_key(self, pattern_sort=False) -> tuple:
+    @property
+    def element_order(self) -> tuple:
         """
-        Returns a particular encoded list (which should be a tuple) that is used
-        in ``Sort[]`` comparisons and in the ordering that occurs
-        in an M-Expression which has the ``Orderless`` property.
-
-        See the docstring for element.get_sort_key() for more detail.
+        Return a value which is used in ordering elements
+        of an expression and Sort[]. The tuple is ultimately compared lexicographically.
         """
-
-        if pattern_sort:
-            return super(_NetworkXBuiltin, self).get_sort_key(True)
-        else:
-            # Return a sort_key tuple.
-            # but with a `2` instead of `1` in the 5th position,
-            # and adding two extra fields: the length in the 5th position,
-            # and a hash in the 6th place.
-            return [
-                1,
-                3,
-                self.class_head_name,
-                tuple(),
-                2,
-                len(self.vertices),
-                hash(self),
-            ]
-            return hash(self)
+        # Return the precedence similar to the key for an `Image[]`
+        # object, but with a `2` instead of `1` in the 5th position,
+        #
+        # Graphs with fewer vertices in a graph should appear before
+        # nodes with more vertices. This property is captured by the
+        # 3rd position, of the order tuple. A hash of the object is put
+        # last for two graphs are structurally the same but different, so that
+        # the same graph object will appear consecutively in a Sort[].
+        return (
+            GRAPH_EXPRESSION_SORT_KEY,
+            SymbolGraph,
+            len(self.vertices),
+            tuple(),
+            2,
+            hash(self),
+        )
 
 
 class _FullGraphRewrite(Exception):
@@ -397,31 +395,28 @@ class Graph(Atom):
     def is_multigraph(self):
         return isinstance(self.G, (nx.MultiDiGraph, nx.MultiGraph))
 
-    def get_sort_key(self, pattern_sort=False) -> tuple:
+    @property
+    def element_order(self) -> tuple:
         """
-        Returns a particular encoded list (which should be a tuple) that is used
-        in ``Sort[]`` comparisons and in the ordering that occurs
-        in an M-Expression which has the ``Orderless`` property.
-
-        See the docstring for element.get_sort_key() for more detail.
+        Return a value which is used in ordering elements
+        of an expression and Sort[]. The tuple is ultimately compared lexicographically.
         """
-
-        if pattern_sort:
-            return super(Graph, self).get_sort_key(True)
-        else:
-            # Return a sort_key tuple.
-            # but with a `2` instead of `1` in the 5th position,
-            # and adding two extra fields: the length in the 5th position,
-            # and a hash in the 6th place.
-            return [
-                1,
-                3,
-                self.class_head_name,
-                tuple(),
-                2,
-                len(self.vertices),
-                hash(self),
-            ]
+        # Return the precedence similar to the key for an `Image[]`
+        # object, but with a `2` instead of `1` in the 5th position,
+        #
+        # Graphs with fewer vertices in a graph should appear before
+        # nodes with more vertices. This property is captured by the
+        # 3rd position, of the order tuple. A hash of the object is put
+        # last for two graphs are structurally the same but different, so that
+        # the same graph object will appear consecutively in a Sort[].
+        return (
+            GRAPH_EXPRESSION_SORT_KEY,
+            SymbolGraph,
+            len(self.vertices),
+            tuple(),
+            2,
+            hash(self),
+        )
 
     def sort_vertices(self, vertices):
         return sorted(vertices)
