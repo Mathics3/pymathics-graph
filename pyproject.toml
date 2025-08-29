@@ -1,13 +1,10 @@
 [build-system]
 requires = [
- "setuptools>=70.0.0", # CVE-2024-38335 recommends this
+	"setuptools", # CVE-2024-38335 recommends this
+        "Mathics3>=9.0.0",
         "networkx>=3.0.0",
-        "pydot",
-        "mpmath>=1.2.0",
-        "numpy<1.27",
         "matplotlib",
-        "scipy>=1.10.0",
-	"sympy>=1.11,<1.13",
+        "Mathics3-Module-Base",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -15,8 +12,9 @@ build-backend = "setuptools.build_meta"
 name = "Mathics3-graph"
 description = "Mathics3 Graph Module using NetworkX"
 dependencies = [
-        "Mathics3>=8.0.1",
+        "Mathics3>=9.0.0",
         "Mathics3-Module-Base",
+        "mpmath>=1.2.0",
         "networkx>=3.0.0",
         "pydot",
         "matplotlib",
