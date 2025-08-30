@@ -1,3 +1,12 @@
+9.0.0
+-----
+
+Aug 29, 2025
+
+Add support for Python 3.13. Drop Support for Python 3.8 and Python 3.9.
+
+Track API changes in Mathics3 Kernel.
+
 8.0.1
 -----
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-PACKAGE=pymathics-graph
+PACKAGE=mathics3-graph
 
 # FIXME put some of the below in a common routine
 function finish {
@@ -22,7 +22,7 @@ echo $__version__
 if ! pyenv local $pyversion ; then
     exit $?
 fi
-python setup.py bdist_wheel --universal
-mv -v dist/pymathics_graph-${__version__}-{py2.,}py3-none-any.whl
-python ./setup.py sdist
+pyenv local 3.13
+pip wheel --wheel-dir=dist .
+python -m build --sdist
 finish
