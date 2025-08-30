@@ -44,7 +44,7 @@ From pip:
 
 ::
 
-   $ pip install pymathics-graph
+   $ pip install mathics3-graph
 
 From git:
 
