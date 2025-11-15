@@ -21,7 +21,7 @@ from mathics.core.convert.expression import ListExpression, from_python, to_math
 from mathics.core.element import BaseElement
 from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
-from mathics.core.keycomparable import IMAGE_EXPRESSION_SORT_KEY
+from mathics.core.keycomparable import IMAGE_EXPRESSION_ELT_ORDER
 from mathics.core.pattern import pattern_objects
 from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
 from mathics.core.systemsymbols import (
@@ -43,7 +43,7 @@ from pymathics.graph.graphsymbols import (
     SymbolUndirectedEdge,
 )
 
-GRAPH_EXPRESSION_SORT_KEY = IMAGE_EXPRESSION_SORT_KEY + 1
+GRAPH_EXPRESSION_SORT_KEY = IMAGE_EXPRESSION_ELT_ORDER + 1
 
 WL_MARKER_TO_NETWORKX = {
     "Circle": "o",
