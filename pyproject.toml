@@ -2,6 +2,7 @@
 requires = [
 	"setuptools", # CVE-2024-38335 recommends this
         "Mathics3>9.0.0",
+        "Mathics3-Module-Base",
         "networkx>=3.0.0",
         "matplotlib",
         "Mathics3-Module-Base",
@@ -9,7 +10,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Mathics3-graph"
+name = "Mathics3-Module-networkx"
 description = "Mathics3 Graph Module using NetworkX"
 dependencies = [
         "Mathics3>=9.0.0",
@@ -45,8 +46,8 @@ classifiers = [
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/Mathics3/pymathics-graph"
-Downloads = "https://github.com/Mathics3/pymathics-graph/releases"
+Homepage = "https://github.com/Mathics3/Mathics3-Module-networkx-graph"
+Downloads = "https://github.com/Mathics3/Mathics3-Module-networkx/releases"
 
 [project.optional-dependencies]
 dev = [

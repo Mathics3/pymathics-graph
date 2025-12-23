@@ -1,4 +1,4 @@
-name: Mathic3 Graph Module (ubuntu)
+name: Mathic3 Module networkx (ubuntu)
 
 on:
   push:
@@ -22,16 +22,18 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install pytest
+        python -m pip install Mathics3-Module-Base
         # Go over and comment out stuff when next Mathics core and Mathics-scanner are released
         # python -m pip install -e git+https://github.com/Mathics3/mathics-scanner#egg=Mathics-Scanner[full]
-        # git clone https://github.com/Mathics3/mathics-core
-        # (cd mathics-core && pip3 install -e .[full])
-        # (cd mathics-core && bash ./admin-tools/make-JSON-tables.sh)
-        # python -m pip install -e git+https://github.com/Mathics3/Mathics3-Module-Base#egg=Mathics3-Module-Base
-    - name: install pymathics graph
+        # Until the next mathics-core release
+        git clone https://github.com/Mathics3/mathics-core
+        (cd mathics-core && pip3 install -e .[full])
+        (cd mathics-core && bash ./admin-tools/make-JSON-tables.sh)
+
+    - name: install Mathics3 Module networkx
       run: |
-        python -m pip install -e .[full]
+        python -m pip install -e .[full] --no-build-isolation
         # make develop
-    - name: Test Mathics3 Module Graph
+    - name: Test Mathics3 Module networkx
       run: |
         make -j3 check

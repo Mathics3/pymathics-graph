@@ -1,4 +1,4 @@
-name: Pymathics-Graph (Consistency Checks)
+name: Mathics3-Module-networkx (Consistency Checks)
 
 on:
   push:
@@ -22,14 +22,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install pytest
+        python -m pip install Mathics3-Module-Base
+        # Until the next mathics-core release
         # python -m pip install -e git+https://github.com/Mathics3/mathics-scanner#egg=Mathics-Scanner[full]
-        # git clone https://github.com/Mathics3/mathics-core
-        # (cd mathics-core && make)
-        # (cd mathics-core && python -m pip install -e .[full])
-        # python -m pip install -e git+https://github.com/Mathics3/Mathics3-Module-Base#egg=Mathics3-Module-Base
-    - name: Install Pymathics.graph with minimum dependencies
+        git clone https://github.com/Mathics3/mathics-core
+        (cd mathics-core && python -m pip install -e .[full])
+        (cd mathics-core && bash ./admin-tools/make-JSON-tables.sh)
+
+    - name: Install Mathics3-Module-Networkx.graph with minimum dependencies
       run: |
-        make develop
+        python -m pip install -e . --no-build-isolation
     - name: Test Mathics Consistency and Style
       run: |
         make check-consistency-and-style

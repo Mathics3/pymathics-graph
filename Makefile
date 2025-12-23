@@ -38,7 +38,7 @@ dist:
 
 #: Install pymathics.graph
 install: pypi-setup
-	$(PYTHON) setup.py install
+	 $(PYTHON) -m pip install -e . --no-build-isolation
 
 # Run tests
 test check: pytest doctest
