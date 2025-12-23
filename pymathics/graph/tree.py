@@ -1,10 +1,10 @@
 """
 Trees
 """
+
 import networkx as nx
-from mathics.core.atoms import Atom
 from mathics.core.evaluation import Evaluation
-from mathics.core.symbols import SymbolConstant
+from mathics.core.symbols import Atom, SymbolConstant
 
 from pymathics.graph.base import (
     DEFAULT_GRAPH_OPTIONS,

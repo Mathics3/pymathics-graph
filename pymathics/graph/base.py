@@ -16,14 +16,14 @@ from mathics.builtin.no_meaning.infix_extra import (
 )
 from mathics.core.attributes import A_PROTECTED, A_READ_PROTECTED
 from mathics.core.builtin import AtomBuiltin, Builtin
-from mathics.core.atoms import Atom, Integer, Integer0, Integer1, Integer2, String
+from mathics.core.atoms import Integer, Integer0, Integer1, Integer2, String
 from mathics.core.convert.expression import ListExpression, from_python, to_mathics_list
 from mathics.core.element import BaseElement
 from mathics.core.evaluation import Evaluation
 from mathics.core.expression import Expression
-from mathics.core.keycomparable import IMAGE_EXPRESSION_SORT_KEY
+from mathics.core.keycomparable import IMAGE_EXPRESSION_ELT_ORDER
 from mathics.core.pattern import pattern_objects
-from mathics.core.symbols import Symbol, SymbolList, SymbolTrue
+from mathics.core.symbols import Atom, Symbol, SymbolList, SymbolTrue
 from mathics.core.systemsymbols import (
     SymbolBlank,
     SymbolCases,
@@ -43,7 +43,7 @@ from pymathics.graph.graphsymbols import (
     SymbolUndirectedEdge,
 )
 
-GRAPH_EXPRESSION_SORT_KEY = IMAGE_EXPRESSION_SORT_KEY + 1
+GRAPH_EXPRESSION_ELT_ORDER = IMAGE_EXPRESSION_ELT_ORDER + 1
 
 WL_MARKER_TO_NETWORKX = {
     "Circle": "o",
@@ -217,7 +217,7 @@ class _NetworkXBuiltin(Builtin):
         # last for two graphs are structurally the same but different, so that
         # the same graph object will appear consecutively in a Sort[].
         return (
-            GRAPH_EXPRESSION_SORT_KEY,
+            GRAPH_EXPRESSION_ELT_ORDER,
             SymbolGraph,
             len(self.vertices),
             tuple(),
@@ -410,7 +410,7 @@ class Graph(Atom):
         # last for two graphs are structurally the same but different, so that
         # the same graph object will appear consecutively in a Sort[].
         return (
-            GRAPH_EXPRESSION_SORT_KEY,
+            GRAPH_EXPRESSION_ELT_ORDER,
             SymbolGraph,
             len(self.vertices),
             tuple(),
